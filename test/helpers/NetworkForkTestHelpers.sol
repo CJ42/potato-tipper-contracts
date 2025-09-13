@@ -9,9 +9,7 @@ contract NetworkForkTestHelpers is Test {
     // setup fork environnement
     function _useMainnetForkEnvironment() internal {
         // load from the .env file or set to Thirdweb as default
-        string memory customMainnetRpcURL = vm.envString(
-            "LUKSO_MAINNET_RPC_URL"
-        );
+        string memory customMainnetRpcURL = vm.envString("LUKSO_MAINNET_RPC_URL");
 
         luksoNetworkFork = bytes(customMainnetRpcURL).length != 0
             ? vm.createFork(customMainnetRpcURL)

@@ -29,6 +29,7 @@
   "scripts": {
     "build": "forge build",
     "test": "forge test",
+    "test:fork": "forge test --fork-url https://rpc.mainnet.lukso.network",
     "format": "forge fmt"
   },
   "devDependencies": {
