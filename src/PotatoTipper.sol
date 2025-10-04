@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.28;
 
 // interfaces
 import {IERC725X} from "@erc725/smart-contracts/contracts/interfaces/IERC725X.sol";
@@ -15,6 +15,7 @@ import {_TYPEID_LSP26_FOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Consta
 
 // libraries
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 // Address of the $POTATO Token contract deployed on LUKSO Mainnet.
 ILSP7 constant _POTATO_TOKEN = ILSP7(0x80D898C5A3A0B118a0c8C8aDcdBB260FC687F1ce);
@@ -65,10 +66,14 @@ address constant _FOLLOWER_REGISTRY = 0xf01103E5a9909Fc0DBe8166dA7085e0285daDDcA
  * @title PotatoTipper, a contract that automatically tips 1 $POTATO token to anyone that follows
  * the account it is linked to.
  * @author Jean Cavallera (CJ42)
- * @dev ⚠️ Disclaimer: this contract has not been audited and does not guarantee to not contains
- * bugs. Use at your own risk
+ * @dev ⚠️ Disclaimer: this contract has not been formally audited by an external third party
+ * auditor.
+ * The contract does not guarantee to be bug free. Use at your own risk.
  */
 contract PotatoTipper is IERC165 {
+    using Strings for address;
+    // TODO: add using for ERC165Checker for address; + check interface ID LSP0
+
     mapping(address user => mapping(address follower => bool tipped)) internal _tipped;
 
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
@@ -79,25 +84,20 @@ contract PotatoTipper is IERC165 {
         return _tipped[user][follower];
     }
 
-    function universalReceiverDelegate(
-        address sender,
-        uint256, /* value */
-        bytes32 typeId,
-        bytes memory data
-    ) external returns (bytes memory) {
+    function universalReceiverDelegate(address sender, uint256, /* value */ bytes32 typeId, bytes memory data)
+        external
+        returns (bytes memory)
+    {
         // CHECK that this call came from the Follower Registry
+        // TODO: test if msg.sender is a not the user UP, do not make assumptions
         if (sender != _FOLLOWER_REGISTRY) return unicode"❌ Not triggered by the Follower Registry";
 
         // CHECK that the call is a follow notification
+        // TODO: really needed? The `universalReceiver` delegate function should already get it
+        // triggered for this?
+        // Or how about if you register it for the generic LSP1 Delegate?
+        // Or doesn't the Follower Registry call it with the specific typeId?
         if (typeId != _TYPEID_LSP26_FOLLOW) return unicode"❌ Not a follow notification";
-
-        // TODO: change to a specific amount fetched from a data key
-        uint256 tipAmount = 1e18; // 1 $POTATO token (the token has 18 decimals)
-
-        // CHECK if this contract has enough in its tipping budget left to tip
-        if (_POTATO_TOKEN.authorizedAmountFor(address(this), msg.sender) < tipAmount) {
-            return unicode"❌ Not enough allowance to tip $POTATO tokens";
-        }
 
         // The Follower Registry (LSP26) notify the address being followed by including
         // the follower address in the data parameter (packed encoded)
@@ -107,12 +107,37 @@ contract PotatoTipper is IERC165 {
         // Prevent 🥔 🚜 (farming), or drainer user's 🥔
         bool alreadyTipped = hasReceivedTip({user: msg.sender, follower: follower});
         if (alreadyTipped) return unicode"🙅🏻 Already tipped a potato";
-        _tipped[msg.sender][follower] = true;
+
+        // This could be fixed by checking if the transfer reverted before marking the user as
+        // tipped.
+        // Or by using a try / catch block to handle the transfer revert.
+
+        // TODO: change to a specific amount fetched from a data key
+        uint256 tipAmount = 1e18; // 1 $POTATO token (the token has 18 decimals)
+
+        // TODO: do we need these two checks? Seems duplicate with what is inside LSP7.
+        // Or could be moved below inside the try / catch
+        // TODO: compare the gas cost. And the impact of checking this error in the `catch { }`
+        // block (as we would have set the
+        // new follower to tipped). This might be ok as there could be scenarios where the user have
+        // no 🥔 tokens left to tip
+        // or the tipping budget is not enough. Therefore, we cannot deal with new followers in
+        // between as "not tipped"
+        // It might have to be documented.
 
         // CHECK that the address being followed has enough 🥔 tokens to tip.
-        // TODO: do we need this check? Seems duplicate with what is inside LSP7. Or could be moved
-        // below inside the try / catch
-        if (_POTATO_TOKEN.balanceOf(msg.sender) == 0) return unicode"🤷🏻‍♂️ No 🥔 left to tip";
+        if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) return unicode"🤷🏻‍♂️ No 🥔 left to tip";
+
+        // CHECK if this contract has enough in its tipping budget left to tip
+        if (_POTATO_TOKEN.authorizedAmountFor(address(this), msg.sender) < tipAmount) {
+            return unicode"❌ Not enough allowance to tip $POTATO tokens";
+        }
+
+        // TODO: there is a bug here
+        // if the transfer occured but the transfer reverted, the follower did not receive a tip
+        // and the contract will still mark the user as tipped.
+        //
+        _tipped[msg.sender][follower] = true;
 
         // Send the tip amount
         try _POTATO_TOKEN.transfer(
@@ -123,8 +148,9 @@ contract PotatoTipper is IERC165 {
             true, // force transfer (allow to send POTATO to EOAs)
             unicode"🥔 Thanks for following. I tipped you a potato!" // data
         ) {
+            // TODO: refactor to use abi.encode for easier encoding / decoding on the UI side
             return abi.encodePacked(
-                unicode"✅🍠 Successfully tipped 1 $POTATO token to new follower.", follower
+                unicode"✅🍠 Successfully tipped 1 $POTATO token to new follower: ", follower.toHexString()
             );
         } catch Error(string memory reason) {
             return abi.encodePacked(

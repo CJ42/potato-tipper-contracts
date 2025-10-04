@@ -1,4 +1,4 @@
-# 🥔🎰 POTATO Tipper contracts
+# 🥔🎰 POTATO Tipper contract
 
 Smart contracts of the POTATO Tipper, a contract that enables you to tip on follow.
 
