@@ -8,14 +8,20 @@ import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
     "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
 import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7DigitalAsset.sol";
 
+// libraries
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+
+// errors
+import {
+    LSP7AmountExceedsAuthorizedAmount,
+    LSP7AmountExceedsBalance
+} from "@lukso/lsp7-contracts/contracts/LSP7Errors.sol";
+
 // constants
 import {OPERATION_0_CALL} from "@erc725/smart-contracts/contracts/constants.sol";
 import {_INTERFACEID_LSP1_DELEGATE} from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP26_FOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
-
-// libraries
-import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 // Address of the $POTATO Token contract deployed on LUKSO Mainnet.
 ILSP7 constant _POTATO_TOKEN = ILSP7(0x80D898C5A3A0B118a0c8C8aDcdBB260FC687F1ce);
@@ -94,7 +100,7 @@ contract PotatoTipper is IERC165 {
 
         // CHECK that the call is a follow notification
         // TODO: really needed? The `universalReceiver` delegate function should already get it
-        // triggered for this?
+        // triggered for this? -> no this might be needed for security reasons
         // Or how about if you register it for the generic LSP1 Delegate?
         // Or doesn't the Follower Registry call it with the specific typeId?
         if (typeId != _TYPEID_LSP26_FOLLOW) return unicode"❌ Not a follow notification";
@@ -108,25 +114,19 @@ contract PotatoTipper is IERC165 {
         bool alreadyTipped = hasReceivedTip({user: msg.sender, follower: follower});
         if (alreadyTipped) return unicode"🙅🏻 Already tipped a potato";
 
-        // This could be fixed by checking if the transfer reverted before marking the user as
-        // tipped.
-        // Or by using a try / catch block to handle the transfer revert.
-
         // TODO: change to a specific amount fetched from a data key
         uint256 tipAmount = 1e18; // 1 $POTATO token (the token has 18 decimals)
 
-        // TODO: do we need these two checks? Seems duplicate with what is inside LSP7.
-        // Or could be moved below inside the try / catch
-        // TODO: compare the gas cost. And the impact of checking this error in the `catch { }`
-        // block (as we would have set the
-        // new follower to tipped). This might be ok as there could be scenarios where the user have
-        // no 🥔 tokens left to tip
-        // or the tipping budget is not enough. Therefore, we cannot deal with new followers in
-        // between as "not tipped"
-        // It might have to be documented.
-
-        // CHECK that the address being followed has enough 🥔 tokens to tip.
-        if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) return unicode"🤷🏻‍♂️ No 🥔 left to tip";
+        // CHECK that the address being followed has enough 🥔 to tip.
+        //
+        // When doing LSP7 transfer as operators, LSP7 logic reverts first with operator allowance error.
+        // Checking user's token balance early improves UX clarity and semantics,
+        // ensuring the user is informed of insufficient balance early.
+        // (= "You first need to have enough 🥔 tokens before allowing the POTATO
+        // Tipper to tip a certain amount of 🥔")
+        if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
+            return unicode"🤷🏻‍♂️ Not enough 🥔 to tip to follower";
+        }
 
         // CHECK if this contract has enough in its tipping budget left to tip
         if (_POTATO_TOKEN.authorizedAmountFor(address(this), msg.sender) < tipAmount) {
@@ -136,7 +136,8 @@ contract PotatoTipper is IERC165 {
         // TODO: there is a bug here
         // if the transfer occured but the transfer reverted, the follower did not receive a tip
         // and the contract will still mark the user as tipped.
-        //
+        // This could be fixed by checking if the transfer reverted before marking the user as tipped.
+        // Or by using a try / catch block to handle the transfer revert.
         _tipped[msg.sender][follower] = true;
 
         // Send the tip amount
@@ -152,12 +153,12 @@ contract PotatoTipper is IERC165 {
             return abi.encodePacked(
                 unicode"✅🍠 Successfully tipped 1 $POTATO token to new follower: ", follower.toHexString()
             );
-        } catch Error(string memory reason) {
-            return abi.encodePacked(
-                unicode"❌🍠 Failed tipping a $POTATO token. `transfer(...)` function reverted with reason: ",
-                reason
-            );
         } catch (bytes memory lowLevelData) {
+            if (bytes4(lowLevelData) == LSP7AmountExceedsAuthorizedAmount.selector) {
+                _tipped[msg.sender][follower] = false;
+                return unicode"❌ Not enough allowance to tip $POTATO tokens";
+            }
+
             return abi.encodePacked(
                 unicode"❌🍠 Failed tipping a $POTATO token. `transfer(...)` function reverted with the following low level data: ",
                 lowLevelData

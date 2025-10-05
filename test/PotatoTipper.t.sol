@@ -231,72 +231,70 @@ contract PotatoTipperTest is NetworkForkTestHelpers, UniversalProfileTestHelpers
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         for (uint256 i = 0; i < logs.length; i++) {
-            if (
-                logs[i].topics[0] == ILSP1UniversalReceiver.UniversalReceiver.selector
-                    && bytes32(logs[i].topics[3]) == _TYPEID_LSP26_FOLLOW
-            ) {
-                // event UniversalReceiver(
-                //     address indexed from,
-                //     uint256 indexed value,
-                //     bytes32 indexed typeId,
-                //     bytes receivedData,
-                //     bytes returnedValue
-                // );
-                console.log("Found UniversalReceiver event related to a typeId new follow at index:", i);
+            if (logs[i].topics[0] != ILSP1UniversalReceiver.UniversalReceiver.selector) continue;
+            if (bytes32(logs[i].topics[3]) != _TYPEID_LSP26_FOLLOW) continue;
 
-                // receivedData + returnedValue
-                // ------------------------------------------------------------------
-                // 0x0000000000000000000000000000000000000000000000000000000000000040 <------------
-                //.  0000000000000000000000000000000000000000000000000000000000000080 receivedData
-                //.  0000000000000000000000000000000000000000000000000000000000000014 .............
-                //.  bbe88a2f48eaa2ef04411e356d193ba3c1b37200000000000000000000000000 <------------
-                //.  0000000000000000000000000000000000000000000000000000000000000100 returnedValue
-                //.  0000000000000000000000000000000000000000000000000000000000000040 .............
-                //.  0000000000000000000000000000000000000000000000000000000000000080 .............
-                //.  0000000000000000000000000000000000000000000000000000000000000019 .............
-                //.  4c5350313a20747970654964206f7574206f662073636f706500000000000000 .............
-                //.  0000000000000000000000000000000000000000000000000000000000000050 .............
-                //.  e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
+            // event UniversalReceiver(
+            //     address indexed from,
+            //     uint256 indexed value,
+            //     bytes32 indexed typeId,
+            //     bytes receivedData,
+            //     bytes returnedValue
+            // );
+            console.log("Found UniversalReceiver event related to a typeId new follow at index:", i);
 
-                // 1. do abi.decode(data, (bytes,bytes))
-                (bytes memory receivedNotificationData, bytes memory allReturnedLSP1DelegateValues) =
-                    abi.decode((logs[i].data), (bytes, bytes));
+            // receivedData + returnedValue
+            // ------------------------------------------------------------------
+            // 0x0000000000000000000000000000000000000000000000000000000000000040 <------------
+            //.  0000000000000000000000000000000000000000000000000000000000000080 receivedData
+            //.  0000000000000000000000000000000000000000000000000000000000000014 .............
+            //.  bbe88a2f48eaa2ef04411e356d193ba3c1b37200000000000000000000000000 <------------
+            //.  0000000000000000000000000000000000000000000000000000000000000100 returnedValue
+            //.  0000000000000000000000000000000000000000000000000000000000000040 .............
+            //.  0000000000000000000000000000000000000000000000000000000000000080 .............
+            //.  0000000000000000000000000000000000000000000000000000000000000019 .............
+            //.  4c5350313a20747970654964206f7574206f662073636f706500000000000000 .............
+            //.  0000000000000000000000000000000000000000000000000000000000000050 .............
+            //.  e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
 
-                // CHECK LSP26 Follower registry sent the correct follower address as notification
-                // data
-                assertEq(receivedNotificationData, abi.encodePacked(follower));
+            // 1. do abi.decode(data, (bytes,bytes))
+            (bytes memory receivedNotificationData, bytes memory allReturnedLSP1DelegateValues) =
+                abi.decode((logs[i].data), (bytes, bytes));
 
-                assertEq(
-                    allReturnedLSP1DelegateValues,
-                    abi.encode(
-                        "LSP1: typeId out of scope",
-                        unicode"✅🍠 Successfully tipped 1 $POTATO token to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
-                    )
-                );
+            // CHECK LSP26 Follower registry sent the correct follower address as notification
+            // data
+            assertEq(receivedNotificationData, abi.encodePacked(follower));
 
-                // 0x0000000000000000000000000000000000000000000000000000000000000040
-                //.  0000000000000000000000000000000000000000000000000000000000000080
-                //.  0000000000000000000000000000000000000000000000000000000000000019 -> 25 bytes
-                //.  4c5350313a20747970654964206f7574206f662073636f706500000000000000
-                //.  0000000000000000000000000000000000000000000000000000000000000050 -> 80 bytes
-                //.  e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
-
-                // -> utf8("LSP1: typeId out of scope") = 25 bytes
-
-                // -> ✅🍠 Successfully tipped 1 $POTATO token to new follower. (60 bytes characters)
-                // -> e29c85 = utf8("✅") = 3 bytes
-                // -> f09f8da0 = utf8("🍠") = 4 bytes
-                // -> rest of the message = 53 bytes
-                // -> follower address (abi packed encoded) = 20 bytes
-                (bytes memory returnedDataDefaultLSP1Delegate, bytes memory returnedDataPotatoTipper) =
-                    abi.decode(allReturnedLSP1DelegateValues, (bytes, bytes));
-
-                assertEq(string(returnedDataDefaultLSP1Delegate), "LSP1: typeId out of scope");
-                assertEq(
-                    string(returnedDataPotatoTipper),
+            assertEq(
+                allReturnedLSP1DelegateValues,
+                abi.encode(
+                    "LSP1: typeId out of scope",
                     unicode"✅🍠 Successfully tipped 1 $POTATO token to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
-                );
-            }
+                )
+            );
+
+            // 0x0000000000000000000000000000000000000000000000000000000000000040
+            //.  0000000000000000000000000000000000000000000000000000000000000080
+            //.  0000000000000000000000000000000000000000000000000000000000000019 -> 25 bytes
+            //.  4c5350313a20747970654964206f7574206f662073636f706500000000000000
+            //.  0000000000000000000000000000000000000000000000000000000000000050 -> 80 bytes
+            //.  e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
+
+            // -> utf8("LSP1: typeId out of scope") = 25 bytes
+
+            // -> ✅🍠 Successfully tipped 1 $POTATO token to new follower. (60 bytes characters)
+            // -> e29c85 = utf8("✅") = 3 bytes
+            // -> f09f8da0 = utf8("🍠") = 4 bytes
+            // -> rest of the message = 53 bytes
+            // -> follower address (abi packed encoded) = 20 bytes
+            (bytes memory returnedDataDefaultLSP1Delegate, bytes memory returnedDataPotatoTipper) =
+                abi.decode(allReturnedLSP1DelegateValues, (bytes, bytes));
+
+            assertEq(string(returnedDataDefaultLSP1Delegate), "LSP1: typeId out of scope");
+            assertEq(
+                string(returnedDataPotatoTipper),
+                unicode"✅🍠 Successfully tipped 1 $POTATO token to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+            );
         }
 
         // CHECK that follower has received a tip (POTATO balance has increased by the tip amount)
