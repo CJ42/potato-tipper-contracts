@@ -3,10 +3,10 @@ pragma solidity ^0.8.28;
 
 // interfaces
 import {IERC725X} from "@erc725/smart-contracts/contracts/interfaces/IERC725X.sol";
+import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
     "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
-import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7DigitalAsset.sol";
 
 // libraries
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
@@ -22,12 +22,7 @@ import {
 import {OPERATION_0_CALL} from "@erc725/smart-contracts/contracts/constants.sol";
 import {_INTERFACEID_LSP1_DELEGATE} from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP26_FOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
-
-// Address of the $POTATO Token contract deployed on LUKSO Mainnet.
-ILSP7 constant _POTATO_TOKEN = ILSP7(0x80D898C5A3A0B118a0c8C8aDcdBB260FC687F1ce);
-
-// Address of the Follower Registry deployed on LUKSO Mainnet based on the LSP26 standard.
-address constant _FOLLOWER_REGISTRY = 0xf01103E5a9909Fc0DBe8166dA7085e0285daDDcA;
+import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
 
 //       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░                          ░░░░░░░░░░░░░░
 //         ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██████████████████████░░                      ░░░░░░░░░░
@@ -82,12 +77,20 @@ contract PotatoTipper is IERC165 {
 
     mapping(address user => mapping(address follower => bool tipped)) internal _tipped;
 
+    mapping(address user => mapping(address follower => bool isInitialFollower)) internal _hasEverFollower;
+
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         return interfaceId == _INTERFACEID_LSP1_DELEGATE || interfaceId == type(IERC165).interfaceId;
     }
 
     function hasReceivedTip(address user, address follower) public view returns (bool) {
         return _tipped[user][follower];
+    }
+
+    function setInitialFollowerList(address[] memory initialFollowers) public {
+        for (uint256 i = 0; i < initialFollowers.length; i++) {
+            _hasEverFollower[msg.sender][initialFollowers[i]] = true;
+        }
     }
 
     function universalReceiverDelegate(address sender, uint256, /* value */ bytes32 typeId, bytes memory data)
@@ -105,8 +108,7 @@ contract PotatoTipper is IERC165 {
         // Or doesn't the Follower Registry call it with the specific typeId?
         if (typeId != _TYPEID_LSP26_FOLLOW) return unicode"❌ Not a follow notification";
 
-        // The Follower Registry (LSP26) notify the address being followed by including
-        // the follower address in the data parameter (packed encoded)
+        // Retrieve the follower address from the notification data sent by the LSP26 Follower Registry
         address follower = address(bytes20(data));
 
         // Do not tip users that are trying to get tips by unfollowing and re-following.
@@ -114,8 +116,10 @@ contract PotatoTipper is IERC165 {
         bool alreadyTipped = hasReceivedTip({user: msg.sender, follower: follower});
         if (alreadyTipped) return unicode"🙅🏻 Already tipped a potato";
 
-        // TODO: change to a specific amount fetched from a data key
-        uint256 tipAmount = 1e18; // 1 $POTATO token (the token has 18 decimals)
+        // Fetch tip amount set as config in user's UP metadata
+        bytes memory tipAmountDataValue = IERC725Y(msg.sender).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY);
+        if (tipAmountDataValue.length != 32) return unicode"❌ Invalid tip amount. Must be encoded as uint256";
+        uint256 tipAmount = uint256(bytes32(tipAmountDataValue));
 
         // CHECK that the address being followed has enough 🥔 to tip.
         //
@@ -125,7 +129,7 @@ contract PotatoTipper is IERC165 {
         // (= "You first need to have enough 🥔 tokens before allowing the POTATO
         // Tipper to tip a certain amount of 🥔")
         if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
-            return unicode"🤷🏻‍♂️ Not enough 🥔 to tip to follower";
+            return unicode"🤷🏻‍♂️ Not enough 🥔 to tip the follower";
         }
 
         // CHECK if this contract has enough in its tipping budget left to tip
@@ -159,10 +163,9 @@ contract PotatoTipper is IERC165 {
                 return unicode"❌ Not enough allowance to tip $POTATO tokens";
             }
 
-            return abi.encodePacked(
-                unicode"❌🍠 Failed tipping a $POTATO token. `transfer(...)` function reverted with the following low level data: ",
-                lowLevelData
-            );
+            // TODO: add returned low level data to the returned message
+            return
+            unicode"❌🍠 Failed tipping a $POTATO token. `transfer(...)` function reverted with the following low level data: ";
         }
     }
 }

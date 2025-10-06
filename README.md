@@ -74,6 +74,30 @@ $ anvil
 ```
 -->
 
+### Test
+
+Useful options
+
+```
+--gas-report
+```
+
+### Gas report
+
+```log
+[PASS] test_FollowerDoesNotAlreadyFollowUser() (gas: 15200)
+[PASS] test_FollowerFollowUser() (gas: 182328)
+[PASS] test_IsLSP1Delegate() (gas: 8391)
+[PASS] test_PotatoTipperIsRegisteredForNotificationTypeNewFollower() (gas: 17195)
+[PASS] test_cannotTipTwiceTheSameNewFollowerIfFollowedUnfollowAndRefollow() (gas: 676043)
+Logs:
+  Found UniversalReceiver event related to a typeId new follow at index: 5
+
+[PASS] test_followerCanReceiveTipsFromTwoDifferentUsersWhoConnectedPotatoTipper() (gas: 855803)
+[PASS] test_shouldNotTipIfPotatoTipperHasNotBeenAuthorizedAsOperator() (gas: 205597)
+[PASS] test_tippingOnFollowAfterAuthorizingPotatoTipperAsOperator() (gas: 438184)
+```
+
 ### Deploy + verify contracts
 
 The folder `script/` provide a script to deploy contracts.
