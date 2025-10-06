@@ -664,11 +664,11 @@ contract PotatoTipperTest is NetworkForkTestHelpers, UniversalProfileTestHelpers
         vm.recordLogs();
 
         vm.prank(caller);
-        user.universalReceiver(_TYPEID_LSP26_FOLLOW, abi.encodePacked(address(existingFollower)));
+        user.universalReceiver(_TYPEID_LSP26_FOLLOW, abi.encodePacked(address(caller)));
 
         // CHECK that follower did NOT receive a tip (tipping was not triggered)
         assertFalse(potatoTipper.hasReceivedTip(address(user), address(follower)));
-        assertEq(potatoToken.balanceOf(address(existingFollower)), callerPotatoBalanceBefore);
+        assertEq(potatoToken.balanceOf(address(caller)), callerPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
         // - user's $POTATO balance has NOT changed
@@ -679,7 +679,7 @@ contract PotatoTipperTest is NetworkForkTestHelpers, UniversalProfileTestHelpers
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _testCorrectDataReturnedAndEmittedInUniversalReceiverEvent(
-            logs, address(existingFollower), unicode"❌ Not triggered by the Follower Registry"
+            logs, address(caller), unicode"❌ Not triggered by the Follower Registry"
         );
     }
 

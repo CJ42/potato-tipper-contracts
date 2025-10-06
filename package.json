@@ -29,12 +29,14 @@
   "scripts": {
     "build": "forge build",
     "test": "forge test --fork-url https://rpc.mainnet.lukso.network",
+    "test:coverage": "forge coverage --fork-url https://rpc.mainnet.lukso.network",
     "format": "forge fmt"
   },
   "devDependencies": {
+    "@remix-project/remixd": "^0.6.40",
     "@types/bun": "latest",
     "dotenv": "^16.4.5",
-    "@remix-project/remixd": "^0.6.40"
+    "lcov-summary": "^1.0.1"
   },
   "dependencies": {
     "@lukso/lsp-smart-contracts": "latest"

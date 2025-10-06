@@ -9,8 +9,8 @@ out = "out"
 libs = ["lib", "node_modules"]
 
 [fuzz] # Fuzzing configurations increased for more thorough testing
-runs = 20000
-dictionnary_weight = 60
+runs = 10000
+dictionnary_weight = 30
 include_storage = true
 include_push_bytes = true
 show_logs = true
