@@ -83,7 +83,7 @@ contract PotatoTipper is IERC165 {
         return interfaceId == _INTERFACEID_LSP1_DELEGATE || interfaceId == type(IERC165).interfaceId;
     }
 
-    function hasReceivedTip(address user, address follower) public view returns (bool) {
+    function hasReceivedTip(address follower, address user) public view returns (bool) {
         return _tipped[user][follower];
     }
 
@@ -113,7 +113,7 @@ contract PotatoTipper is IERC165 {
 
         // Do not tip users that are trying to get tips by unfollowing and re-following.
         // Prevent 🥔 🚜 (farming), or drainer user's 🥔
-        bool alreadyTipped = hasReceivedTip({user: msg.sender, follower: follower});
+        bool alreadyTipped = hasReceivedTip({follower: follower, user: msg.sender});
         if (alreadyTipped) return unicode"🙅🏻 Already tipped a potato";
 
         // Fetch tip amount set as config in user's UP metadata
