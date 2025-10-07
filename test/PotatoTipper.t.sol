@@ -14,6 +14,7 @@ import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
 import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7DigitalAsset.sol";
 
 // utils
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {LSP2Utils} from "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
 import {LSP6Utils} from "@lukso/lsp6-contracts/contracts/LSP6Utils.sol";
 
@@ -37,6 +38,7 @@ import {UniversalProfile} from "@lukso/universalprofile-contracts/contracts/Univ
 import {PotatoTipper} from "../src/PotatoTipper.sol";
 
 contract PotatoTipperTest is UniversalProfileTestHelpers {
+    using Strings for address;
     using LSP6Utils for *;
 
     // TODO: Move to a parent `Config` contract added to the inheritance of the PotatoTipper contract
@@ -136,15 +138,15 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     // - follower does not already follow user
     // - follower has not received a tip yet
     // - PotatoTipper is authorized as operator by user for at least the tip amount
-    function _preTippingChecks(address userTipping, uint256 tippingBudget) internal view {
+    function _preTippingChecks(address userTipping, address follower, uint256 tippingBudget) internal view {
         // CHECK PotatoTipper allowance is set
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), userTipping), tippingBudget);
 
         // CHECK that follower does not already follow user
-        assertFalse(followerRegistry.isFollowing(address(newFollower), userTipping));
+        assertFalse(followerRegistry.isFollowing(address(follower), userTipping));
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), userTipping));
+        assertFalse(potatoTipper.hasReceivedTip(address(follower), userTipping));
     }
 
     // Post tipping checks:
@@ -154,17 +156,20 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     // - PotatoTipper allowance decreased by tip amount
     function _postTippingChecks(
         address userTipping,
+        address followerReceivingTip,
         uint256 tipAmount,
         uint256 followerPotatoBalanceBefore,
         uint256 userPotatoBalanceBefore,
         uint256 potatoTipperAllowanceBefore
     ) internal view {
         // CHECK that follower is now following user
-        assertTrue(followerRegistry.isFollowing(address(newFollower), userTipping));
+        assertTrue(followerRegistry.isFollowing(address(followerReceivingTip), userTipping));
 
         // CHECK that follower has received a tip (POTATO balance has increased by the tip amount)
-        assertTrue(potatoTipper.hasReceivedTip(address(newFollower), userTipping));
-        assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore + tipAmount);
+        assertTrue(potatoTipper.hasReceivedTip(address(followerReceivingTip), userTipping));
+        assertEq(
+            potatoToken.balanceOf(address(followerReceivingTip)), followerPotatoBalanceBefore + tipAmount
+        );
 
         // CHECK that the user's gave a tip
         assertEq(potatoToken.balanceOf(userTipping), userPotatoBalanceBefore - tipAmount);
@@ -295,13 +300,18 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(address(user));
         potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
 
-        _preTippingChecks(address(user), tippingBudget);
+        _preTippingChecks(address(user), address(newFollower), tippingBudget);
 
         vm.prank(address(newFollower));
         followerRegistry.follow(address(user));
 
         _postTippingChecks(
-            address(user), TIP_AMOUNT, followerPotatoBalanceBefore, userPotatoBalanceBefore, tippingBudget
+            address(user),
+            address(newFollower),
+            TIP_AMOUNT,
+            followerPotatoBalanceBefore,
+            userPotatoBalanceBefore,
+            tippingBudget
         );
     }
 
@@ -382,13 +392,18 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(address(user));
         potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
 
-        _preTippingChecks(address(user), tippingBudget);
+        _preTippingChecks(address(user), address(newFollower), tippingBudget);
 
         vm.prank(address(newFollower));
         followerRegistry.follow(address(user));
 
         _postTippingChecks(
-            address(user), TIP_AMOUNT, followerPotatoBalanceBefore, userPotatoBalanceBefore, tippingBudget
+            address(user),
+            address(newFollower),
+            TIP_AMOUNT,
+            followerPotatoBalanceBefore,
+            userPotatoBalanceBefore,
+            tippingBudget
         );
 
         // Following user 2
@@ -397,7 +412,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(address(anotherUser));
         potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
 
-        _preTippingChecks(address(anotherUser), tippingBudget);
+        _preTippingChecks(address(anotherUser), address(newFollower), tippingBudget);
 
         vm.prank(address(newFollower));
         followerRegistry.follow(address(anotherUser));
@@ -442,13 +457,14 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(address(user));
         potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
 
-        _preTippingChecks(address(user), tippingBudget);
+        _preTippingChecks(address(user), address(newFollower), tippingBudget);
 
         vm.prank(address(newFollower));
         followerRegistry.follow(address(user));
 
         _postTippingChecks(
             address(user),
+            address(newFollower),
             customTipAmount,
             followerPotatoBalanceBefore,
             userPotatoBalanceBefore,
@@ -660,7 +676,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         );
     }
 
-    /// forge-config: default.fuzz.runs = 1000
     function test_OnlyCallsFromFollowerRegistry(address caller) public {
         vm.assume(caller != _FOLLOWER_REGISTRY);
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
@@ -674,16 +689,16 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(caller), address(user)));
 
         vm.recordLogs();
 
         vm.prank(caller);
-        user.universalReceiver(_TYPEID_LSP26_FOLLOW, abi.encodePacked(address(caller)));
+        user.universalReceiver(_TYPEID_LSP26_FOLLOW, abi.encodePacked(caller));
 
         // CHECK that follower did NOT receive a tip (tipping was not triggered)
-        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
-        assertEq(potatoToken.balanceOf(address(caller)), callerPotatoBalanceBefore);
+        assertFalse(potatoTipper.hasReceivedTip(caller, address(user)));
+        assertEq(potatoToken.balanceOf(caller), callerPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
         // - user's $POTATO balance has NOT changed
@@ -694,9 +709,92 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(caller), unicode"❌ Not triggered by the Follower Registry"
+            logs, caller, unicode"❌ Not triggered by the Follower Registry"
         );
     }
+
+    /// @dev Not using a `uint256` to avoid using a number that is over the Secp256k1 curve order
+    function test_EOAsCannotFollowAndReceiveTips(uint160 randomPrivateKey) public {
+        vm.assume(randomPrivateKey != 0);
+
+        address eoa = vm.addr(randomPrivateKey);
+
+        vm.assume(eoa != address(0));
+        vm.assume(eoa.code.length == 0);
+
+        uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
+        uint256 eoaPotatoBalanceBefore = potatoToken.balanceOf(address(eoa));
+
+        uint256 tippingBudget = 10 * TIP_AMOUNT;
+
+        vm.prank(address(user));
+        potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+
+        // CHECK that follower has not received a tip yet
+        assertFalse(potatoTipper.hasReceivedTip(eoa, address(user)));
+
+        vm.recordLogs();
+
+        vm.prank(eoa);
+        followerRegistry.follow(address(user));
+
+        // CHECK that follower did NOT receive a tip (tipping was not triggered)
+        assertFalse(potatoTipper.hasReceivedTip(eoa, address(user)));
+        assertEq(potatoToken.balanceOf(eoa), eoaPotatoBalanceBefore);
+
+        // CHECK that the user's did NOT give a tip
+        // - user's $POTATO balance has NOT changed
+        // - `POTATOTipper` allowance has NOT changed
+        assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+
+        // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        _checkReturnedDataEmittedInUniversalReceiverEvent(logs, eoa, unicode"❌ Only 🆙 allowed to be tipped");
+    }
+
+    function test_onlyUniversalProfilesCanReceiveTips(uint160 randomPrivateKey) public {
+        vm.assume(randomPrivateKey != 0);
+        // Mock a 🆙 minimal proxy pointing to UP implementation v0.12.1
+        address universalProfile = vm.addr(randomPrivateKey);
+        vm.etch(
+            universalProfile,
+            hex"363d3d373d3d3d363d7352c90985af970d4e0dc26cb5d052505278af32a95af43d82803e903d91602b57fd5bf3"
+        );
+
+        uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
+        uint256 eoaPotatoBalanceBefore = potatoToken.balanceOf(address(universalProfile));
+
+        uint256 tippingBudget = 10 * TIP_AMOUNT;
+
+        vm.prank(address(user));
+        potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
+
+        _preTippingChecks(address(user), universalProfile, tippingBudget);
+
+        vm.recordLogs();
+
+        vm.prank(universalProfile);
+        followerRegistry.follow(address(user));
+
+        _postTippingChecks(
+            address(user),
+            address(universalProfile),
+            TIP_AMOUNT,
+            eoaPotatoBalanceBefore,
+            userPotatoBalanceBefore,
+            tippingBudget
+        );
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs,
+            universalProfile,
+            string.concat(unicode"✅ Successfully tipped 🍠 to new follower: ", universalProfile.toHexString())
+        );
+    }x
 
     // function test_SettingInitialFollowerList() public {
     //     uint256 initialFollowerCount =

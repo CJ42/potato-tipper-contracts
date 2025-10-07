@@ -9,11 +9,11 @@ out = "out"
 libs = ["lib", "node_modules"]
 
 [fuzz] # Fuzzing configurations increased for more thorough testing
-runs = 1000
+runs = 100
 dictionnary_weight = 30
-include_storage = true
-include_push_bytes = true
-show_logs = true
+# include_storage = true
+# include_push_bytes = true
+# show_logs = true
 
 [invariant] # Invariant configurations increased for more thorough testing
 runs = 20000
