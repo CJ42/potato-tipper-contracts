@@ -351,7 +351,7 @@ contract PotatoTipperTest is NetworkForkTestHelpers, UniversalProfileTestHelpers
 
         // CHECK that the user's gave a tip
         // - $POTATO balance has decreased by tip amount)
-        // - `POTATOTipper` allowance decreased by tip amount
+        // - POTATOTipper allowance decreased by tip amount
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore - TIP_AMOUNT);
         assertEq(
             potatoToken.authorizedAmountFor(address(potatoTipper), address(user)),
@@ -363,7 +363,7 @@ contract PotatoTipperTest is NetworkForkTestHelpers, UniversalProfileTestHelpers
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(follower),
-            unicode"✅🍠 Successfully tipped 1 $POTATO token to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+            unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
         );
 
         // Test unfollow and re-follow does not trigger a new tip

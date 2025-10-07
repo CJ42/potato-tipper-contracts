@@ -20,6 +20,7 @@ import {
 
 // constants
 import {OPERATION_0_CALL} from "@erc725/smart-contracts/contracts/constants.sol";
+import {_INTERFACEID_LSP0} from "@lukso/lsp0-contracts/contracts/LSP0Constants.sol";
 import {_INTERFACEID_LSP1_DELEGATE} from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP26_FOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
@@ -72,8 +73,8 @@ import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} fr
  * The contract does not guarantee to be bug free. Use at your own risk.
  */
 contract PotatoTipper is IERC165 {
+    using ERC165Checker for address;
     using Strings for address;
-    // TODO: add using for ERC165Checker for address; + check interface ID LSP0
 
     mapping(address user => mapping(address follower => bool tipped)) internal _tipped;
 
@@ -101,27 +102,28 @@ contract PotatoTipper is IERC165 {
         // TODO: test if msg.sender is a not the user UP, do not make assumptions
         if (sender != _FOLLOWER_REGISTRY) return unicode"❌ Not triggered by the Follower Registry";
 
-        // CHECK that the call is a follow notification
-        // TODO: really needed? The `universalReceiver` delegate function should already get it
-        // triggered for this? -> no this might be needed for security reasons
-        // Or how about if you register it for the generic LSP1 Delegate?
-        // Or doesn't the Follower Registry call it with the specific typeId?
+        // CHECK notification type ID and only run if we are being notified about a "new follower"
         if (typeId != _TYPEID_LSP26_FOLLOW) return unicode"❌ Not a follow notification";
 
         // Retrieve the follower address from the notification data sent by the LSP26 Follower Registry
         address follower = address(bytes20(data));
 
-        // Do not tip users that are trying to get tips by unfollowing and re-following.
-        // Prevent 🥔 🚜 (farming), or drainer user's 🥔
+        // Only 🆙✅ allowed to receive tips, 🔑❌ not EOAs
+        if (!follower.supportsInterface(_INTERFACEID_LSP0)) return unicode"❌ Only 🆙 allowed to be tipped";
+
+        // CHECK user has not already followed and received a tip previously
+        // (prevent recursive follow -> unfollow -> re-follow 🥔 🚜)
         bool alreadyTipped = hasReceivedTip({follower: follower, user: msg.sender});
         if (alreadyTipped) return unicode"🙅🏻 Already tipped a potato";
 
         // Fetch tip amount set as config in user's UP metadata
         bytes memory tipAmountDataValue = IERC725Y(msg.sender).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY);
+
+        // CHECK tip amount is correctly encoded in wei (18 decimals)
         if (tipAmountDataValue.length != 32) return unicode"❌ Invalid tip amount. Must be encoded as uint256";
         uint256 tipAmount = uint256(bytes32(tipAmountDataValue));
 
-        // CHECK that the address being followed has enough 🥔 to tip.
+        // CHECK the address being followed has enough 🥔 to tip.
         //
         // When doing LSP7 transfer as operators, LSP7 logic reverts first with operator allowance error.
         // Checking user's token balance early improves UX clarity and semantics,
@@ -144,28 +146,39 @@ contract PotatoTipper is IERC165 {
         // Or by using a try / catch block to handle the transfer revert.
         _tipped[msg.sender][follower] = true;
 
-        // Send the tip amount
-        try _POTATO_TOKEN.transfer(
-            msg.sender, // the UP that was followed
-            follower, // the UP that is following
-            tipAmount, // amount (= 1 POTATO token, the token has 18 decimals)
-            // TODO: this should be set to `false` to prevent farming
-            true, // force transfer (allow to send POTATO to EOAs)
-            unicode"🥔 Thanks for following. I tipped you a potato!" // data
-        ) {
-            // TODO: refactor to use abi.encode for easier encoding / decoding on the UI side
-            return abi.encodePacked(
-                unicode"✅🍠 Successfully tipped 1 $POTATO token to new follower: ", follower.toHexString()
-            );
+        // Transfer 🥔 $POTATO 🥔 tokens as tip to the new follower
+        try _POTATO_TOKEN.transfer({
+            // 🆙 that was ⬅️ followed
+            from: msg.sender,
+            // 🆙 that is following ➡️
+            to: follower,
+            // amount of 🥔🥔🥔 to tip
+            amount: tipAmount,
+            // Default to false, but we already checked if follower is a 🆙, so we know it supports LSP1
+            force: false,
+            // message data to give context to the LSP7 token transfer
+            data: unicode"Thanks for following! Tipping you some 🥔"
+        }) {
+            // TODO: refactor to use abi.encode for easier encoding / decoding of the returned data
+            // on the UI side to display notifications
+            return
+                abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory lowLevelData) {
+            // Handle revert call gracefuly and return:
+            // 1. a descriptive error message
+            // 2. any custom error data (or revert reason string)
+            // So a dApp can decode and display it in the UI.
             if (bytes4(lowLevelData) == LSP7AmountExceedsAuthorizedAmount.selector) {
                 _tipped[msg.sender][follower] = false;
+                // TODO: add error data to be able to decode custom error params in the UI
                 return unicode"❌ Not enough allowance to tip $POTATO tokens";
             }
 
-            // TODO: add returned low level data to the returned message
-            return
-            unicode"❌🍠 Failed tipping a $POTATO token. `transfer(...)` function reverted with the following low level data: ";
+            // Fallback to a generic error message (still including error data for debugging purposes)
+            return abi.encodePacked(
+                unicode"❌🍠 Failed tipping 🥔. `transfer(...)` function reverted with following error data: ",
+                lowLevelData
+            );
         }
     }
 }
