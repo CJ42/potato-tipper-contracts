@@ -7,6 +7,7 @@ verbosity = 3
 src = "src"
 out = "out"
 libs = ["lib", "node_modules"]
+fs_permissions = [{ access = "read", path = "./script/data" }]
 
 [fuzz] # Fuzzing configurations increased for more thorough testing
 runs = 100
