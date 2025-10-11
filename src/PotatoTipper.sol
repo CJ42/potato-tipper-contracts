@@ -7,15 +7,12 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
     "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
 
+// modules
+import {LSP26FollowerSystem} from "@lukso/lsp26-contracts/contracts/LSP26FollowerSystem.sol";
+
 // libraries
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-
-// errors
-import {
-    LSP7AmountExceedsAuthorizedAmount,
-    LSP7AmountExceedsBalance
-} from "@lukso/lsp7-contracts/contracts/LSP7Errors.sol";
 
 // constants
 import {_INTERFACEID_LSP0} from "@lukso/lsp0-contracts/contracts/LSP0Constants.sol";
@@ -24,6 +21,12 @@ import {
     _TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW
 } from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
+
+// errors (to bubble up when tipping fails)
+import {
+    LSP7AmountExceedsAuthorizedAmount,
+    LSP7AmountExceedsBalance
+} from "@lukso/lsp7-contracts/contracts/LSP7Errors.sol";
 
 //       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░                          ░░░░░░░░░░░░░░
 //         ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██████████████████████░░                      ░░░░░░░░░░
@@ -121,7 +124,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         // CHECK that this call came from the Follower Registry
         if (sender != _FOLLOWER_REGISTRY) return unicode"❌ Not triggered by the Follower Registry";
 
-        // Retrieve the follower address from the notification data sent by the LSP26 Follower Registry
+        // Retrieve follower address from the notification data sent by the LSP26 Follower Registry
         address follower = address(bytes20(data));
 
         // Only 🆙✅ allowed to receive tips, 🔑❌ not EOAs
@@ -129,7 +132,6 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
         // CHECK notification type ID and only run if we are being notified about follow / unfollow actions
         if (typeId == _TYPEID_LSP26_FOLLOW) return _onFollow(follower);
-
         if (typeId == _TYPEID_LSP26_UNFOLLOW) return _onUnfollow(follower);
 
         return unicode"❌ Not a follow or unfollow notification";
@@ -139,6 +141,11 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// ------------------
 
     function _onFollow(address follower) internal returns (bytes memory message) {
+        bool isFollowing = LSP26FollowerSystem(_FOLLOWER_REGISTRY).isFollowing(follower, msg.sender);
+
+        // CHECK to ensure this came from a legitimate notification callback from the LSP26 Registry
+        if (!isFollowing) return unicode"❌ Not a legitimate follow";
+
         // Record when we see a new follower AFTER the PotatoTipper was connected to user's 🆙
         if (!_hasFollowedSinceDelegate[msg.sender][follower]) {
             _hasFollowedSinceDelegate[msg.sender][follower] = true;
@@ -151,7 +158,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         // (prevent recursive follow -> unfollow -> re-follow 🥔 🚜)
         if (_tipped[msg.sender][follower]) return unicode"🙅🏻 Already tipped a potato";
 
-        // Check this is not an initial follower that was following us
+        // Check this is not an existing follower that unfollowed and tried to re-follow
         if (_wasFollowing[msg.sender][follower]) {
             return unicode"🙅🏻 Follower followed before. Not eligible for a tip";
         }
@@ -170,6 +177,11 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     }
 
     function _onUnfollow(address address_) internal returns (bytes memory) {
+        bool isFollowing = LSP26FollowerSystem(_FOLLOWER_REGISTRY).isFollowing(address_, msg.sender);
+
+        // CHECK to ensure this came from a legitimate notification callback from the LSP26 Registry
+        if (isFollowing) return unicode"❌ Not a legitimate unfollow";
+
         // Don't do anything if follower already received a tip (legitimate unfollow APT)
         if (_tipped[msg.sender][address_]) return "";
 
@@ -209,30 +221,30 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             // on the UI side to display notifications
             return
                 abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
-        } catch (bytes memory lowLevelData) {
+        } catch (bytes memory errorData) {
             // Revert state changes. This allows re-trying to tip this follower again later
             _tipped[msg.sender][follower] = false;
 
             // Handle revert call gracefuly and return:
             // 1. a descriptive error message
             // 2. any custom error data (or revert reason string)
-            // So a dApp can decode and display it in the UI.
+            // So a dApp can decode the `returnedValues` from the `UniversalReceiver` event + display in UI.
 
             // CHECK the address being followed has enough 🥔 to tip.
-            if (bytes4(lowLevelData) == LSP7AmountExceedsBalance.selector) {
+            if (bytes4(errorData) == LSP7AmountExceedsBalance.selector) {
                 return unicode"🤷🏻‍♂️ Not enough 🥔 to tip follower";
             }
 
             // CHECK if the Potato Tipper contract has enough left in its tipping budget
-            if (bytes4(lowLevelData) == LSP7AmountExceedsAuthorizedAmount.selector) {
+            if (bytes4(errorData) == LSP7AmountExceedsAuthorizedAmount.selector) {
                 // TODO: add error data to be able to decode custom error params in the UI
-                return unicode"❌ Not enough left in tipping budget";
+                return unicode"❌ Not enough 🥔 left in tipping budget";
             }
 
-            // Fallback to a generic error message (still including error data for debugging purposes)
+            // Fallback to a generic error message (including error data for debugging purposes)
             return abi.encodePacked(
-                unicode"❌🍠 Failed tipping 🥔. `transfer(...)` function reverted with following error data: ",
-                lowLevelData
+                unicode"❌ Failed tipping 🥔. LSP7 transfer reverted with following error data: ",
+                errorData
             );
         }
     }
