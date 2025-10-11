@@ -2,7 +2,6 @@
 pragma solidity ^0.8.28;
 
 // interfaces
-import {IERC725X} from "@erc725/smart-contracts/contracts/interfaces/IERC725X.sol";
 import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
@@ -19,7 +18,6 @@ import {
 } from "@lukso/lsp7-contracts/contracts/LSP7Errors.sol";
 
 // constants
-import {OPERATION_0_CALL} from "@erc725/smart-contracts/contracts/constants.sol";
 import {_INTERFACEID_LSP0} from "@lukso/lsp0-contracts/contracts/LSP0Constants.sol";
 import {_INTERFACEID_LSP1_DELEGATE} from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {
@@ -192,22 +190,6 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     }
 
     function _sendTip(address follower, uint256 tipAmount) internal returns (bytes memory) {
-        // CHECK the address being followed has enough 🥔 to tip.
-        //
-        // When doing LSP7 transfer as operators, LSP7 reverts first with operator allowance error.
-        // Checking user's token balance early improves UX, to inform user of insufficient balance first
-        // (= "You first need to have enough 🥔 before being able to use the POTATO Tipper to tip")
-        if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
-            return unicode"🤷🏻‍♂️ Not enough 🥔 to tip the follower";
-        }
-
-        // TODO: there is a bug here
-        // if the transfer occured but the transfer reverted, the follower did not receive a tip
-        // and the contract will still mark the user as tipped.
-        // This could be fixed by checking if the transfer reverted before marking the user as tipped.
-        // Or by using a try / catch block to handle the transfer revert.
-
-        // Mark user as tipped first before making the transfer
         _tipped[msg.sender][follower] = true;
 
         // Transfer 🥔 $POTATO 🥔 tokens as tip to the new follower
@@ -228,7 +210,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             return
                 abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory lowLevelData) {
-            // Reset state to allow re-trying to tip this follower again later
+            // Revert state changes. This allows re-trying to tip this follower again later
             _tipped[msg.sender][follower] = false;
 
             // Handle revert call gracefuly and return:
@@ -236,10 +218,15 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             // 2. any custom error data (or revert reason string)
             // So a dApp can decode and display it in the UI.
 
-            // CHECK if this contract has enough in its tipping budget left to tip
+            // CHECK the address being followed has enough 🥔 to tip.
+            if (bytes4(lowLevelData) == LSP7AmountExceedsBalance.selector) {
+                return unicode"🤷🏻‍♂️ Not enough 🥔 to tip follower";
+            }
+
+            // CHECK if the Potato Tipper contract has enough left in its tipping budget
             if (bytes4(lowLevelData) == LSP7AmountExceedsAuthorizedAmount.selector) {
                 // TODO: add error data to be able to decode custom error params in the UI
-                return unicode"❌ Not enough allowance to tip $POTATO tokens";
+                return unicode"❌ Not enough left in tipping budget";
             }
 
             // Fallback to a generic error message (still including error data for debugging purposes)
