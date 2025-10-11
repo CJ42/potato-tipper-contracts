@@ -2,11 +2,6 @@
 
 Smart contracts of the POTATO Tipper, a contract that enables you to tip on follow.
 
-## Tests to write
-
-- [ ] Check the success or error message in the `UniversalReceiver` events emitted
-- [ ]
-
 ## Overview
 
 ## Getting started

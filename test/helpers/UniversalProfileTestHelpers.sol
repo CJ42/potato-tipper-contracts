@@ -16,6 +16,7 @@ import {LSP6Utils} from "@lukso/lsp6-contracts/contracts/LSP6Utils.sol";
 // interfaces
 import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
     "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
+import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
 
 // constants
 import {
@@ -23,10 +24,12 @@ import {
     _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX
 } from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {
+    _LSP6KEY_ADDRESSPERMISSIONS_ARRAY,
     _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX,
     _PERMISSION_REENTRANCY,
     _PERMISSION_SUPER_SETDATA,
-    ALL_REGULAR_PERMISSIONS
+    ALL_REGULAR_PERMISSIONS,
+    _PERMISSION_ADDUNIVERSALRECEIVERDELEGATE
 } from "@lukso/lsp6-contracts/contracts/LSP6Constants.sol";
 import {
     _TYPEID_LSP7_TOKENSSENDER,
@@ -36,6 +39,9 @@ import {
 /// @dev Helper functions to deploy Universal Profiles and set them up
 /// like if they were configured in the 🆙 Browser Extension 🧩
 contract UniversalProfileTestHelpers is Test {
+    using LSP2Utils for *;
+    using LSP6Utils for *;
+
     LSP1DelegateUP mainLSP1DelegateImplementationForUPs;
 
     function setUp() public virtual {
@@ -72,10 +78,8 @@ contract UniversalProfileTestHelpers is Test {
 
         // give SUPER_SETDATA + REENTRANCY permissions to the main LSP1 Universal Receiver Delegate
         // contract
-        bytes32 permissionDataKeyForMainLSP1Delegate = LSP2Utils.generateMappingWithGroupingKey(
-            _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX,
-            bytes20(abi.encodePacked(mainLSP1DelegateImplementation))
-        );
+        bytes32 permissionDataKeyForMainLSP1Delegate = _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX
+            .generateMappingWithGroupingKey(bytes20(abi.encodePacked(mainLSP1DelegateImplementation)));
 
         // use Bitwise OR to set each permission bit individually
         // (just for simplicity here and avoid creating a `bytes32[] memory` array).
@@ -91,8 +95,8 @@ contract UniversalProfileTestHelpers is Test {
     function _setupMainControllerPermissions(UniversalProfile universalProfile, address mainController)
         internal
     {
-        bytes32 dataKey = LSP2Utils.generateMappingWithGroupingKey(
-            _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX, bytes20(mainController)
+        bytes32 dataKey = _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX.generateMappingWithGroupingKey(
+            bytes20(mainController)
         );
 
         bytes memory dataValue = abi.encodePacked(ALL_REGULAR_PERMISSIONS);
@@ -127,15 +131,13 @@ contract UniversalProfileTestHelpers is Test {
     ) internal {
         vm.startPrank(mainController);
 
-        bytes32 dataKeyLSP1DelegateForTokensSent = LSP2Utils.generateMappingKey(
-            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP7_TOKENSSENDER)
-        );
+        bytes32 dataKeyLSP1DelegateForTokensSent =
+            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP7_TOKENSSENDER));
 
-        bytes32 dataKeyPermissionsOfLSP1Delegate = LSP2Utils.generateMappingWithGroupingKey(
-            _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX, bytes20(abi.encodePacked(specificLSP1Delegate))
-        );
+        bytes32 dataKeyPermissionsOfLSP1Delegate = _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX
+            .generateMappingWithGroupingKey(bytes20(abi.encodePacked(specificLSP1Delegate)));
 
-        bytes32 lsp1DelegatePermissionsValue = LSP6Utils.combinePermissions(lsp1DelegatePermissionsList);
+        bytes32 lsp1DelegatePermissionsValue = lsp1DelegatePermissionsList.combinePermissions();
 
         // register the specific LSP1 delegate to react on tokens sent
         universalProfile.setData(dataKeyLSP1DelegateForTokensSent, abi.encodePacked(specificLSP1Delegate));
@@ -156,15 +158,13 @@ contract UniversalProfileTestHelpers is Test {
     ) internal {
         vm.startPrank(mainController);
 
-        bytes32 dataKeyLSP1DelegateForTokensReceived = LSP2Utils.generateMappingKey(
-            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP7_TOKENSRECIPIENT)
-        );
+        bytes32 dataKeyLSP1DelegateForTokensReceived =
+            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP7_TOKENSRECIPIENT));
 
-        bytes32 dataKeyPermissions = LSP2Utils.generateMappingWithGroupingKey(
-            _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX, bytes20(abi.encodePacked(specificLSP1Delegate))
-        );
+        bytes32 dataKeyPermissions = _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX
+            .generateMappingWithGroupingKey(bytes20(abi.encodePacked(specificLSP1Delegate)));
 
-        bytes32 lsp1DelegatePermissionsValue = LSP6Utils.combinePermissions(lsp1DelegatePermissionsList);
+        bytes32 lsp1DelegatePermissionsValue = lsp1DelegatePermissionsList.combinePermissions();
 
         // register the specific LSP1 delegate to react on tokens received
         universalProfile.setData(
@@ -175,5 +175,34 @@ contract UniversalProfileTestHelpers is Test {
         universalProfile.setData(dataKeyPermissions, abi.encodePacked(lsp1DelegatePermissionsValue));
 
         vm.stopPrank();
+    }
+
+    function _getControllerAtIndex(UniversalProfile profile, uint128 index) internal view returns (address) {
+        bytes32 addressPermissionDataKeyAtIndex =
+            _LSP6KEY_ADDRESSPERMISSIONS_ARRAY.generateArrayElementKeyAtIndex(index);
+
+        bytes memory value = profile.getData(addressPermissionDataKeyAtIndex);
+        assertTrue(value.length == 20, "not an address under AddressPermissions[index]");
+
+        return address(bytes20(value));
+    }
+
+    /// @dev Give permission to add LSP1 Delegate
+    function _grantAddLSP1DelegatePermissionToController(UniversalProfile profile, address controller)
+        internal
+    {
+        bytes32 currentPermissions = IERC725Y(address(profile)).getPermissionsFor(controller);
+
+        bytes32[] memory newPermissionsList = new bytes32[](2);
+        newPermissionsList[0] = currentPermissions;
+        newPermissionsList[1] = _PERMISSION_ADDUNIVERSALRECEIVERDELEGATE;
+
+        bytes32 newPermissions = newPermissionsList.combinePermissions();
+
+        vm.prank(controller);
+        profile.setData(
+            _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX.generateMappingKey(bytes20(controller)),
+            abi.encodePacked(newPermissions)
+        );
     }
 }

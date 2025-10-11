@@ -79,50 +79,14 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     function setUp() public override {
         super.setUp();
 
-        // Fetch the main controller of these users
-        // TODO: move this getData calls to `UniversalProfileTestHelpers`
-        userBrowserExtensionController = address(
-            bytes20(
-                user.getData(
-                    // AddressPermissions[3]
-                    bytes32(0xdf30dba06db6a30e65354d9a64c6098600000000000000000000000000000003)
-                )
-            )
-        );
-
-        anotherUserBrowserExtensionController = address(
-            bytes20(
-                anotherUser.getData(
-                    // AddressPermissions[1]
-                    bytes32(0xdf30dba06db6a30e65354d9a64c6098600000000000000000000000000000001)
-                )
-            )
-        );
+        // Fetch the main controller of these users`
+        userBrowserExtensionController = _getControllerAtIndex(user, 3);
+        anotherUserBrowserExtensionController = _getControllerAtIndex(anotherUser, 1);
 
         potatoTipper = new PotatoTipper();
 
         vm.prank(userBrowserExtensionController);
         user.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
-
-        // Give permission to add LSP1 Delegate
-        bytes32 currentPermissions =
-            IERC725Y(address(anotherUser)).getPermissionsFor(anotherUserBrowserExtensionController);
-
-        bytes32[] memory newPermissionsList = new bytes32[](2);
-        newPermissionsList[0] = currentPermissions;
-        newPermissionsList[1] = _PERMISSION_ADDUNIVERSALRECEIVERDELEGATE;
-
-        bytes32 newPermissions = LSP6Utils.combinePermissions(newPermissionsList);
-
-        vm.prank(anotherUserBrowserExtensionController);
-        // TODO: move this setData call function to `UniversalProfileTestHelpers`
-        anotherUser.setData(
-            // AddressPermissions:Permissions:<controller>
-            LSP2Utils.generateMappingKey(
-                _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX, bytes20(anotherUserBrowserExtensionController)
-            ),
-            abi.encodePacked(newPermissions)
-        );
 
         vm.prank(anotherUserBrowserExtensionController);
         anotherUser.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
@@ -436,7 +400,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore + (TIP_AMOUNT * 2));
     }
 
-    // TODO: put pre + post tipping checks here
     function test_customTipAmount() public {
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
         uint256 followerPotatoBalanceBefore = potatoToken.balanceOf(address(newFollower));
@@ -545,7 +508,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"🤷🏻‍♂️ Not enough 🥔 to tip the follower"
+            logs, address(newFollower), unicode"🤷🏻‍♂️ Not enough 🥔 to tip follower"
         );
     }
 
@@ -592,7 +555,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"❌ Not enough allowance to tip $POTATO tokens"
+            logs, address(newFollower), unicode"❌ Not enough left in tipping budget"
         );
     }
 
@@ -804,115 +767,124 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     // - Existing follower unfollowed -> then refollowed = did not get a tip
     // - New follower follows, but does not get a tip because POTATO allowance too low, then increase
     // allowance. Able to unfollow and then re-follow
-    // -
+    // - Test that the user cannot trigger the Potato Tipper directly even if it connected to the Potato
+    // Tipper (via UP.execute(...) calling the `universalReceiverDelegate(...)` function on the Potato Tipper
+    // contract)
 
     // Tests for gas cost of setting list of existing followers
     // -----------------------------------------------
 
-    function test_encodeListOfMappingWithGroupingKeys() public {
-        vm.skip(true);
-        uint256 initialFollowerCount = LSP26FollowerSystem(_FOLLOWER_REGISTRY).followerCount(address(user));
-        assertEq(initialFollowerCount, 217);
+    // function test_encodeListOfMappingWithGroupingKeys() public {
+    //     vm.skip(true);
+    //     uint256 initialFollowerCount =
+    // LSP26FollowerSystem(_FOLLOWER_REGISTRY).followerCount(address(user));
+    //     assertEq(initialFollowerCount, 217);
 
-        address[] memory userInitialFollowers = LSP26FollowerSystem(_FOLLOWER_REGISTRY).getFollowersByIndex(
-            address(user), 0, initialFollowerCount
-        );
+    //     address[] memory userInitialFollowers =
+    // LSP26FollowerSystem(_FOLLOWER_REGISTRY).getFollowersByIndex(
+    //         address(user), 0, initialFollowerCount
+    //     );
 
-        bytes32[] memory followersDataKeys = new bytes32[](initialFollowerCount);
-        bytes[] memory followersDataValues = new bytes[](initialFollowerCount);
+    //     bytes32[] memory followersDataKeys = new bytes32[](initialFollowerCount);
+    //     bytes[] memory followersDataValues = new bytes[](initialFollowerCount);
 
-        // PotatoTipper:ExistingFollower:<address>
-        bytes6 keyPrefix = 0xd1d57abed02d;
-        bytes4 mapPrefix = 0xb67dad42;
+    //     // PotatoTipper:ExistingFollower:<address>
+    //     bytes6 keyPrefix = 0xd1d57abed02d;
+    //     bytes4 mapPrefix = 0xb67dad42;
 
-        for (uint128 ii; ii < initialFollowerCount; ii++) {
-            followersDataKeys[ii] = LSP2Utils.generateMappingWithGroupingKey(
-                keyPrefix, mapPrefix, bytes20(userInitialFollowers[ii])
-            );
-            followersDataValues[ii] = hex"01";
-        }
+    //     for (uint128 ii; ii < initialFollowerCount; ii++) {
+    //         followersDataKeys[ii] = LSP2Utils.generateMappingWithGroupingKey(
+    //             keyPrefix, mapPrefix, bytes20(userInitialFollowers[ii])
+    //         );
+    //         followersDataValues[ii] = hex"01";
+    //     }
 
-        console.log("setDataBatch calldata:");
-        console.logBytes(abi.encodeCall(IERC725Y.setDataBatch, (followersDataKeys, followersDataValues)));
-    }
+    //     console.log("setDataBatch calldata:");
+    //     console.logBytes(abi.encodeCall(IERC725Y.setDataBatch, (followersDataKeys, followersDataValues)));
+    // }
 
-    function test_abiEncodeArrayofFollowerAddressesAndStoreInSingleKey() public {
-        vm.skip(true);
-        uint256 initialFollowerCount = LSP26FollowerSystem(_FOLLOWER_REGISTRY).followerCount(address(user));
-        assertEq(initialFollowerCount, 218);
+    // function test_abiEncodeArrayofFollowerAddressesAndStoreInSingleKey() public {
+    //     vm.skip(true);
+    //     uint256 initialFollowerCount =
+    // LSP26FollowerSystem(_FOLLOWER_REGISTRY).followerCount(address(user));
+    //     assertEq(initialFollowerCount, 218);
 
-        address[] memory userInitialFollowers = LSP26FollowerSystem(_FOLLOWER_REGISTRY).getFollowersByIndex(
-            address(user), 0, initialFollowerCount
-        );
+    //     address[] memory userInitialFollowers =
+    // LSP26FollowerSystem(_FOLLOWER_REGISTRY).getFollowersByIndex(
+    //         address(user), 0, initialFollowerCount
+    //     );
 
-        console.logBytes(
-            abi.encodeCall(
-                IERC725Y.setData, (keccak256("ExistingFollowers"), abi.encode(userInitialFollowers))
-            )
-        );
+    //     console.logBytes(
+    //         abi.encodeCall(
+    //             IERC725Y.setData, (keccak256("ExistingFollowers"), abi.encode(userInitialFollowers))
+    //         )
+    //     );
 
-        console.logBytes(abi.encode(userInitialFollowers));
-    }
+    //     console.logBytes(abi.encode(userInitialFollowers));
+    // }
 
-    function test_settingFollowerListInLSP2ArrayKey() public {
-        vm.skip(true);
-        uint256 initialFollowerCount = LSP26FollowerSystem(_FOLLOWER_REGISTRY).followerCount(address(user));
-        assertEq(initialFollowerCount, 217);
+    // function test_settingFollowerListInLSP2ArrayKey() public {
+    //     vm.skip(true);
+    //     uint256 initialFollowerCount =
+    // LSP26FollowerSystem(_FOLLOWER_REGISTRY).followerCount(address(user));
+    //     assertEq(initialFollowerCount, 217);
 
-        address[] memory userInitialFollowers = LSP26FollowerSystem(_FOLLOWER_REGISTRY).getFollowersByIndex(
-            address(user), 0, initialFollowerCount
-        );
+    //     address[] memory userInitialFollowers =
+    // LSP26FollowerSystem(_FOLLOWER_REGISTRY).getFollowersByIndex(
+    //         address(user), 0, initialFollowerCount
+    //     );
 
-        bytes32[] memory followersDataKeys = new bytes32[](initialFollowerCount + 1);
-        bytes[] memory followersDataValues = new bytes[](initialFollowerCount + 1);
+    //     bytes32[] memory followersDataKeys = new bytes32[](initialFollowerCount + 1);
+    //     bytes[] memory followersDataValues = new bytes[](initialFollowerCount + 1);
 
-        bytes32 EXISTING_FOLLOWER_ARRAY_DATA_KEY = keccak256("ExistingFollowers");
-        console.logBytes32(EXISTING_FOLLOWER_ARRAY_DATA_KEY);
+    //     bytes32 EXISTING_FOLLOWER_ARRAY_DATA_KEY = keccak256("ExistingFollowers");
+    //     console.logBytes32(EXISTING_FOLLOWER_ARRAY_DATA_KEY);
 
-        followersDataKeys[0] = EXISTING_FOLLOWER_ARRAY_DATA_KEY;
-        followersDataValues[0] = abi.encodePacked(uint128(initialFollowerCount));
+    //     followersDataKeys[0] = EXISTING_FOLLOWER_ARRAY_DATA_KEY;
+    //     followersDataValues[0] = abi.encodePacked(uint128(initialFollowerCount));
 
-        vm.prank(userBrowserExtensionController);
-        user.setDataBatch(followersDataKeys, followersDataValues);
+    //     vm.prank(userBrowserExtensionController);
+    //     user.setDataBatch(followersDataKeys, followersDataValues);
 
-        for (uint128 ii; ii < initialFollowerCount; ii++) {
-            bytes32 followerDataKey =
-                LSP2Utils.generateArrayElementKeyAtIndex(EXISTING_FOLLOWER_ARRAY_DATA_KEY, ii);
+    //     for (uint128 ii; ii < initialFollowerCount; ii++) {
+    //         bytes32 followerDataKey =
+    //             LSP2Utils.generateArrayElementKeyAtIndex(EXISTING_FOLLOWER_ARRAY_DATA_KEY, ii);
 
-            console.log("Follower data key:", ii);
-            console.logBytes32(followerDataKey);
+    //         console.log("Follower data key:", ii);
+    //         console.logBytes32(followerDataKey);
 
-            followersDataKeys[ii + 1] = followerDataKey;
-            followersDataValues[ii + 1] = abi.encodePacked(userInitialFollowers[ii]);
-        }
+    //         followersDataKeys[ii + 1] = followerDataKey;
+    //         followersDataValues[ii + 1] = abi.encodePacked(userInitialFollowers[ii]);
+    //     }
 
-        // console.logBytes(abi.encode(followersDataKeys));
-        // console.logBytes(abi.encode(followersDataValues));
-        console.log("setDataBatch calldata:");
-        console.logBytes(abi.encodeCall(IERC725Y.setDataBatch, (followersDataKeys, followersDataValues)));
+    //     // console.logBytes(abi.encode(followersDataKeys));
+    //     // console.logBytes(abi.encode(followersDataValues));
+    //     console.log("setDataBatch calldata:");
+    //     console.logBytes(abi.encodeCall(IERC725Y.setDataBatch, (followersDataKeys, followersDataValues)));
 
-        assertEq(
-            IERC725Y(address(user)).getData(EXISTING_FOLLOWER_ARRAY_DATA_KEY),
-            abi.encodePacked(uint128(initialFollowerCount))
-        );
-    }
+    //     assertEq(
+    //         IERC725Y(address(user)).getData(EXISTING_FOLLOWER_ARRAY_DATA_KEY),
+    //         abi.encodePacked(uint128(initialFollowerCount))
+    //     );
+    // }
 
-    function test_SettingInitialFollowerList() public {
-        vm.skip(true);
-        uint256 initialFollowerCount = LSP26FollowerSystem(_FOLLOWER_REGISTRY).followerCount(address(user));
-        assertEq(initialFollowerCount, 218);
+    // function test_SettingInitialFollowerList() public {
+    //     vm.skip(true);
+    //     uint256 initialFollowerCount =
+    // LSP26FollowerSystem(_FOLLOWER_REGISTRY).followerCount(address(user));
+    //     assertEq(initialFollowerCount, 218);
 
-        // address[] memory userInitialFollowers =
-        // LSP26FollowerSystem(_FOLLOWER_REGISTRY).getFollowersByIndex(
-        //     address(user), 0, initialFollowerCount
-        // );
+    //     // address[] memory userInitialFollowers =
+    //     // LSP26FollowerSystem(_FOLLOWER_REGISTRY).getFollowersByIndex(
+    //     //     address(user), 0, initialFollowerCount
+    //     // );
 
-        // Set the initial follower list
-        // vm.prank(address(user));
-        // potatoTipper.setInitialFollowerList(userInitialFollowers);
+    //     // Set the initial follower list
+    //     // vm.prank(address(user));
+    //     // potatoTipper.setInitialFollowerList(userInitialFollowers);
 
-        // for (uint256 ii; ii < initialFollowerCount; ii++) {
-        //     assertTrue(potatoTipper.isInitialFollower(userInitialFollowers[ii], address(user)));
-        // }
-    }
+    //     // for (uint256 ii; ii < initialFollowerCount; ii++) {
+    //     //     assertTrue(potatoTipper.isInitialFollower(userInitialFollowers[ii], address(user)));
+    //     // }
+    // }
 }

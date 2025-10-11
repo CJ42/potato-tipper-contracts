@@ -28,6 +28,8 @@
   ],
   "scripts": {
     "build": "forge build",
+    "lint": "forge lint src/*.sol",
+    "lint:test": "forge lint test/**/*.sol",
     "test": "forge test --fork-url https://rpc.mainnet.lukso.network",
     "test:gas": "forge test --fork-url https://rpc.mainnet.lukso.network --gas-report",
     "test:coverage": "forge coverage --fork-url https://rpc.mainnet.lukso.network",
