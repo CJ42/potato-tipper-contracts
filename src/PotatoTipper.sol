@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.28;
 
 // interfaces
@@ -204,6 +204,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     function _sendTip(address follower, uint256 tipAmount) internal returns (bytes memory) {
         _tipped[msg.sender][follower] = true;
 
+        // TODO: emit Tipping success and failure events
         // Transfer 🥔 $POTATO 🥔 tokens as tip to the new follower
         try _POTATO_TOKEN.transfer({
             // 🆙 that was ⬅️ followed
@@ -223,6 +224,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
                 abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
             // Revert state changes. This allows re-trying to tip this follower again later
+            // TODO: probably move these checks above to follow strictly CEI
             _tipped[msg.sender][follower] = false;
 
             // Handle revert call gracefuly and return:
