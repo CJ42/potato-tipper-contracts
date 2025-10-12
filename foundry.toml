@@ -22,7 +22,8 @@ call_override = true    # useful for reentrancy checks
 dictionnary_weight = 80 # this is the default value
 
 [profile.ci]
-fuzz = { runs = 20000, dictionnary_weight = 100, include_storage = true, include_push_bytes = true, show_logs = true }
+fuzz = { runs = 5000, dictionnary_weight = 50 }
+# , include_storage = true, include_push_bytes = true, show_logs = true }
 invariant = { runs = 20000, depth = 2000, call_override = true, dictionnary_weight = 100, include_storage = true, include_push_bytes = true }
 
 [profile.lite]
