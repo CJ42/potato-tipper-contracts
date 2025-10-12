@@ -24,8 +24,6 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
 
       - name: Install Dependencies
         run: bun install
@@ -41,10 +39,10 @@ jobs:
 
       - name: Run Forge build
         run: |
-          forge build --sizes
+          bun run build --sizes
         id: build
 
       - name: Run Forge tests
         run: |
-          forge test -vvv
+          bun run test -vvv
         id: test

@@ -1,4 +1,4 @@
-# 🥔🎰 POTATO Tipper contract
+# 🥔🎰 POTATO Tipper contract - [![Build + Test pass](https://github.com/Stakingverse/pool-contracts/actions/workflows/build-test.yml/badge.svg)](https://github.com/Stakingverse/pool-contracts/actions/workflows/build-test.yml) [![Code coverage](https://img.shields.io/badge/Code_Coverage-87%25-green?logo=codecrafters&logoColor=white)](./README.md#code-coverage)
 
 Smart contracts of the POTATO Tipper, a contract that enables you to tip on follow.
 
@@ -6,7 +6,7 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 
 Soon...
 
-## Code Coverage
+## Code Coverage
 
 ```
 ╭----------------------+----------------+----------------+---------------+---------------╮
