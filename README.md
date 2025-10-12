@@ -61,6 +61,10 @@ Uncovered for src/PotatoTipper.sol:
 - The Potato Tipper only works for new followers (therefore the notion of an _"incentive system"_). Existing followers cannot get tipped (as mentioned above). If a user (Alice) connects the Potato Tipper to its UP, and Bob was following Alice before she used the Potato Tipper, Bob will never be able to get a tip from the Potato Tipper contract. Even by trying to unfollow and re-follow Alice.
 - If Alice's UP follows Bob's UP and get tipped some 🥔, this does not guarantee that Alice will keep following Bob's afterwards. If Alice unfollows Bob, Bob will not get the 🥔 he tipped back. The Potato Tipper is not opinionated towards this behaviour as UPs might unfollow each other afterwards for legitimate reasons. The Potato Tipper cannot differentiate that.
 
+# Interaction Flow
+
+![Interaction flow diagram](assets/interaction-flow-diagram.png)
+
 ## Development
 
 ### Pre-requisites
@@ -108,7 +112,7 @@ Logs:
 [PASS] test_tippingOnFollowAfterAuthorizingPotatoTipperAsOperator() (gas: 438184)
 ```
 
-### Documentation
+### Developing with Foundry
 
 This template repository is based on Foundry, **a blazing fast, portable and modular toolkit for EVM application development written in Rust.** It includes:
 
