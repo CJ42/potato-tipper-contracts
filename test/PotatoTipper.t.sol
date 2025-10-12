@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 // test libraries
-import {Test, Vm, console} from "forge-std/Test.sol";
+import {Vm, console} from "forge-std/Test.sol";
 import {UniversalProfileTestHelpers} from "./helpers/UniversalProfileTestHelpers.sol";
 import {LSP1DelegateRevertsOnLSP7TokensReceived} from "./helpers/LSP1DelegateRevertsOnLSP7TokensReceived.sol";
 
@@ -10,8 +10,6 @@ import {LSP1DelegateRevertsOnLSP7TokensReceived} from "./helpers/LSP1DelegateRev
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
 import {ILSP1UniversalReceiver} from "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiver.sol";
-import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
-    "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
 import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7DigitalAsset.sol";
 
 // utils
@@ -24,10 +22,6 @@ import {
     _INTERFACEID_LSP1_DELEGATE,
     _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX
 } from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
-import {
-    _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX,
-    _PERMISSION_ADDUNIVERSALRECEIVERDELEGATE
-} from "@lukso/lsp6-contracts/contracts/LSP6Constants.sol";
 import {_TYPEID_LSP7_TOKENSRECIPIENT} from "@lukso/lsp7-contracts/contracts/LSP7Constants.sol";
 import {
     _TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW
@@ -1238,6 +1232,12 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         vm.prank(address(newFollower));
         followerRegistry.follow(address(user));
+
+        // CHECK that follower has NOT received a tip (tipping failed)
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+        assertEq(potatoToken.balanceOf(address(newFollower)), newFollowerPotatoBalanceBefore);
+        assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // Test the custom error bubbled up as a hex string
         bytes memory expectedAppendedErrorData =
