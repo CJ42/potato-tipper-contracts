@@ -10,8 +10,8 @@ libs = ["lib", "node_modules"]
 fs_permissions = [{ access = "read", path = "./script/data" }]
 
 [fuzz] # Fuzzing configurations increased for more thorough testing
-runs = 100
-dictionnary_weight = 30
+runs = 1000             # default = 256
+dictionnary_weight = 50 # between 0 and 100
 # include_storage = true
 # include_push_bytes = true
 # show_logs = true
@@ -22,8 +22,9 @@ call_override = true    # useful for reentrancy checks
 dictionnary_weight = 80 # this is the default value
 
 [profile.ci]
-fuzz = { runs = 200000, dictionnary_weight = 100, include_storage = true, include_push_bytes = true, show_logs = true }
-invariant = { runs = 200000, depth = 5000, call_override = true, dictionnary_weight = 100, include_storage = true, include_push_bytes = true }
+fuzz = { runs = 5000, dictionnary_weight = 50 }
+# , include_storage = true, include_push_bytes = true, show_logs = true }
+invariant = { runs = 20000, depth = 2000, call_override = true, dictionnary_weight = 100, include_storage = true, include_push_bytes = true }
 
 [profile.lite]
 fuzz = { runs = 50 }

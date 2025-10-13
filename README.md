@@ -1,12 +1,69 @@
-# 🥔🎰 POTATO Tipper contract
+# 🥔🔁 POTATO Tipper **contracts** - [![Build + Test pass](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml/badge.svg)](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml) [![Code coverage](https://img.shields.io/badge/Code_Coverage-87%25-green?logo=codecrafters&logoColor=white)](./README.md#code-coverage)
 
-Smart contracts of the POTATO Tipper, a contract that enables you to tip on follow.
+Smart contracts of the POTATO Tipper, a contract that enables you to tip on follow, acting as an incentive mechanism to gain new followers.
+
+| Network       | Contract address |
+| :------------ | :--------------- |
+| LUKSO Mainnet | 🔜               |
+| LUKSO Testnet | 🔜               |
+
+> **⚠️ Disclaimer:** the `PotatoTipper.sol` contract is experimental. Use it responsibly and at your own risk.
+>
+> Although it has been thoroughly tested with Foundry and some auditing tools, it has not been formally audited by an external third party auditor.
+>
+> See the **Security Notes & Limitations** for more details on the auditing tools used and the known trade-offs.
+
+- [🥔🔁 POTATO Tipper **contracts** - ](#-potato-tipper-contracts----)
+  - [Overview](#overview)
+  - [Interaction Flow](#interaction-flow)
+  - [Learning](#learning)
+  - [Security Notes + Limitations](#security-notes--limitations)
+  - [Code Coverage](#code-coverage)
+- [Development](#development)
+  - [Pre-requisites](#pre-requisites)
+  - [Gas report](#gas-report)
+  - [Developing with Foundry](#developing-with-foundry)
 
 ## Overview
 
-Soon...
+- 🫡 Permission-less (not controlled by anyone). Purely an automatic tipping mechanism on-chain.
+- ⚙️ Configurable settings:
 
-## Code Coverage
+  - customizable tip amount (🥔, or 🥔🥔, or 🥔🥔🥔, or more...)
+  - allocated tipping budget (cannot use user's full 🥔 balance unless configured as such)
+  - eligibility criterias for a new follower to get a tip (e.g: at least have 3 followers)
+
+- ✅🆙 Only Universal Profile can receive tips (❌🔑 not EOAs)
+  - only one tip per UP they follow.
+  - Existing followers are not eligible to receive tips.
+
+**For the smart contract technicalities:**
+
+- 📢 Built as an LSP1 Universal Receiver Delegate contract.
+- 🔌 Work automatically once it is _"plugged-in_ to a Universal Profile to reacts on follow / unfollow notifications from LSP26 Follower System. This can be done by setting the Potato Tipper contract address as a value under the following data keys in a UP:
+
+  - `LSP1UniversalReceiverDelegate:LSP26FollowerSystem_FollowNotification` -> `0x0cfc51aec37c55a4d0b1000071e02f9f05bcd5816ec4f3134aa2e5a916669537`
+  - `LSP1UniversalReceiverDelegate:LSP26FollowerSystem_UnfollowNotification` -> `0x0cfc51aec37c55a4d0b100009d3c0b4012b69658977b099bdaa51eff0f0460f4`
+
+- 🤝🏻 Act as an operator via `authorizeOperator(...)` to transfer tokens on behalf of the user's UP.
+  - Give it the allocated tipping budget as authorized amount / allowance.
+  - No 🥔 tokens need to be transferred to the Potato Tipper contract (it transfers them on behalf of the user's UP)
+
+## Interaction Flow
+
+![Interaction flow diagram](assets/interaction-flow-diagram.png)
+
+## Learning
+
+You can learn more about the Potato Tipper and its design patterns that use the LSP1 Universal Receiver Delegate standard through the [`LEARNING.md`](./LEARNING.md).
+
+## Security Notes + Limitations
+
+- New followers can only get tipped once. They cannot unfollow and re-follow to try to get tips many times.
+- The Potato Tipper only works for new followers (therefore the notion of an _"incentive system"_). Existing followers cannot get tipped (as mentioned above). If a user (Alice) connects the Potato Tipper to its UP, and Bob was following Alice before she used the Potato Tipper, Bob will never be able to get a tip from the Potato Tipper contract. Even by trying to unfollow and re-follow Alice.
+- If Alice's UP follows Bob's UP and get tipped some 🥔, this does not guarantee that Alice will keep following Bob's afterwards. If Alice unfollows Bob, Bob will not get the 🥔 he tipped back. The Potato Tipper is not opinionated towards this behaviour as UPs might unfollow each other afterwards for legitimate reasons. The Potato Tipper cannot differentiate that.
+
+## Code Coverage
 
 ```
 ╭----------------------+----------------+----------------+---------------+---------------╮
@@ -23,9 +80,9 @@ Uncovered for src/PotatoTipper.sol:
 - Statement (location: source ID 102, lines 235..236, bytes 19197..19262, hits: 0)
 ```
 
-## Development
+# Development
 
-### Pre-requisites
+## Pre-requisites
 
 1. Install the [**`bun`** package manager](https://bun.sh/package-manager).
 2. [Install foundry](https://getfoundry.sh/).
@@ -54,7 +111,7 @@ bun run test:coverage
 bun run format
 ```
 
-### Gas report
+## Gas report
 
 ```log
 [PASS] test_FollowerDoesNotAlreadyFollowUser() (gas: 15200)
@@ -70,7 +127,7 @@ Logs:
 [PASS] test_tippingOnFollowAfterAuthorizingPotatoTipperAsOperator() (gas: 438184)
 ```
 
-### Documentation
+## Developing with Foundry
 
 This template repository is based on Foundry, **a blazing fast, portable and modular toolkit for EVM application development written in Rust.** It includes:
 
