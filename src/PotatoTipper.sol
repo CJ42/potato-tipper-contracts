@@ -92,6 +92,12 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// (observed via an unfollow notifications without any post-install follow ever observed)
     mapping(address user => mapping(address follower => bool followedBPT)) private _wasFollowing;
 
+    /// @notice Check if the contract implements a given interface
+    ///
+    /// @dev Only LSP1Delegate and ERC165 interfaces are supported
+    ///
+    /// @param interfaceId The interface identifier, as specified in ERC-165
+    /// @return `true` if the contract implements `interfaceId` or `false` otherwise
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         return interfaceId == _INTERFACEID_LSP1_DELEGATE || interfaceId == type(IERC165).interfaceId;
     }
