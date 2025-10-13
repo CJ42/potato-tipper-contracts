@@ -173,6 +173,16 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         if (tipAmountDataValue.length != 32) return unicode"❌ Invalid tip amount. Must be encoded as uint256";
         uint256 tipAmount = uint256(bytes32(tipAmountDataValue));
 
+        // CHECK the address being followed has enough 🥔 to tip.
+        if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
+            return unicode"🤷🏻‍♂️ Not enough 🥔 to tip follower";
+        }
+
+        // CHECK if the Potato Tipper contract has enough left in its tipping budget
+        if (_POTATO_TOKEN.authorizedAmountFor(address(this), msg.sender) < tipAmount) {
+            return unicode"❌ Not enough 🥔 left in tipping budget";
+        }
+
         return _sendTip(follower, tipAmount);
     }
 
@@ -223,25 +233,9 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             return
                 abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
-            // Revert state changes. This allows re-trying to tip this follower again later
-            // TODO: probably move these checks above to follow strictly CEI
-            _tipped[msg.sender][follower] = false;
-
-            // Handle revert call gracefuly and return:
-            // 1. a descriptive error message
-            // 2. any custom error data (or revert reason string)
+            // Handle revert call gracefuly and return a descriptive error message.
             // So a dApp can decode the `returnedValues` from the `UniversalReceiver` event + display in UI.
-
-            // CHECK the address being followed has enough 🥔 to tip.
-            if (bytes4(errorData) == LSP7AmountExceedsBalance.selector) {
-                return unicode"🤷🏻‍♂️ Not enough 🥔 to tip follower";
-            }
-
-            // CHECK if the Potato Tipper contract has enough left in its tipping budget
-            if (bytes4(errorData) == LSP7AmountExceedsAuthorizedAmount.selector) {
-                // TODO: add error data to be able to decode custom error params in the UI
-                return unicode"❌ Not enough 🥔 left in tipping budget";
-            }
+            // TODO: remove any custom error data appended (or revert reason string)
 
             // Fallback to a generic error message (including error data for debugging purposes)
             return abi.encodePacked(

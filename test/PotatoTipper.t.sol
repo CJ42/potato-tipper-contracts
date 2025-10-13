@@ -1227,10 +1227,12 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         followerRegistry.follow(address(user));
 
         // CHECK that follower has NOT received a tip (tipping failed)
-        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(newFollower)), newFollowerPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+        // TODO: this getter function should be renamed to `hasBeenTipped` and not factor in if the transfer
+        // failed or not because of the LSP7 callback hooks
+        assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         // Test the custom error bubbled up as a hex string
         bytes memory expectedAppendedErrorData =
