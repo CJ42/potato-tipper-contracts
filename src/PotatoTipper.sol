@@ -22,11 +22,8 @@ import {
 } from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
 
-// errors (to bubble up when tipping fails)
-import {
-    LSP7AmountExceedsAuthorizedAmount,
-    LSP7AmountExceedsBalance
-} from "@lukso/lsp7-contracts/contracts/LSP7Errors.sol";
+// events
+import {TipSent, TipFailed} from "./Events.sol";
 
 //       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░                          ░░░░░░░░░░░░░░
 //         ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██████████████████████░░                      ░░░░░░░░░░
@@ -228,11 +225,13 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             // message data to give context to the LSP7 token transfer
             data: unicode"Thanks for following! Tipping you some 🥔"
         }) {
+            emit TipSent({from: msg.sender, to: follower, amount: tipAmount});
             // TODO: refactor to use abi.encode for easier encoding / decoding of the returned data
             // on the UI side to display notifications
             return
                 abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
+            emit TipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
             // Handle revert call gracefuly and return a descriptive error message.
             // So a dApp can decode the `returnedValues` from the `UniversalReceiver` event + display in UI.
             // TODO: remove any custom error data appended (or revert reason string)
