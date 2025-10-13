@@ -1234,10 +1234,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // failed or not because of the LSP7 callback hooks
         assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
-        // Test the custom error bubbled up as a hex string
-        bytes memory expectedAppendedErrorData =
-            abi.encodeWithSignature("Error(string)", "Force revert on LSP7TokensReceived");
-
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         for (uint256 ii = 0; ii < logs.length; ii++) {
@@ -1246,10 +1242,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
                 abi.decode((logs[ii].data), (bytes, bytes));
 
-            bytes memory expectedMessage = abi.encodePacked(
-                unicode"❌ Failed tipping 🥔. LSP7 transfer reverted with following error data: ",
-                expectedAppendedErrorData
-            );
+            bytes memory expectedMessage = unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
 
             // CHECK LSP26 Follower registry sent follower address as notification data
             assertEq(receivedNotificationData, abi.encodePacked(address(newFollower)));

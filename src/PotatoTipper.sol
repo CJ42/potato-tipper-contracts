@@ -211,7 +211,6 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     function _sendTip(address follower, uint256 tipAmount) internal returns (bytes memory) {
         _tipped[msg.sender][follower] = true;
 
-        // TODO: emit Tipping success and failure events
         // Transfer 🥔 $POTATO 🥔 tokens as tip to the new follower
         try _POTATO_TOKEN.transfer({
             // 🆙 that was ⬅️ followed
@@ -226,21 +225,15 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             data: unicode"Thanks for following! Tipping you some 🥔"
         }) {
             emit TipSent({from: msg.sender, to: follower, amount: tipAmount});
-            // TODO: refactor to use abi.encode for easier encoding / decoding of the returned data
-            // on the UI side to display notifications
+
+            // Return a success message that can be decoded from the `UniversalReceiver` event log
             return
                 abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
             emit TipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
-            // Handle revert call gracefuly and return a descriptive error message.
-            // So a dApp can decode the `returnedValues` from the `UniversalReceiver` event + display in UI.
-            // TODO: remove any custom error data appended (or revert reason string)
 
-            // Fallback to a generic error message (including error data for debugging purposes)
-            return abi.encodePacked(
-                unicode"❌ Failed tipping 🥔. LSP7 transfer reverted with following error data: ",
-                errorData
-            );
+            // Fallback to a generic error message
+            return unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
         }
     }
 }

@@ -38,7 +38,6 @@
   "devDependencies": {
     "@remix-project/remixd": "^0.6.40",
     "@types/bun": "latest",
-    "dotenv": "^16.4.5",
     "lcov-summary": "^1.0.1",
     "solhint": "^6.0.1"
   },
