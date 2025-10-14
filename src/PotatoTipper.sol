@@ -161,10 +161,12 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @return message A human-readable message that can be decoded from the `UniversalReceiver` event log
     ///
     // solhint-disable-next-line use-natspec
-    function universalReceiverDelegate(address sender, uint256, /* value */ bytes32 typeId, bytes memory data)
-        external
-        returns (bytes memory)
-    {
+    function universalReceiverDelegate(
+        address sender,
+        uint256, /* value */
+        bytes32 typeId,
+        bytes calldata data
+    ) external returns (bytes memory) {
         // CHECK that this call came from the Follower Registry
         if (sender != _FOLLOWER_REGISTRY) return unicode"❌ Not triggered by the Follower Registry";
 
