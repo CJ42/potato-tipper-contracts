@@ -113,6 +113,10 @@ bun run format
 
 ## Gas report
 
+> Note that the files `.gas-snapshot-before` and `.gas-snapshot-after` compare before the `TipSent` and `TipReceived` events have been added
+> and the logic to not revert the mapping was introduced.
+> TODO: delete these files afterwards when making repo public.
+
 ```log
 [PASS] test_FollowerDoesNotAlreadyFollowUser() (gas: 15200)
 [PASS] test_FollowerFollowUser() (gas: 182328)

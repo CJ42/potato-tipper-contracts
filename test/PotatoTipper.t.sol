@@ -579,7 +579,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"🤷🏻‍♂️ Not enough 🥔 to tip follower"
+            logs, address(newFollower), unicode"🤷🏻‍♂️ Not enough 🥔 left in balance"
         );
     }
 
