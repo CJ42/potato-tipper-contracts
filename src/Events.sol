@@ -6,7 +6,7 @@ pragma solidity ^0.8.28;
 /// @param from The UP address that sent a tip
 /// @param to The UP address that received a tip
 /// @param amount The amount of the tip in wei
-event TipSent(address indexed from, address indexed to, uint256 amount);
+event TipSent(address indexed from, address indexed to, uint256 indexed amount);
 
 /// @notice Emitted on a failed LSP7 token transfer made by the $POTATO token contract
 ///
@@ -18,4 +18,4 @@ event TipSent(address indexed from, address indexed to, uint256 amount);
 /// @param to The UP address that received a tip
 /// @param amount The amount of the tip in wei
 /// @param errorData The error data returned from the failed transfer
-event TipFailed(address indexed from, address indexed to, uint256 amount, bytes errorData);
+event TipFailed(address indexed from, address indexed to, uint256 indexed amount, bytes errorData);
