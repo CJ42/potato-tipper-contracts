@@ -116,7 +116,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @param user The address of the user that sent the tip
     ///
     /// @return true if the `follower` has already been tipped by the `user`, false otherwise
-    function hasReceivedTip(address follower, address user) public view returns (bool) {
+    function hasBeenTipped(address follower, address user) public view returns (bool) {
         return _tipped[user][follower];
     }
 
