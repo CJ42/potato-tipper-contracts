@@ -55,7 +55,7 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 
 ## Learning
 
-You can learn more about the Potato Tipper and its design patterns that use the LSP1 Universal Receiver Delegate standard through the [`LEARNING.md`](./LEARNING.md).
+You can learn more about the Potato Tipper and its design patterns that use the LSP1 Universal Receiver Delegate standard through the [`LEARN.md`](./LEARN.md) file.
 
 ## Security Notes + Limitations
 
