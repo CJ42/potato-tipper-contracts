@@ -2,8 +2,9 @@
 pragma solidity ^0.8.28;
 
 // interfaces
-import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
-    "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
+import {
+    ILSP1UniversalReceiverDelegate as ILSP1Delegate
+} from "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
 
 import {_TYPEID_LSP7_TOKENSRECIPIENT} from "@lukso/lsp7-contracts/contracts/LSP7Constants.sol";
 
