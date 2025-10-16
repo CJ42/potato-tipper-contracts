@@ -7,9 +7,6 @@ import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
     "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
 
-// modules
-import {LSP26FollowerSystem} from "@lukso/lsp26-contracts/contracts/LSP26FollowerSystem.sol";
-
 // libraries
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -161,7 +158,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         bytes calldata data
     ) external returns (bytes memory) {
         // CHECK that this call came from the Follower Registry
-        if (sender != _FOLLOWER_REGISTRY) return unicode"❌ Not triggered by the Follower Registry";
+        if (sender != address(_FOLLOWER_REGISTRY)) return unicode"❌ Not triggered by the Follower Registry";
 
         // Retrieve follower address from the notification data sent by the LSP26 Follower Registry
         if (data.length != 20) return unicode"❌ Invalid data received. Must be a 20 bytes long address";
@@ -191,7 +188,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// indicate successful tip, or an error reason if no tip was sent.
     /// This message can be decoded from the `UniversalReceiver` event log
     function _onFollow(address follower) internal returns (bytes memory message) {
-        bool isFollowing = LSP26FollowerSystem(_FOLLOWER_REGISTRY).isFollowing(follower, msg.sender);
+        bool isFollowing = _FOLLOWER_REGISTRY.isFollowing(follower, msg.sender);
 
         // CHECK to ensure this came from a legitimate notification callback from the LSP26 Registry
         if (!isFollowing) return unicode"❌ Not a legitimate follow";
@@ -220,7 +217,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @param address_ The address that unfollowed the user's UP
     /// @return message A human-readable message returned to the `universalReceiver(...)` function.
     function _onUnfollow(address address_) internal returns (bytes memory) {
-        bool isFollowing = LSP26FollowerSystem(_FOLLOWER_REGISTRY).isFollowing(address_, msg.sender);
+        bool isFollowing = _FOLLOWER_REGISTRY.isFollowing(address_, msg.sender);
 
         // CHECK to ensure this came from a legitimate notification callback from the LSP26 Registry
         if (isFollowing) return unicode"❌ Not a legitimate unfollow";

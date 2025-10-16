@@ -113,22 +113,46 @@ bun run format
 
 ## Gas report
 
-> Note that the files `.gas-snapshot-before` and `.gas-snapshot-after` compare before the `TipSent` and `TipReceived` events have been added
-> and the logic to not revert the mapping was introduced.
-> TODO: delete these files afterwards when making repo public.
-
 ```log
-[PASS] test_FollowerDoesNotAlreadyFollowUser() (gas: 15200)
-[PASS] test_FollowerFollowUser() (gas: 182328)
-[PASS] test_IsLSP1Delegate() (gas: 8391)
-[PASS] test_PotatoTipperIsRegisteredForNotificationTypeNewFollower() (gas: 17195)
-[PASS] test_cannotTipTwiceTheSameNewFollowerIfFollowedUnfollowAndRefollow() (gas: 676043)
-Logs:
-  Found UniversalReceiver event related to a typeId new follow at index: 5
+$ forge snapshot --fork-url https://rpc.mainnet.lukso.network
+[⠊] Compiling...
+[⠑] Compiling 2 files with Solc 0.8.30
+[⠘] Solc 0.8.30 finished in 1.65s
+Compiler run successful!
 
-[PASS] test_followerCanReceiveTipsFromTwoDifferentUsersWhoConnectedPotatoTipper() (gas: 855803)
-[PASS] test_shouldNotTipIfPotatoTipperHasNotBeenAuthorizedAsOperator() (gas: 205597)
-[PASS] test_tippingOnFollowAfterAuthorizingPotatoTipperAsOperator() (gas: 438184)
+Ran 29 tests for test/PotatoTipper.t.sol:PotatoTipperTest
+[PASS] test_AliceUPCannotCallBobUPUniversalReceiverFunctionToGetTipped() (gas: 175240)
+[SKIP] test_EOAsCannotFollowAndReceiveTips(uint160) (runs: 0, μ: 0, ~: 0)
+[PASS] test_ExistingFollowerUnfollowsAndRefollowDoesNotTriggerTip() (gas: 321610)
+[PASS] test_FallbackToDisplayGenericErrorMessageInUniversalReceiverEventIfTippingFails() (gas: 715078)
+[PASS] test_FollowerDoesNotAlreadyFollowUser() (gas: 15202)
+[PASS] test_FollowerFollowUser() (gas: 201163)
+[PASS] test_IsLSP1Delegate() (gas: 8516)
+[PASS] test_NewFollowerFailsToGetTipIsEligibleToUnfollowAndRefollowToGetTip() (gas: 492948)
+[PASS] test_OnlyCallsFromFollowerRegistry(address) (runs: 1030, μ: 164865, ~: 164867)
+[PASS] test_OnlyRunWithFollowOrUnfollowTypeId(bytes32) (runs: 1030, μ: 34793, ~: 34784)
+[PASS] test_PotatoTipperIsRegisteredForNotificationTypeNewFollower() (gas: 17250)
+[PASS] test_PotatoTipperIsRegisteredForNotificationTypeUnfollow() (gas: 17217)
+[PASS] test_TippingFailsAfterTippingBudgetGoesBelowCustomAmount(uint256) (runs: 1030, μ: 644487, ~: 644502)
+[PASS] test_TippingFailsAfterTippingBudgetGoesToZero() (gas: 561483)
+[PASS] test_cannotTipTwiceTheSameNewFollowerIfFollowedUnfollowAndRefollow() (gas: 521577)
+[PASS] test_customTipAmount() (gas: 457728)
+[SKIP] test_customTipAmountGreaterThanUserBalanceButLessThanTippingBudgetDontTriggerTip(uint256,uint256) (runs: 0, μ: 0, ~: 0)
+[PASS] test_customTipAmountIncorrectlySetDontTriggerTip(bytes) (runs: 1022, μ: 379331, ~: 378889)
+[PASS] test_customTipAmountLessThanUserBalanceButGreaterThanTippingBudgetDontTriggerTip(uint256,uint256) (runs: 1013, μ: 360116, ~: 360154)
+[SKIP] test_doesNotRunOnUnfollow() (gas: 0)
+[PASS] test_existingFollowerCannotTriggerDirectlyToGetTipped() (gas: 175513)
+[PASS] test_followerCanReceiveTipsFromTwoDifferentUsersWhoConnectedPotatoTipper() (gas: 799219)
+[SKIP] test_onlyUniversalProfilesCanReceiveTips(uint160) (runs: 0, μ: 0, ~: 0)
+[PASS] test_shouldNotTipButStillFollowIfPotatoTipperConnectedButNotAuthorizedAsOperator() (gas: 217609)
+[PASS] test_tippingOnFollowAfterAuthorizingPotatoTipperAsOperator() (gas: 419474)
+[PASS] test_userCallsDirectlyPotatoTipperWithTypeIdFollowAndExistingFollower() (gas: 246154)
+[PASS] test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndAddressThatDoesNotActuallyFollow() (gas: 175163)
+[PASS] test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndExistingFollower() (gas: 158405)
+[PASS] test_userWhoRegisteredPotatoTipperCannotCallContractDirectlyToTipPeopleIfTheyDontActuallyFollow() (gas: 135178)
+Suite result: ok. 25 passed; 0 failed; 4 skipped; finished in 141.89s (198.01s CPU time)
+
+Ran 1 test suite in 142.35s (141.89s CPU time): 25 tests passed, 0 failed, 4 skipped (29 total tests)
 ```
 
 ## Developing with Foundry
