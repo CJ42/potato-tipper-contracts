@@ -198,7 +198,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             //.  0000000000000000000000000000000000000000000000000000000000000050 .............
             //.  e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
 
-            (bytes memory receivedNotificationData, bytes memory allReturnedLSP1DelegateValues) =
+            (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
                 abi.decode((logs[i].data), (bytes, bytes));
 
             // CHECK LSP26 Follower registry sent follower address as notification data
@@ -212,7 +212,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             //.  4c5350313a20747970654964206f7574206f662073636f706500000000000000
             //.  0000000000000000000000000000000000000000000000000000000000000050 -> 80 bytes (characters)
             //.  e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
-            assertEq(allReturnedLSP1DelegateValues, abi.encode("LSP1: typeId out of scope", expectedMessage));
+            assertEq(allReturnedLsp1DelegateValues, abi.encode("LSP1: typeId out of scope", expectedMessage));
 
             // CHECK LSP1 Default Delegate returned the right message
             // CHECK Potato Tipper returned the right message
@@ -222,10 +222,10 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             // -> f09f8da0 = utf8("🍠") = 4 bytes
             // -> rest of the message = 53 bytes
             // -> follower address (abi packed encoded) = 20 bytes
-            (bytes memory returnedDataDefaultLSP1Delegate, bytes memory returnedDataPotatoTipper) =
-                abi.decode(allReturnedLSP1DelegateValues, (bytes, bytes));
+            (bytes memory returnedDataDefaultLsp1Delegate, bytes memory returnedDataPotatoTipper) =
+                abi.decode(allReturnedLsp1DelegateValues, (bytes, bytes));
 
-            assertEq(string(returnedDataDefaultLSP1Delegate), "LSP1: typeId out of scope");
+            assertEq(string(returnedDataDefaultLsp1Delegate), "LSP1: typeId out of scope");
             assertEq(string(returnedDataPotatoTipper), expectedMessage);
         }
     }
@@ -378,20 +378,20 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             if (logs[i].topics[0] != ILSP1UniversalReceiver.UniversalReceiver.selector) continue;
             if (bytes32(logs[i].topics[3]) != _TYPEID_LSP26_FOLLOW) continue;
 
-            (bytes memory receivedNotificationData, bytes memory allReturnedLSP1DelegateValues) =
+            (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
                 abi.decode((logs[i].data), (bytes, bytes));
 
             // CHECK LSP26 Follower registry sent follower address as notification data
             assertEq(receivedNotificationData, abi.encodePacked(newFollower));
             assertEq(
-                allReturnedLSP1DelegateValues,
+                allReturnedLsp1DelegateValues,
                 abi.encode("LSP1: typeId out of scope", unicode"🙅🏻 Already tipped a potato")
             );
 
-            (bytes memory returnedDataDefaultLSP1Delegate, bytes memory returnedDataPotatoTipper) =
-                abi.decode(allReturnedLSP1DelegateValues, (bytes, bytes));
+            (bytes memory returnedDataDefaultLsp1Delegate, bytes memory returnedDataPotatoTipper) =
+                abi.decode(allReturnedLsp1DelegateValues, (bytes, bytes));
 
-            assertEq(string(returnedDataDefaultLSP1Delegate), "LSP1: typeId out of scope");
+            assertEq(string(returnedDataDefaultLsp1Delegate), "LSP1: typeId out of scope");
             assertEq(string(returnedDataPotatoTipper), unicode"🙅🏻 Already tipped a potato");
         }
     }
@@ -1203,18 +1203,11 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
     function test_FallbackToDisplayGenericErrorMessageInUniversalReceiverEventIfTippingFails() public {
         // Reverts on token received when tipping 🥔
-        address lsp1DelegateReverts = address(new LSP1DelegateRevertsOnLSP7TokensReceived());
+        LSP1DelegateRevertsOnLSP7TokensReceived lsp1DelegateReverts =
+            new LSP1DelegateRevertsOnLSP7TokensReceived();
 
-        bytes32 lsp1DelegateDataKeyOnLSP7TokensReceived = LSP2Utils.generateMappingKey(
-            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP7_TOKENSRECIPIENT)
-        );
-
-        vm.prank(newFollowerBrowserExtensionController);
-        newFollower.setData(lsp1DelegateDataKeyOnLSP7TokensReceived, abi.encodePacked(lsp1DelegateReverts));
-
-        assertEq(
-            newFollower.getData(lsp1DelegateDataKeyOnLSP7TokensReceived),
-            abi.encodePacked(lsp1DelegateReverts)
+        _setUpSpecificLSP1DelegateForTokensReceived(
+            newFollower, newFollowerBrowserExtensionController, lsp1DelegateReverts
         );
 
         // Prepare attempt to tip
@@ -1234,35 +1227,30 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         followerRegistry.follow(address(user));
 
         // CHECK that follower has NOT received a tip (tipping failed)
-        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(newFollower)), newFollowerPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
-
-        // Test the custom error bubbled up as a hex string
-        bytes memory expectedAppendedErrorData =
-            abi.encodeWithSignature("Error(string)", "Force revert on LSP7TokensReceived");
+        // TODO: this getter function should be renamed to `hasBeenTipped` and not factor in if the transfer
+        // failed or not because of the LSP7 callback hooks
+        assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         for (uint256 ii = 0; ii < logs.length; ii++) {
             if (logs[ii].topics[0] != ILSP1UniversalReceiver.UniversalReceiver.selector) continue;
             if (bytes32(logs[ii].topics[3]) != _TYPEID_LSP26_FOLLOW) continue;
-            (bytes memory receivedNotificationData, bytes memory allReturnedLSP1DelegateValues) =
+            (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
                 abi.decode((logs[ii].data), (bytes, bytes));
 
-            bytes memory expectedMessage = abi.encodePacked(
-                unicode"❌ Failed tipping 🥔. LSP7 transfer reverted with following error data: ",
-                expectedAppendedErrorData
-            );
+            bytes memory expectedMessage = unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
 
             // CHECK LSP26 Follower registry sent follower address as notification data
             assertEq(receivedNotificationData, abi.encodePacked(address(newFollower)));
-            assertEq(allReturnedLSP1DelegateValues, abi.encode("LSP1: typeId out of scope", expectedMessage));
-            (bytes memory returnedDataDefaultLSP1Delegate, bytes memory returnedDataPotatoTipper) =
-                abi.decode(allReturnedLSP1DelegateValues, (bytes, bytes));
+            assertEq(allReturnedLsp1DelegateValues, abi.encode("LSP1: typeId out of scope", expectedMessage));
+            (bytes memory returnedDataDefaultLsp1Delegate, bytes memory returnedDataPotatoTipper) =
+                abi.decode(allReturnedLsp1DelegateValues, (bytes, bytes));
 
-            assertEq(string(returnedDataDefaultLSP1Delegate), "LSP1: typeId out of scope");
+            assertEq(string(returnedDataDefaultLsp1Delegate), "LSP1: typeId out of scope");
             assertEq(returnedDataPotatoTipper, expectedMessage);
         }
     }

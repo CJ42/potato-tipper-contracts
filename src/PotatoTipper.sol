@@ -22,11 +22,8 @@ import {
 } from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
 
-// errors (to bubble up when tipping fails)
-import {
-    LSP7AmountExceedsAuthorizedAmount,
-    LSP7AmountExceedsBalance
-} from "@lukso/lsp7-contracts/contracts/LSP7Errors.sol";
+// events
+import {TipSent, TipFailed} from "./Events.sol";
 
 //       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░                          ░░░░░░░░░░░░░░
 //         ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░██████████████████████░░                      ░░░░░░░░░░
@@ -173,6 +170,16 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         if (tipAmountDataValue.length != 32) return unicode"❌ Invalid tip amount. Must be encoded as uint256";
         uint256 tipAmount = uint256(bytes32(tipAmountDataValue));
 
+        // CHECK the address being followed has enough 🥔 to tip.
+        if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
+            return unicode"🤷🏻‍♂️ Not enough 🥔 to tip follower";
+        }
+
+        // CHECK if the Potato Tipper contract has enough left in its tipping budget
+        if (_POTATO_TOKEN.authorizedAmountFor(address(this), msg.sender) < tipAmount) {
+            return unicode"❌ Not enough 🥔 left in tipping budget";
+        }
+
         return _sendTip(follower, tipAmount);
     }
 
@@ -204,7 +211,6 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     function _sendTip(address follower, uint256 tipAmount) internal returns (bytes memory) {
         _tipped[msg.sender][follower] = true;
 
-        // TODO: emit Tipping success and failure events
         // Transfer 🥔 $POTATO 🥔 tokens as tip to the new follower
         try _POTATO_TOKEN.transfer({
             // 🆙 that was ⬅️ followed
@@ -218,36 +224,16 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             // message data to give context to the LSP7 token transfer
             data: unicode"Thanks for following! Tipping you some 🥔"
         }) {
-            // TODO: refactor to use abi.encode for easier encoding / decoding of the returned data
-            // on the UI side to display notifications
+            emit TipSent({from: msg.sender, to: follower, amount: tipAmount});
+
+            // Return a success message that can be decoded from the `UniversalReceiver` event log
             return
                 abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
-            // Revert state changes. This allows re-trying to tip this follower again later
-            // TODO: probably move these checks above to follow strictly CEI
-            _tipped[msg.sender][follower] = false;
+            emit TipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
 
-            // Handle revert call gracefuly and return:
-            // 1. a descriptive error message
-            // 2. any custom error data (or revert reason string)
-            // So a dApp can decode the `returnedValues` from the `UniversalReceiver` event + display in UI.
-
-            // CHECK the address being followed has enough 🥔 to tip.
-            if (bytes4(errorData) == LSP7AmountExceedsBalance.selector) {
-                return unicode"🤷🏻‍♂️ Not enough 🥔 to tip follower";
-            }
-
-            // CHECK if the Potato Tipper contract has enough left in its tipping budget
-            if (bytes4(errorData) == LSP7AmountExceedsAuthorizedAmount.selector) {
-                // TODO: add error data to be able to decode custom error params in the UI
-                return unicode"❌ Not enough 🥔 left in tipping budget";
-            }
-
-            // Fallback to a generic error message (including error data for debugging purposes)
-            return abi.encodePacked(
-                unicode"❌ Failed tipping 🥔. LSP7 transfer reverted with following error data: ",
-                errorData
-            );
+            // Fallback to a generic error message
+            return unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
         }
     }
 }

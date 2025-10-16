@@ -42,10 +42,10 @@ contract UniversalProfileTestHelpers is Test {
     using LSP2Utils for *;
     using LSP6Utils for *;
 
-    LSP1DelegateUP mainLSP1DelegateImplementationForUPs;
+    LSP1DelegateUP mainLsp1DelegateImplementationForUps;
 
     function setUp() public virtual {
-        mainLSP1DelegateImplementationForUPs = new LSP1DelegateUP();
+        mainLsp1DelegateImplementationForUps = new LSP1DelegateUP();
     }
 
     function _setUpUniversalProfileLikeBrowserExtension(address mainController)
@@ -58,7 +58,7 @@ contract UniversalProfileTestHelpers is Test {
 
         _setupMainControllerPermissions(universalProfile, mainController);
         _setUPMainLSP1DelegateWithPermissions(
-            universalProfile, mainController, mainLSP1DelegateImplementationForUPs
+            universalProfile, mainController, mainLsp1DelegateImplementationForUps
         );
 
         _transferOwnershipToKeyManager(universalProfile, mainController, keyManager);
@@ -123,28 +123,28 @@ contract UniversalProfileTestHelpers is Test {
     // Unused helper function for now (can be used for testing future reactions on tokens sent / received)
     // ---------------------------------------------------------------------------------------------------
 
-    function _setUpSpecificLSP1DelegateForTokensSent(
+    function _setUpSpecificLsp1DelegateForTokensSent(
         UniversalProfile universalProfile,
         address mainController,
-        ILSP1Delegate specificLSP1Delegate,
+        ILSP1Delegate specificLsp1Delegate,
         bytes32[] memory lsp1DelegatePermissionsList
     ) internal {
         vm.startPrank(mainController);
 
-        bytes32 dataKeyLSP1DelegateForTokensSent =
+        bytes32 dataKeyLsp1DelegateForTokensSent =
             _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP7_TOKENSSENDER));
 
-        bytes32 dataKeyPermissionsOfLSP1Delegate = _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX
-            .generateMappingWithGroupingKey(bytes20(abi.encodePacked(specificLSP1Delegate)));
+        bytes32 dataKeyPermissionsOfLsp1Delegate = _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX
+            .generateMappingWithGroupingKey(bytes20(abi.encodePacked(specificLsp1Delegate)));
 
         bytes32 lsp1DelegatePermissionsValue = lsp1DelegatePermissionsList.combinePermissions();
 
         // register the specific LSP1 delegate to react on tokens sent
-        universalProfile.setData(dataKeyLSP1DelegateForTokensSent, abi.encodePacked(specificLSP1Delegate));
+        universalProfile.setData(dataKeyLsp1DelegateForTokensSent, abi.encodePacked(specificLsp1Delegate));
 
         // set the permissions for the specific LSP1 delegate
         universalProfile.setData(
-            dataKeyPermissionsOfLSP1Delegate, abi.encodePacked(lsp1DelegatePermissionsValue)
+            dataKeyPermissionsOfLsp1Delegate, abi.encodePacked(lsp1DelegatePermissionsValue)
         );
 
         vm.stopPrank();
@@ -153,26 +153,14 @@ contract UniversalProfileTestHelpers is Test {
     function _setUpSpecificLSP1DelegateForTokensReceived(
         UniversalProfile universalProfile,
         address mainController,
-        ILSP1Delegate specificLSP1Delegate,
-        bytes32[] memory lsp1DelegatePermissionsList
+        ILSP1Delegate specificLsp1Delegate
     ) internal {
-        vm.startPrank(mainController);
-
         bytes32 dataKeyLSP1DelegateForTokensReceived =
             _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP7_TOKENSRECIPIENT));
 
-        bytes32 dataKeyPermissions = _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX
-            .generateMappingWithGroupingKey(bytes20(abi.encodePacked(specificLSP1Delegate)));
-
-        bytes32 lsp1DelegatePermissionsValue = lsp1DelegatePermissionsList.combinePermissions();
-
+        vm.prank(mainController);
         // register the specific LSP1 delegate to react on tokens received
-        universalProfile.setData(
-            dataKeyLSP1DelegateForTokensReceived, abi.encodePacked(lsp1DelegatePermissionsValue)
-        );
-
-        // set the permissions for the specific LSP1 delegate
-        universalProfile.setData(dataKeyPermissions, abi.encodePacked(lsp1DelegatePermissionsValue));
+        universalProfile.setData(dataKeyLSP1DelegateForTokensReceived, abi.encodePacked(specificLsp1Delegate));
 
         vm.stopPrank();
     }
