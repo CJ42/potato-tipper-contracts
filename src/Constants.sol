@@ -19,8 +19,7 @@ import {ILSP26FollowerSystem as ILSP26} from "@lukso/lsp26-contracts/contracts/I
 //     valueType: "uint256",
 //     valueContent: "Number"
 // }
-bytes32 constant POTATO_TIPPER_TIP_AMOUNT_DATA_KEY =
-    0xd1d57abed02d4c2d7ce000007ac37193edd83998b040b27baa12f8c01dc5eec0;
+bytes32 constant POTATO_TIPPER_TIP_AMOUNT_DATA_KEY = 0xd1d57abed02d4c2d7ce000007ac37193edd83998b040b27baa12f8c01dc5eec0;
 
 // Address of the $POTATO Token contract deployed on LUKSO Mainnet.
 ILSP7 constant _POTATO_TOKEN = ILSP7(0x80D898C5A3A0B118a0c8C8aDcdBB260FC687F1ce);

@@ -23,9 +23,7 @@ import {
     _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX
 } from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP7_TOKENSRECIPIENT} from "@lukso/lsp7-contracts/contracts/LSP7Constants.sol";
-import {
-    _TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW
-} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
+import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "../src/Constants.sol";
 
 // contracts to test
@@ -42,9 +40,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     bytes32 immutable _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY =
         LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_FOLLOW));
 
-    bytes32 immutable _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY = LSP2Utils.generateMappingKey(
-        _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW)
-    );
+    bytes32 immutable _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY =
+        LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
 
     // Contract addresses from LUKSO Mainnet for mainnet fork testing
     // (🆙 users, 🥔 token, and LSP26 Follower Registry)
@@ -135,17 +132,14 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // CHECK that follower has received a tip (POTATO balance has increased by the tip amount)
         assertTrue(potatoTipper.hasBeenTipped(address(followerReceivingTip), userTipping));
-        assertEq(
-            potatoToken.balanceOf(address(followerReceivingTip)), followerPotatoBalanceBefore + tipAmount
-        );
+        assertEq(potatoToken.balanceOf(address(followerReceivingTip)), followerPotatoBalanceBefore + tipAmount);
 
         // CHECK that the user's gave a tip
         assertEq(potatoToken.balanceOf(userTipping), userPotatoBalanceBefore - tipAmount);
 
         // CHECK that the PotatoTipper allowance decreased by tip amount
         assertEq(
-            potatoToken.authorizedAmountFor(address(potatoTipper), userTipping),
-            potatoTipperAllowanceBefore - tipAmount
+            potatoToken.authorizedAmountFor(address(potatoTipper), userTipping), potatoTipperAllowanceBefore - tipAmount
         );
     }
 
@@ -195,7 +189,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             //.  0000000000000000000000000000000000000000000000000000000000000019 .............
             //.  4c5350313a20747970654964206f7574206f662073636f706500000000000000 .............
             //.  0000000000000000000000000000000000000000000000000000000000000050 .............
-            //.  e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
+            //.
+            // e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
 
             (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
                 abi.decode((logs[i].data), (bytes, bytes));
@@ -210,7 +205,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             //.  0000000000000000000000000000000000000000000000000000000000000019 -> 25 bytes (characters)
             //.  4c5350313a20747970654964206f7574206f662073636f706500000000000000
             //.  0000000000000000000000000000000000000000000000000000000000000050 -> 80 bytes (characters)
-            //.  e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
+            //.
+            // e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
             assertEq(allReturnedLsp1DelegateValues, abi.encode("LSP1: typeId out of scope", expectedMessage));
 
             // CHECK LSP1 Default Delegate returned the right message
@@ -315,8 +311,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(address(user));
         potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
 
-        uint256 potatoTipperAllowanceBefore =
-            potatoToken.authorizedAmountFor(address(potatoTipper), address(user));
+        uint256 potatoTipperAllowanceBefore = potatoToken.authorizedAmountFor(address(potatoTipper), address(user));
         assertEq(potatoTipperAllowanceBefore, tippingBudget);
 
         // CHECK that follower has not received a tip yet
@@ -440,8 +435,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK that another user has given a tip
         assertEq(potatoToken.balanceOf(address(anotherUser)), anotherUserPotatoBalanceBefore - TIP_AMOUNT);
         assertEq(
-            potatoToken.authorizedAmountFor(address(potatoTipper), address(anotherUser)),
-            tippingBudget - TIP_AMOUNT
+            potatoToken.authorizedAmountFor(address(potatoTipper), address(anotherUser)), tippingBudget - TIP_AMOUNT
         );
 
         // CHECK that follower has received a tip from both users
@@ -464,8 +458,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(customTipAmount));
 
         assertEq(
-            abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY), (uint256)),
-            customTipAmount
+            abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY), (uint256)), customTipAmount
         );
 
         // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
@@ -545,7 +538,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         //.  0000000000000000000000000000000000000000000000000000000000000019
         //.  4c5350313a20747970654964206f7574206f662073636f706500000000000000
         //   0000000000000000000000000000000000000000000000000000000000000031
-        //.  f09fa4b7f09f8fbbe2808de29982efb88f204e6f7420656e6f75676820f09fa59420746f2074697020666f6c6c6f776572000000000000000000000000000000;
+        //.
+        // f09fa4b7f09f8fbbe2808de29982efb88f204e6f7420656e6f75676820f09fa59420746f2074697020666f6c6c6f776572000000000000000000000000000000;
 
         // 0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000194c5350313a20747970654964206f7574206f662073636f7065000000000000000000000000000000000000000000000000000000000000000000000000000025e29d8c204e6f7420656e6f756768206c65667420696e2074697070696e6720627564676574000000000000000000000000000000000000000000000000000000
 
@@ -639,10 +633,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(userBrowserExtensionController);
         user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(TIP_AMOUNT));
 
-        assertEq(
-            abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY), (uint256)),
-            TIP_AMOUNT
-        );
+        assertEq(abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY), (uint256)), TIP_AMOUNT);
 
         // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
         vm.prank(address(user));
@@ -666,8 +657,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), 0);
 
-        UniversalProfile anotherFollower =
-            UniversalProfile(payable(0x04063d2b65634a91221596Dc5864e3f12288fA16));
+        UniversalProfile anotherFollower = UniversalProfile(payable(0x04063d2b65634a91221596Dc5864e3f12288fA16));
 
         uint256 anotherFollowerPotatoBalanceBefore = potatoToken.balanceOf(address(anotherFollower));
 
@@ -704,10 +694,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(userBrowserExtensionController);
         user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(TIP_AMOUNT));
 
-        assertEq(
-            abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY), (uint256)),
-            TIP_AMOUNT
-        );
+        assertEq(abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY), (uint256)), TIP_AMOUNT);
 
         // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
         vm.prank(address(user));
@@ -727,12 +714,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             tippingBudget
         );
 
-        assertEq(
-            potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget - TIP_AMOUNT
-        );
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget - TIP_AMOUNT);
 
-        UniversalProfile anotherFollower =
-            UniversalProfile(payable(0x04063d2b65634a91221596Dc5864e3f12288fA16));
+        UniversalProfile anotherFollower = UniversalProfile(payable(0x04063d2b65634a91221596Dc5864e3f12288fA16));
 
         uint256 anotherFollowerPotatoBalanceBefore = potatoToken.balanceOf(address(anotherFollower));
 
@@ -764,9 +748,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     // TODO: change this test (logic changed)
     function test_doesNotRunOnUnfollow() public {
         vm.skip(true);
-        bytes32 lsp1DelegateOnUnfollowDataKey = LSP2Utils.generateMappingKey(
-            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW)
-        );
+        bytes32 lsp1DelegateOnUnfollowDataKey =
+            LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
 
         // Assume the user connected the POTATO Tipper with the data key
         // LSP1UniversalReceiverDelegate:_TYPEID_LSP26_UNFOLLOW
@@ -795,7 +778,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // This cannot happen in production as the follower registry can only trigger `universalReceiver(...)`
         // with the follow and unfollow type IDs, but testing for sanity purpose
-        vm.prank(_FOLLOWER_REGISTRY);
+        vm.prank(address(_FOLLOWER_REGISTRY));
         user.universalReceiver(typeId, abi.encodePacked(address(12_345)));
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -805,9 +788,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     }
 
     function test_existingFollowerCannotTriggerDirectlyToGetTipped() public {
-        assertTrue(
-            LSP26FollowerSystem(_FOLLOWER_REGISTRY).isFollowing(address(existingFollower), address(user))
-        );
+        assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
 
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
         uint256 existingFollowerPotatoBalanceBefore = potatoToken.balanceOf(address(existingFollower));
@@ -845,7 +826,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     }
 
     function test_OnlyCallsFromFollowerRegistry(address caller) public {
-        vm.assume(caller != _FOLLOWER_REGISTRY);
+        vm.assume(caller != address(_FOLLOWER_REGISTRY));
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
         uint256 callerPotatoBalanceBefore = potatoToken.balanceOf(address(caller));
 
@@ -970,9 +951,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
     /// @dev Test user calls directly Potato Tipper with type ID = FOLLOW, address = address that does not
     /// follow
-    function test_userWhoRegisteredPotatoTipperCannotCallContractDirectlyToTipPeopleIfTheyDontActuallyFollow()
-        public
-    {
+    function test_userWhoRegisteredPotatoTipperCannotCallContractDirectlyToTipPeopleIfTheyDontActuallyFollow() public {
         vm.prank(address(user));
         potatoToken.authorizeOperator(address(potatoTipper), TIP_AMOUNT, "");
 
@@ -1010,9 +989,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // assertFalse(potatoTipper.followedAfterPotatoTipper(address(existingFollower), address(user)));
     }
 
-    function test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndAddressThatDoesNotActuallyFollow()
-        public
-    {
+    function test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndAddressThatDoesNotActuallyFollow() public {
         vm.prank(address(user));
         potatoToken.authorizeOperator(address(potatoTipper), TIP_AMOUNT, "");
 
@@ -1050,10 +1027,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         vm.prank(address(user));
         bytes memory returnedData = potatoTipper.universalReceiverDelegate(
-            address(_FOLLOWER_REGISTRY),
-            0,
-            _TYPEID_LSP26_UNFOLLOW,
-            abi.encodePacked(address(existingFollower))
+            address(_FOLLOWER_REGISTRY), 0, _TYPEID_LSP26_UNFOLLOW, abi.encodePacked(address(existingFollower))
         );
 
         assertEq(returnedData, unicode"❌ Not a legitimate unfollow");
@@ -1205,8 +1179,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
     function test_FallbackToDisplayGenericErrorMessageInUniversalReceiverEventIfTippingFails() public {
         // Reverts on token received when tipping 🥔
-        LSP1DelegateRevertsOnLSP7TokensReceived lsp1DelegateReverts =
-            new LSP1DelegateRevertsOnLSP7TokensReceived();
+        LSP1DelegateRevertsOnLSP7TokensReceived lsp1DelegateReverts = new LSP1DelegateRevertsOnLSP7TokensReceived();
 
         _setUpSpecificLSP1DelegateForTokensReceived(
             newFollower, newFollowerBrowserExtensionController, lsp1DelegateReverts

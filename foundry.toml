@@ -35,7 +35,7 @@ optimizer = false
 [fmt]
 bracket_spacing = false
 int_types = "long"
-line_length = 110
+line_length = 120
 multiline_func_header = "attributes_first"
 number_underscore = "thousands"
 quote_style = "double"

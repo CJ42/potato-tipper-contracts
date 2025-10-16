@@ -4,8 +4,9 @@ pragma solidity ^0.8.28;
 // interfaces
 import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
-import {ILSP1UniversalReceiverDelegate as ILSP1Delegate} from
-    "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
+import {
+    ILSP1UniversalReceiverDelegate as ILSP1Delegate
+} from "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
 
 // libraries
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
@@ -14,9 +15,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 // constants
 import {_INTERFACEID_LSP0} from "@lukso/lsp0-contracts/contracts/LSP0Constants.sol";
 import {_INTERFACEID_LSP1_DELEGATE} from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
-import {
-    _TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW
-} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
+import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
 
 // events
@@ -141,8 +140,8 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
     /// @notice Handle follow/unfollow notifications + automatically tip 🥔  tokens to new follower
     ///
-    /// @dev Called by user's 🆙 `universalReceiver(...)` function when receiving a notification from the LSP26
-    /// Follower Registry about a new follower or an unfollow action (extracted from notification `data`).
+    /// @dev Called by user's 🆙 `universalReceiver(...)` function when receiving a notification from the
+    /// LSP26 Follower Registry about a new follower or an unfollow action (extracted from notification `data`).
     ///
     /// @param sender The address that notified the user's UP (MUST be the LSP26 Follower Registry)
     /// @param typeId The type ID of the notification (follow or unfollow)
@@ -156,7 +155,10 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         uint256, /* value */
         bytes32 typeId,
         bytes calldata data
-    ) external returns (bytes memory) {
+    )
+        external
+        returns (bytes memory)
+    {
         // CHECK that this call came from the Follower Registry
         if (sender != address(_FOLLOWER_REGISTRY)) return unicode"❌ Not triggered by the Follower Registry";
 
@@ -236,8 +238,8 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         }
 
         // Allow new followers to unfollow -> re-follow to try to get a tip again
-        // (e.g: if tipped failed because not enough 🥔 in user's balance, tipping budget, or transfer failed)
-        // This allows an `address_` APT to re-follow and still be eligible for a tip.
+        // (e.g: if tipped failed because not enough 🥔 in user's balance, tipping budget, or transfer
+        // failed). This allows an `address_` APT to re-follow and still be eligible for a tip.
         return "";
     }
 
@@ -287,8 +289,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             data: unicode"Thanks for following! Tipping you some 🥔"
         }) {
             emit TipSent({from: msg.sender, to: follower, amount: tipAmount});
-            return
-                abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
+            return abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
             emit TipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
             return unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
