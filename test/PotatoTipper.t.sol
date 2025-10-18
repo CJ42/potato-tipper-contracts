@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 // test libraries
-import {Vm, console} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Test.sol";
 import {UniversalProfileTestHelpers} from "./helpers/UniversalProfileTestHelpers.sol";
 import {LSP1DelegateRevertsOnLSP7TokensReceived} from "./helpers/LSP1DelegateRevertsOnLSP7TokensReceived.sol";
 
@@ -16,32 +16,34 @@ import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7D
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {LSP2Utils} from "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
 import {LSP6Utils} from "@lukso/lsp6-contracts/contracts/LSP6Utils.sol";
+import {PotatoLib} from "../src/PotatoLib.sol";
 
 // constants
 import {
     _INTERFACEID_LSP1_DELEGATE,
     _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX
 } from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
-import {_TYPEID_LSP7_TOKENSRECIPIENT} from "@lukso/lsp7-contracts/contracts/LSP7Constants.sol";
 import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
-import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "../src/Constants.sol";
+import {POTATO_TIPPER_SETTINGS_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "../src/Constants.sol";
 
 // contracts to test
-import {LSP26FollowerSystem} from "@lukso/lsp26-contracts/contracts/LSP26FollowerSystem.sol";
 import {UniversalProfile} from "@lukso/universalprofile-contracts/contracts/UniversalProfile.sol";
 import {PotatoTipper} from "../src/PotatoTipper.sol";
 
 contract PotatoTipperTest is UniversalProfileTestHelpers {
     using Strings for address;
     using LSP6Utils for *;
+    using PotatoLib for bytes;
 
     // TODO: Move to a parent `Config` contract added to the inheritance of the PotatoTipper contract
     // So that dApps can fetch the data key to configure easily without needing to encode with erc725.js
     bytes32 immutable _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY =
-        LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_FOLLOW));
+    // forge-lint: disable-next-line(unsafe-typecast)
+    LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_FOLLOW));
 
     bytes32 immutable _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY =
-        LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
+    // forge-lint: disable-next-line(unsafe-typecast)
+    LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
 
     // Contract addresses from LUKSO Mainnet for mainnet fork testing
     // (🆙 users, 🥔 token, and LSP26 Follower Registry)
@@ -71,6 +73,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     // contract to test
     PotatoTipper potatoTipper;
     uint256 constant TIP_AMOUNT = 1e18; // 1 $POTATO token
+    uint16 constant MIN_FOLLOWER_REQUIRED = 0;
+    uint256 constant MIN_POTATO_BALANCE_REQUIRED = 0;
 
     function setUp() public override {
         super.setUp();
@@ -82,20 +86,26 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         anotherUserBrowserExtensionController = _getControllerAtIndex(anotherUser, 1);
         newFollowerBrowserExtensionController = _getControllerAtIndex(newFollower, 1);
 
-        _grantAddLSP1DelegatePermissionToController(user, userBrowserExtensionController);
-        _grantAddLSP1DelegatePermissionToController(anotherUser, anotherUserBrowserExtensionController);
-        _grantAddLSP1DelegatePermissionToController(newFollower, newFollowerBrowserExtensionController);
+        _grantAddLsp1DelegatePermissionToController(user, userBrowserExtensionController);
+        _grantAddLsp1DelegatePermissionToController(anotherUser, anotherUserBrowserExtensionController);
+        _grantAddLsp1DelegatePermissionToController(newFollower, newFollowerBrowserExtensionController);
 
         vm.startPrank(userBrowserExtensionController);
         user.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
         user.setData(_LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
-        user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(TIP_AMOUNT));
+        user.setData(
+            POTATO_TIPPER_SETTINGS_DATA_KEY,
+            abi.encodePacked(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
+        );
         vm.stopPrank();
 
         vm.startPrank(anotherUserBrowserExtensionController);
         anotherUser.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
         anotherUser.setData(_LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
-        anotherUser.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(TIP_AMOUNT));
+        anotherUser.setData(
+            POTATO_TIPPER_SETTINGS_DATA_KEY,
+            abi.encodePacked(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
+        );
         vm.stopPrank();
     }
 
@@ -455,10 +465,13 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // Set custom tip amount to 5 POTATO tokens
         vm.prank(userBrowserExtensionController);
-        user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(customTipAmount));
+        user.setData(
+            POTATO_TIPPER_SETTINGS_DATA_KEY,
+            abi.encodePacked(customTipAmount, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
+        );
 
         assertEq(
-            abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY), (uint256)), customTipAmount
+            abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_SETTINGS_DATA_KEY), (uint256)), customTipAmount
         );
 
         // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
@@ -480,8 +493,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         );
     }
 
-    function test_customTipAmountIncorrectlySetDontTriggerTip(bytes memory badEncodedDataValue) public {
-        vm.assume(badEncodedDataValue.length != 32);
+    function test_customTipSettingsIncorrectlySetDontTriggerTip(bytes memory badEncodedDataValue) public {
+        vm.assume(badEncodedDataValue.length != 66);
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
         uint256 followerPotatoBalanceBefore = potatoToken.balanceOf(address(newFollower));
 
@@ -489,7 +502,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // Set an incorrect value for the tip amount
         vm.prank(userBrowserExtensionController);
-        user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, badEncodedDataValue);
+        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, badEncodedDataValue);
 
         // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
         vm.prank(address(user));
@@ -544,7 +557,10 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // 0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000194c5350313a20747970654964206f7574206f662073636f7065000000000000000000000000000000000000000000000000000000000000000000000000000025e29d8c204e6f7420656e6f756768206c65667420696e2074697070696e6720627564676574000000000000000000000000000000000000000000000000000000
 
         vm.prank(userBrowserExtensionController);
-        user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(customTipAmount));
+        user.setData(
+            POTATO_TIPPER_SETTINGS_DATA_KEY,
+            abi.encode(customTipAmount, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
+        );
 
         // Authorize the Potato Tipper contract to be able to transfer $POTATO tokens
         vm.prank(address(user));
@@ -590,7 +606,10 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // Set an incorrect value for the tip amount
         vm.prank(userBrowserExtensionController);
-        user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(customTipAmount));
+        user.setData(
+            POTATO_TIPPER_SETTINGS_DATA_KEY,
+            abi.encodePacked(customTipAmount, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
+        );
 
         // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
         vm.prank(address(user));
@@ -631,9 +650,12 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // Set custom tip amount to 5 POTATO tokens
         vm.prank(userBrowserExtensionController);
-        user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(TIP_AMOUNT));
+        user.setData(
+            POTATO_TIPPER_SETTINGS_DATA_KEY,
+            abi.encodePacked(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
+        );
 
-        assertEq(abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY), (uint256)), TIP_AMOUNT);
+        assertEq(abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_SETTINGS_DATA_KEY), (uint256)), TIP_AMOUNT);
 
         // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
         vm.prank(address(user));
@@ -692,9 +714,16 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // Set custom tip amount to 5 POTATO tokens
         vm.prank(userBrowserExtensionController);
-        user.setData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, abi.encode(TIP_AMOUNT));
+        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT));
 
-        assertEq(abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY), (uint256)), TIP_AMOUNT);
+        (
+            uint256 tipAmountSetInProfile,
+            uint256 minFollowerRequiredSetInProfile,
+            uint256 minPotatoBalanceRequiredSetInProfile
+        ) = IERC725Y(address(user)).getData(POTATO_TIPPER_SETTINGS_DATA_KEY).getSettings();
+        assertEq(tipAmountSetInProfile, TIP_AMOUNT);
+        assertEq(minFollowerRequiredSetInProfile, MIN_FOLLOWER_REQUIRED);
+        assertEq(minPotatoBalanceRequiredSetInProfile, MIN_POTATO_BALANCE_REQUIRED);
 
         // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
         vm.prank(address(user));
@@ -749,7 +778,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     function test_doesNotRunOnUnfollow() public {
         vm.skip(true);
         bytes32 lsp1DelegateOnUnfollowDataKey =
-            LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
+        // forge-lint: disable-next-line(unsafe-typecast)
+        LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
 
         // Assume the user connected the POTATO Tipper with the data key
         // LSP1UniversalReceiverDelegate:_TYPEID_LSP26_UNFOLLOW
@@ -1181,7 +1211,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // Reverts on token received when tipping 🥔
         LSP1DelegateRevertsOnLSP7TokensReceived lsp1DelegateReverts = new LSP1DelegateRevertsOnLSP7TokensReceived();
 
-        _setUpSpecificLSP1DelegateForTokensReceived(
+        _setUpSpecificLsp1DelegateForTokensReceived(
             newFollower, newFollowerBrowserExtensionController, lsp1DelegateReverts
         );
 
@@ -1205,8 +1235,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.balanceOf(address(newFollower)), newFollowerPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
-        // TODO: this getter function should be renamed to `hasBeenTipped` and not factor in if the transfer
-        // failed or not because of the LSP7 callback hooks
         assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
