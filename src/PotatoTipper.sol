@@ -99,7 +99,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @notice Check if a `follower` address has already been attempted to be tippied from a `user`'s UP
     ///
     /// @dev The result of this function does not guarantee that the `follower` actually received a tip,
-    /// only that the `user`'s UP attempted to send a tip to the `follower`. This is because the tip transfer
+    /// only that the `user`'s UP attempted to send a tip to the new `follower`. This is because the tip transfer
     /// could have failed for various reasons during the LSP1 `universalReceiver(...)` hook call on the
     /// `follower` and `user`'s UPs.
     ///

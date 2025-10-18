@@ -56,7 +56,7 @@ contract UniversalProfileTestHelpers is Test {
         LSP6KeyManager keyManager = new LSP6KeyManager(address(universalProfile));
 
         _setupMainControllerPermissions(universalProfile, mainController);
-        _setUPMainLSP1DelegateWithPermissions(universalProfile, mainController, mainLsp1DelegateImplementationForUps);
+        _setupMainLsp1DelegateWithPermissions(universalProfile, mainController, mainLsp1DelegateImplementationForUps);
 
         _transferOwnershipToKeyManager(universalProfile, mainController, keyManager);
 
@@ -75,16 +75,16 @@ contract UniversalProfileTestHelpers is Test {
 
         // give SUPER_SETDATA + REENTRANCY permissions to the main LSP1 Universal Receiver Delegate
         // contract
-        bytes32 permissionDataKeyForMainLSP1Delegate =
+        bytes32 permissionDataKeyForMainLsp1Delegate =
             _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX.generateMappingWithGroupingKey(
-                bytes20(abi.encodePacked(mainLSP1DelegateImplementation))
+                bytes20(abi.encodePacked(mainLsp1DelegateImplementation))
             );
 
         // use Bitwise OR to set each permission bit individually
         // (just for simplicity here and avoid creating a `bytes32[] memory` array).
         // However, it is recommended to use the LSP6Utils.combinePermissions(...) function.
         universalProfile.setData(
-            permissionDataKeyForMainLSP1Delegate, abi.encodePacked(_PERMISSION_REENTRANCY | _PERMISSION_SUPER_SETDATA)
+            permissionDataKeyForMainLsp1Delegate, abi.encodePacked(_PERMISSION_REENTRANCY | _PERMISSION_SUPER_SETDATA)
         );
 
         vm.stopPrank();
@@ -127,11 +127,13 @@ contract UniversalProfileTestHelpers is Test {
         vm.startPrank(mainController);
 
         bytes32 dataKeyLsp1DelegateForTokensSent =
-            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP7_TOKENSSENDER));
+        // forge-lint: disable-next-line(unsafe-typecast)
+        _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP7_TOKENSSENDER));
 
         bytes32 dataKeyPermissionsOfLsp1Delegate =
             _LSP6KEY_ADDRESSPERMISSIONS_PERMISSIONS_PREFIX.generateMappingWithGroupingKey(
-                bytes20(abi.encodePacked(specificLsp1Delegate))
+                // forge-lint: disable-next-line(unsafe-typecast)
+                bytes20(address(specificLsp1Delegate))
             );
 
         bytes32 lsp1DelegatePermissionsValue = lsp1DelegatePermissionsList.combinePermissions();
@@ -145,17 +147,18 @@ contract UniversalProfileTestHelpers is Test {
         vm.stopPrank();
     }
 
-    function _setUpSpecificLSP1DelegateForTokensReceived(
+    function _setUpSpecificLsp1DelegateForTokensReceived(
         UniversalProfile universalProfile,
         address mainController,
         ILSP1Delegate specificLsp1Delegate
     ) internal {
-        bytes32 dataKeyLSP1DelegateForTokensReceived =
-            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP7_TOKENSRECIPIENT));
+        bytes32 dataKeyLsp1DelegateForTokensReceived =
+        // forge-lint: disable-next-line(unsafe-typecast)
+        _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP7_TOKENSRECIPIENT));
 
         vm.prank(mainController);
         // register the specific LSP1 delegate to react on tokens received
-        universalProfile.setData(dataKeyLSP1DelegateForTokensReceived, abi.encodePacked(specificLsp1Delegate));
+        universalProfile.setData(dataKeyLsp1DelegateForTokensReceived, abi.encodePacked(specificLsp1Delegate));
 
         vm.stopPrank();
     }
@@ -167,11 +170,13 @@ contract UniversalProfileTestHelpers is Test {
         bytes memory value = profile.getData(addressPermissionDataKeyAtIndex);
         assertTrue(value.length == 20, "not an address under AddressPermissions[index]");
 
+        // casting to 'bytes20' is safe because we checked that the length is 20 bytes
+        // forge-lint: disable-next-line(unsafe-typecast)
         return address(bytes20(value));
     }
 
     /// @dev Give permission to add LSP1 Delegate
-    function _grantAddLSP1DelegatePermissionToController(UniversalProfile profile, address controller) internal {
+    function _grantAddLsp1DelegatePermissionToController(UniversalProfile profile, address controller) internal {
         bytes32 currentPermissions = IERC725Y(address(profile)).getPermissionsFor(controller);
 
         bytes32[] memory newPermissionsList = new bytes32[](2);

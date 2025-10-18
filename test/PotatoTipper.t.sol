@@ -23,12 +23,10 @@ import {
     _INTERFACEID_LSP1_DELEGATE,
     _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX
 } from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
-import {_TYPEID_LSP7_TOKENSRECIPIENT} from "@lukso/lsp7-contracts/contracts/LSP7Constants.sol";
 import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {POTATO_TIPPER_SETTINGS_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "../src/Constants.sol";
 
 // contracts to test
-import {LSP26FollowerSystem} from "@lukso/lsp26-contracts/contracts/LSP26FollowerSystem.sol";
 import {UniversalProfile} from "@lukso/universalprofile-contracts/contracts/UniversalProfile.sol";
 import {PotatoTipper} from "../src/PotatoTipper.sol";
 
@@ -40,10 +38,12 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     // TODO: Move to a parent `Config` contract added to the inheritance of the PotatoTipper contract
     // So that dApps can fetch the data key to configure easily without needing to encode with erc725.js
     bytes32 immutable _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY =
-        LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_FOLLOW));
+    // forge-lint: disable-next-line(unsafe-typecast)
+    LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_FOLLOW));
 
     bytes32 immutable _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY =
-        LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
+    // forge-lint: disable-next-line(unsafe-typecast)
+    LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
 
     // Contract addresses from LUKSO Mainnet for mainnet fork testing
     // (🆙 users, 🥔 token, and LSP26 Follower Registry)
@@ -86,9 +86,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         anotherUserBrowserExtensionController = _getControllerAtIndex(anotherUser, 1);
         newFollowerBrowserExtensionController = _getControllerAtIndex(newFollower, 1);
 
-        _grantAddLSP1DelegatePermissionToController(user, userBrowserExtensionController);
-        _grantAddLSP1DelegatePermissionToController(anotherUser, anotherUserBrowserExtensionController);
-        _grantAddLSP1DelegatePermissionToController(newFollower, newFollowerBrowserExtensionController);
+        _grantAddLsp1DelegatePermissionToController(user, userBrowserExtensionController);
+        _grantAddLsp1DelegatePermissionToController(anotherUser, anotherUserBrowserExtensionController);
+        _grantAddLsp1DelegatePermissionToController(newFollower, newFollowerBrowserExtensionController);
 
         vm.startPrank(userBrowserExtensionController);
         user.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
@@ -778,7 +778,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     function test_doesNotRunOnUnfollow() public {
         vm.skip(true);
         bytes32 lsp1DelegateOnUnfollowDataKey =
-            LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
+        // forge-lint: disable-next-line(unsafe-typecast)
+        LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
 
         // Assume the user connected the POTATO Tipper with the data key
         // LSP1UniversalReceiverDelegate:_TYPEID_LSP26_UNFOLLOW
@@ -1210,7 +1211,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // Reverts on token received when tipping 🥔
         LSP1DelegateRevertsOnLSP7TokensReceived lsp1DelegateReverts = new LSP1DelegateRevertsOnLSP7TokensReceived();
 
-        _setUpSpecificLSP1DelegateForTokensReceived(
+        _setUpSpecificLsp1DelegateForTokensReceived(
             newFollower, newFollowerBrowserExtensionController, lsp1DelegateReverts
         );
 
@@ -1234,8 +1235,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.balanceOf(address(newFollower)), newFollowerPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
-        // TODO: this getter function should be renamed to `hasBeenTipped` and not factor in if the transfer
-        // failed or not because of the LSP7 callback hooks
         assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
