@@ -63,14 +63,14 @@ contract UniversalProfileTestHelpers is Test {
         return universalProfile;
     }
 
-    function _setUPMainLSP1DelegateWithPermissions(
+    function _setupMainLsp1DelegateWithPermissions(
         UniversalProfile universalProfile,
         address mainController,
-        ILSP1Delegate mainLSP1DelegateImplementation
+        ILSP1Delegate mainLsp1DelegateImplementation
     ) internal {
         vm.startPrank(mainController);
         universalProfile.setData(
-            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_KEY, abi.encodePacked(mainLSP1DelegateImplementation)
+            _LSP1_UNIVERSAL_RECEIVER_DELEGATE_KEY, abi.encodePacked(mainLsp1DelegateImplementation)
         );
 
         // give SUPER_SETDATA + REENTRANCY permissions to the main LSP1 Universal Receiver Delegate

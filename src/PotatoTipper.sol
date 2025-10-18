@@ -11,12 +11,13 @@ import {
 // libraries
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {PotatoLib} from "./PotatoLib.sol";
 
 // constants
 import {_INTERFACEID_LSP0} from "@lukso/lsp0-contracts/contracts/LSP0Constants.sol";
 import {_INTERFACEID_LSP1_DELEGATE} from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
-import {POTATO_TIPPER_TIP_AMOUNT_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
+import {POTATO_TIPPER_SETTINGS_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
 
 // events
 import {TipSent, TipFailed} from "./Events.sol";
@@ -69,6 +70,7 @@ import {TipSent, TipFailed} from "./Events.sol";
 contract PotatoTipper is IERC165, ILSP1Delegate {
     using ERC165Checker for address;
     using Strings for address;
+    using PotatoLib for bytes;
 
     /// @dev Track `follower` addresses that received a tip already from a `user`'s UP
     mapping(address user => mapping(address follower => bool tippedAPT)) internal _tipped;
@@ -164,6 +166,8 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
         // Retrieve follower address from the notification data sent by the LSP26 Follower Registry
         if (data.length != 20) return unicode"❌ Invalid data received. Must be a 20 bytes long address";
+        // casting to 'bytes20' is safe because of check above
+        // forge-lint: disable-next-line(unsafe-typecast)
         address follower = address(bytes20(data));
 
         // Only 🆙✅ allowed to receive tips, 🔑❌ not EOAs
@@ -255,12 +259,15 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @param follower The address of the new follower that will receive a tip
     /// @return A human-readable message that can be decoded from the `UniversalReceiver` event
     function _sendTip(address follower) internal returns (bytes memory) {
-        // Fetch tip amount set as config in user's UP metadata
-        bytes memory tipAmountDataValue = IERC725Y(msg.sender).getData(POTATO_TIPPER_TIP_AMOUNT_DATA_KEY);
+        // Fetch configs from user's UP metadata
+        bytes memory settingsValue = IERC725Y(msg.sender).getData(POTATO_TIPPER_SETTINGS_DATA_KEY);
 
         // Tip amount MUST be encoded in wei ($POTATO token has 18 decimals)
-        if (tipAmountDataValue.length != 32) return unicode"❌ Invalid tip amount. Must be encoded as uint256";
-        uint256 tipAmount = uint256(bytes32(tipAmountDataValue));
+        if (settingsValue.length != 66) {
+            return unicode"❌ Invalid settings. Must be encoded as (uint256,uint16,uint256)";
+        }
+
+        (uint256 tipAmount, uint16 minimumFollowers, uint256 minimumPotatoBalance) = settingsValue.getSettings();
 
         // CHECK the address being followed has enough 🥔 to tip.
         if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
@@ -270,6 +277,16 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         // CHECK if the Potato Tipper contract has enough left in its tipping budget
         if (_POTATO_TOKEN.authorizedAmountFor(address(this), msg.sender) < tipAmount) {
             return unicode"❌ Not enough 🥔 left in tipping budget";
+        }
+
+        // CHECK the follower has the minimum number of followers required
+        if (_FOLLOWER_REGISTRY.followerCount(follower) < minimumFollowers) {
+            return unicode"❌ Not eligible for tip: minimum follower required not met";
+        }
+
+        // CHECK if the followers has the minimum amount of $POTATO tokens required
+        if (_POTATO_TOKEN.balanceOf(follower) < minimumPotatoBalance) {
+            return unicode"❌ Not eligible for tip: minimum 🥔 balance required not met";
         }
 
         _tipped[msg.sender][follower] = true;
