@@ -11,11 +11,13 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 >
 > Although it has been thoroughly tested with Foundry and some auditing tools, it has not been formally audited by an external third party auditor.
 >
-> See the **Security Notes & Limitations** for more details on the auditing tools used and the known trade-offs.
+> See the [**Security Notes & Limitations**](#security-notes--limitations) section for more details on the auditing tools used and the known trade-offs.
 
 - [🥔🔁 POTATO Tipper **contracts** - ](#-potato-tipper-contracts----)
   - [Overview](#overview)
-  - [Interaction Flow](#interaction-flow)
+  - [Technical Details](#technical-details)
+    - [Smart contract specifics](#smart-contract-specifics)
+    - [Interaction Flow](#interaction-flow)
   - [Learning](#learning)
   - [Security Notes + Limitations](#security-notes--limitations)
   - [Code Coverage](#code-coverage)
@@ -26,18 +28,27 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 
 ## Overview
 
-- 🫡 Permission-less (not controlled by anyone). Purely an automatic tipping mechanism on-chain.
-- ⚙️ Configurable settings:
+- 🫡 **Permission-less**: smart contract not controlled or governed by anyone
+- 🔄 **Automatic tipping mechanism:** built fully on-chain for 🆙 when receiving new followers
+- 🚫 **Censorship resistant:** tipping happens automatically in the background on-chain, regardless of the dApp you are using to follow the user (not tied to a specific dApp, no _"dApp lock-in"_)
+- ⚙️ **Configurable settings:**
 
   - customizable tip amount (🥔, or 🥔🥔, or 🥔🥔🥔, or more...)
   - allocated tipping budget (cannot use user's full 🥔 balance unless configured as such)
-  - eligibility criterias for a new follower to get a tip (e.g: at least have 3 followers)
+  - eligibility criteria for a new follower to get a tip (_e.g: at least have 3 followers, or X amount of $POTATO tokens_)
 
-- ✅🆙 Only Universal Profile can receive tips (❌🔑 not EOAs)
+- 🌐 **Portable settings:** PotatoTipper’s settings live as metadata inside each user’s 🆙, making them:
+
+  - easily readable (per user, instead of having to interact with the `PotatoTipper` contract)
+  - easily portable (_e.g: if a future Potato Tipper v2 is live, the settings are portable and don’t need to be reset again_)
+
+- ✅🆙 **Only for Universal Profile:** only 🆙 can receive tips (❌🔑 not EOAs)
   - only one tip per UP they follow.
   - Existing followers are not eligible to receive tips.
 
-**For the smart contract technicalities:**
+## Technical Details
+
+### Smart contract specifics
 
 - 📢 Built as an LSP1 Universal Receiver Delegate contract.
 - 🔌 Work automatically once it is _"plugged-in_ to a Universal Profile to reacts on follow / unfollow notifications from LSP26 Follower System. This can be done by setting the Potato Tipper contract address as a value under the following data keys in a UP:
@@ -45,17 +56,17 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
   - `LSP1UniversalReceiverDelegate:LSP26FollowerSystem_FollowNotification` -> `0x0cfc51aec37c55a4d0b1000071e02f9f05bcd5816ec4f3134aa2e5a916669537`
   - `LSP1UniversalReceiverDelegate:LSP26FollowerSystem_UnfollowNotification` -> `0x0cfc51aec37c55a4d0b100009d3c0b4012b69658977b099bdaa51eff0f0460f4`
 
-- 🤝🏻 Act as an operator via `authorizeOperator(...)` to transfer tokens on behalf of the user's UP.
+- 🤝🏻 Act as an operator via [`authorizeOperator(...)`](https://docs.lukso.tech/contracts/contracts/LSP7DigitalAsset/#authorizeoperator) to transfer tokens on behalf of the user's UP.
   - Give it the allocated tipping budget as authorized amount / allowance.
-  - No 🥔 tokens need to be transferred to the Potato Tipper contract (it transfers them on behalf of the user's UP)
+  - No 🥔 tokens need to be transferred to the `PotatoTipper` contract (it transfers them on behalf of the user's 🆙).
 
-## Interaction Flow
+### Interaction Flow
 
 ![Interaction flow diagram](assets/interaction-flow-diagram.png)
 
 ## Learning
 
-You can learn more about the Potato Tipper and its design patterns that use the LSP1 Universal Receiver Delegate standard through the [`LEARN.md`](./LEARN.md) file.
+You can learn more about the Potato Tipper and its design patterns that use the [LSP1 Universal Receiver Delegate](https://docs.lukso.tech/standards/accounts/lsp1-universal-receiver-delegate/) standard through the [`LEARN.md`](./LEARN.md) file.
 
 ## Security Notes + Limitations
 
