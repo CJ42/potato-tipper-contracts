@@ -21,7 +21,7 @@ import {PotatoLib} from "../src/PotatoLib.sol";
 // constants
 import {
     _INTERFACEID_LSP1_DELEGATE,
-    _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX
+    _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX as _LSP1_DELEGATE_PREFIX
 } from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {POTATO_TIPPER_SETTINGS_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "../src/Constants.sol";
@@ -32,6 +32,7 @@ import {PotatoTipper} from "../src/PotatoTipper.sol";
 
 contract PotatoTipperTest is UniversalProfileTestHelpers {
     using Strings for address;
+    using LSP2Utils for *;
     using LSP6Utils for *;
     using PotatoLib for bytes;
 
@@ -39,18 +40,18 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     // So that dApps can fetch the data key to configure easily without needing to encode with erc725.js
     bytes32 immutable _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY =
     // forge-lint: disable-next-line(unsafe-typecast)
-    LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_FOLLOW));
+    _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_FOLLOW));
 
     bytes32 immutable _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY =
     // forge-lint: disable-next-line(unsafe-typecast)
-    LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
+    _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
 
     // Contract addresses from LUKSO Mainnet for mainnet fork testing
     // (🆙 users, 🥔 token, and LSP26 Follower Registry)
     //
     // Note: main controller addresses need to be retrieved to be able to do `setData(...)` to setup in tests:
-    // - LSP1 Delegate to react on follow
-    // - PotatoTipper:TipAmount
+    // - LSP1 Delegate to react on follow + unfollow
+    // - PotatoTipper:Settings
     // ------------------------------------------------------------------------------------------------------------------
 
     ILSP7 potatoToken = _POTATO_TOKEN;
@@ -779,7 +780,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.skip(true);
         bytes32 lsp1DelegateOnUnfollowDataKey =
         // forge-lint: disable-next-line(unsafe-typecast)
-        LSP2Utils.generateMappingKey(_LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX, bytes20(_TYPEID_LSP26_UNFOLLOW));
+        _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
 
         // Assume the user connected the POTATO Tipper with the data key
         // LSP1UniversalReceiverDelegate:_TYPEID_LSP26_UNFOLLOW
