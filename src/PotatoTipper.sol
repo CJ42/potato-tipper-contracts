@@ -107,7 +107,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @param user The address of the user that sent the tip
     ///
     /// @return true if the `follower` has already been tipped by the `user`, false otherwise
-    function hasBeenTipped(address follower, address user) public view returns (bool) {
+    function hasBeenTipped(address follower, address user) external view returns (bool) {
         return _tipped[user][follower];
     }
 
@@ -123,7 +123,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @param user The address of the user that was followed
     ///
     /// @return true if `follower` was already following `user` before it connected to the Potato Tipper.
-    function wasFollowingBeforePotatoTipper(address follower, address user) public view returns (bool) {
+    function wasFollowingBeforePotatoTipper(address follower, address user) external view returns (bool) {
         return _wasFollowing[user][follower];
     }
 
@@ -133,7 +133,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @param follower The address of the follower that followed `user`.
     /// @param user The address of the user that was followed.
     /// @return true if `follower` followed `user` after it connected to the Potato Tipper, false otherwise.
-    function followedAfterPotatoTipper(address follower, address user) public view returns (bool) {
+    function followedAfterPotatoTipper(address follower, address user) external view returns (bool) {
         return _hasFollowedSinceDelegate[user][follower];
     }
 
