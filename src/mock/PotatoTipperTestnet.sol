@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.28;
 
+import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7DigitalAsset.sol";
 import {PotatoTipper} from "../PotatoTipper.sol";
 
 // Address of the $POTATO Token contract deployed on LUKSO Testnet.
