@@ -49,15 +49,15 @@ A brand could tip its new followers in LYX, other tokens, tokens created by the 
 
 ## Data Keys
 
-The Potato Tipper stores the configurations such as the custom tip amount under each user's 🆙. Below are their LSP2 JSON Schemas:
+The Potato Tipper stores the configurations such as the custom tip amount and tip eligibility criterias under each user's 🆙. Below is the LSP2 JSON Schema for tip settings:
 
 ```json
 {
-  "name": "PotatoTipper:TipAmount",
-  "key": "0xd1d57abed02d4c2d7ce000007ac37193edd83998b040b27baa12f8c01dc5eec0",
-  "keyType": "Mapping",
-  "valueType": "uint256",
-  "valueContent": "Number"
+    "name": "PotatoTipper:Settings",
+    "key": "0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a",
+    "keyType": "Mapping",
+    "valueType": "(uint256,uint16,uint256)",
+    "valueContent": "(Number,Number,Number)"
 }
 ```
 
