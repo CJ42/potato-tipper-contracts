@@ -77,11 +77,11 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
     /// @dev Track `follower` addresses that followed a user's 🆙 AFTER the Potato Tipper was connected
     /// Regardless if the follower received a tip or not
-    mapping(address user => mapping(address follower => bool followedAPT)) private _hasFollowedSinceDelegate;
+    mapping(address user => mapping(address follower => bool followedAPT)) internal _hasFollowedSinceDelegate;
 
     /// @dev Track followers that existed BEFORE the Potato Tipper was connected to the user's UP
     /// (observed via an unfollow notifications without any post-install follow ever observed)
-    mapping(address user => mapping(address follower => bool followedBPT)) private _wasFollowing;
+    mapping(address user => mapping(address follower => bool followedBPT)) internal _wasFollowing;
 
     /// @notice Check if the contract implements a given interface
     ///

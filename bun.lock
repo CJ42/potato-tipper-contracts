@@ -5,9 +5,10 @@
       "name": "lukso-foundry-template",
       "dependencies": {
         "@lukso/lsp-smart-contracts": "latest",
+        "@openzeppelin-v5-contracts": "npm:@openzeppelin/contracts@^5.0.0",
       },
       "devDependencies": {
-        "@remix-project/remixd": "^0.6.40",
+        "@remix-project/remixd": "^0.6.56",
         "@types/bun": "latest",
         "lcov-summary": "^1.0.1",
         "solhint": "^6.0.1",
@@ -195,6 +196,8 @@
 
     "@noble/secp256k1": ["@noble/secp256k1@1.6.3", "", {}, "sha512-T04e4iTurVy7I8Sw4+c5OSN9/RkPlo1uKxAomtxQNLq8j1uPAqnsqG1bqvY3Jv7c13gyr6dui0zmh/I3+f/JaQ=="],
 
+    "@openzeppelin-v5-contracts": ["@openzeppelin/contracts@5.4.0", "", {}, "sha512-eCYgWnLg6WO+X52I16TZt8uEjbtdkgLC0SUX/xnAksjjrQI4Xfn4iBRoI5j55dmlOhDv1Y7BoR3cU7e3WWhC6A=="],
+
     "@openzeppelin/contracts": ["@openzeppelin/contracts@4.9.6", "", {}, "sha512-xSmezSupL+y9VkHZJGDoCBpmnB2ogM13ccaYDWqJTfS3dbuHkgjuwDFUmaFauBCboQMGB/S5UqUl2y54X99BmA=="],
 
     "@openzeppelin/contracts-upgradeable": ["@openzeppelin/contracts-upgradeable@4.9.6", "", {}, "sha512-m4iHazOsOCv1DgM7eD7GupTJ+NFVujRZt1wzddDPSVGpWdKq1SKkla5htKG7+IS4d2XOCtzkUNwRZ7Vq5aEUMA=="],
@@ -209,7 +212,7 @@
 
     "@remix-project/remix-solidity": ["@remix-project/remix-solidity@0.5.64", "", { "dependencies": { "@ethereumjs/block": "^10.0.0", "@ethereumjs/tx": "github:yann300/ethereumjs-vm#fixV10", "@ethereumjs/util": "^10.0.0", "@ethereumjs/vm": "^10.0.0", "@remix-project/remix-lib": "^0.5.85", "async": "^2.6.2", "eslint-scope": "^5.0.0", "ethers": "^6.14.0", "ethjs-util": "^0.1.6", "minixhr": "^3.2.2", "semver": "^6.3.0", "solc": "0.8.26", "string-similarity": "^4.0.4", "web3": "^4.1.1", "webworkify-webpack": "^2.1.5" } }, "sha512-f+W/uUioVaTvJeZtJRFgElBPSrkxesbC7Fxe/e19POZPf+n356yDnMrBWaV82f0p6l1IBPL3O967oHVV20IivQ=="],
 
-    "@remix-project/remixd": ["@remix-project/remixd@0.6.54", "", { "dependencies": { "@remix-project/remix-solidity": "^0.5.36", "@remixproject/plugin": "0.3.33", "@remixproject/plugin-api": "0.3.33", "@remixproject/plugin-utils": "0.3.33", "@remixproject/plugin-ws": "0.3.33", "axios": "1.8.2", "bn.js": "^5.1.2", "chokidar": "^2.1.8", "commander": "^9.4.1", "fs-extra": "^3.0.1", "isbinaryfile": "^3.0.2", "latest-version": "^5.1.0", "semver": "^6.3.0", "ws": "^7.3.0" }, "bin": { "remixd": "src/bin/remixd.js" } }, "sha512-wPxilWirSlJzOf7A/v1EJ38/Eh6VGTjq6Nhvzd7yi2oApSjCjDHPOXPGK4nmPDyDo/VXJ0YR3vKRwaGa0sdEbQ=="],
+    "@remix-project/remixd": ["@remix-project/remixd@0.6.56", "", { "dependencies": { "@remix-project/remix-solidity": "^0.5.36", "@remixproject/plugin": "0.3.33", "@remixproject/plugin-api": "0.3.33", "@remixproject/plugin-utils": "0.3.33", "@remixproject/plugin-ws": "0.3.33", "axios": "1.8.2", "bn.js": "^5.1.2", "chokidar": "^2.1.8", "commander": "^9.4.1", "fs-extra": "^3.0.1", "isbinaryfile": "^3.0.2", "latest-version": "^5.1.0", "semver": "^6.3.0", "ws": "^7.3.0" }, "bin": { "remixd": "src/bin/remixd.js" } }, "sha512-hp4gESXstURbokeqHCk1GQGlljeMnmxC8639BlveYMAzm1St+1mhFYcFrOijO746e2GcLQSWT9l3YHfEHSc8lA=="],
 
     "@remixproject/plugin": ["@remixproject/plugin@0.3.33", "", { "dependencies": { "@remixproject/plugin-api": "0.3.33", "@remixproject/plugin-utils": "0.3.33", "events": "3.2.0" } }, "sha512-ia6LevsWYPkcRwOBl3umA2fPCgYt2TmB437Pafs9BE6fD9judEvlvEqXjBy9GLBsZzZWSiyYenOnW8HIiwqfMA=="],
 

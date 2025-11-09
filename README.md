@@ -5,7 +5,7 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 | Network       | Contract address |
 | :------------ | :--------------- |
 | LUKSO Mainnet | 🔜               |
-| LUKSO Testnet | 🔜               |
+| LUKSO Testnet | (code will change) `0xf2b2ac53d3A3EeaF2a2a10084b0EC88F2424f066` |
 
 > **⚠️ Disclaimer:** the `PotatoTipper.sol` contract is experimental. Use it responsibly and at your own risk.
 >
