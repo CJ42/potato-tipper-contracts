@@ -780,7 +780,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.skip(true);
         bytes32 lsp1DelegateOnUnfollowDataKey =
         // forge-lint: disable-next-line(unsafe-typecast)
-        _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
+        _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
 
         // Assume the user connected the POTATO Tipper with the data key
         // LSP1UniversalReceiverDelegate:_TYPEID_LSP26_UNFOLLOW

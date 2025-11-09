@@ -5,7 +5,7 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 | Network       | Contract address |
 | :------------ | :--------------- |
 | LUKSO Mainnet | 🔜               |
-| LUKSO Testnet | 🔜               |
+| LUKSO Testnet | (code will change) `0xf2b2ac53d3A3EeaF2a2a10084b0EC88F2424f066` |
 
 > **⚠️ Disclaimer:** the `PotatoTipper.sol` contract is experimental. Use it responsibly and at your own risk.
 >
@@ -69,6 +69,8 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 You can learn more about the Potato Tipper and its design patterns that use the [LSP1 Universal Receiver Delegate](https://docs.lukso.tech/standards/accounts/lsp1-universal-receiver-delegate/) standard through the [`LEARN.md`](./LEARN.md) file.
 
 ## Security Notes + Limitations
+
+> For security reports and audits using AI auditing tools from Ackee and Nethermind, see the [`audits/`](./audits/) folder.
 
 - New followers can only get tipped once. They cannot unfollow and re-follow to try to get tips many times.
 - The Potato Tipper only works for new followers (therefore the notion of an _"incentive system"_). Existing followers cannot get tipped (as mentioned above). If a user (Alice) connects the Potato Tipper to its UP, and Bob was following Alice before she used the Potato Tipper, Bob will never be able to get a tip from the Potato Tipper contract. Even by trying to unfollow and re-follow Alice.
