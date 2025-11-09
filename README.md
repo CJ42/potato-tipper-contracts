@@ -70,6 +70,8 @@ You can learn more about the Potato Tipper and its design patterns that use the 
 
 ## Security Notes + Limitations
 
+> For security reports and audits using AI auditing tools from Ackee and Nethermind, see the [`audits/`](./audits/) folder.
+
 - New followers can only get tipped once. They cannot unfollow and re-follow to try to get tips many times.
 - The Potato Tipper only works for new followers (therefore the notion of an _"incentive system"_). Existing followers cannot get tipped (as mentioned above). If a user (Alice) connects the Potato Tipper to its UP, and Bob was following Alice before she used the Potato Tipper, Bob will never be able to get a tip from the Potato Tipper contract. Even by trying to unfollow and re-follow Alice.
 - If Alice's UP follows Bob's UP and get tipped some 🥔, this does not guarantee that Alice will keep following Bob's afterwards. If Alice unfollows Bob, Bob will not get the 🥔 he tipped back. The Potato Tipper is not opinionated towards this behaviour as UPs might unfollow each other afterwards for legitimate reasons. The Potato Tipper cannot differentiate that.

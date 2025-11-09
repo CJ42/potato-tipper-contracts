@@ -7,10 +7,10 @@ import {PotatoTipper} from "../PotatoTipper.sol";
 // Address of the $POTATO Token contract deployed on LUKSO Testnet.
 ILSP7 constant _POTATO_TOKEN = ILSP7(0x3bbb93Dfc6e238fb345301c124c84BcA53eBedB8);
 
-/// @dev dummy PotatoTipper contract currently used on testnet for testing purposes (includes owner reset functions for ease of testing)
-/// Useful to import in Remix and add in the interface
-/// Note that if this contract is deployed, it will not work for tipping since the `_POTATO_TOKEN` address is not the one used above
-/// but the one from `Constants.sol`
+/// @dev dummy PotatoTipper contract currently used on testnet for testing purposes (includes owner reset functions for
+/// ease of testing) Useful to import in Remix and add in the interface
+/// Note that if this contract is deployed, it will not work for tipping since the `_POTATO_TOKEN` address is not the
+/// one used above but the one from `Constants.sol`
 contract PotatoTipperTestnet is PotatoTipper {
     address internal _owner;
 
@@ -32,5 +32,4 @@ contract PotatoTipperTestnet is PotatoTipper {
         require(msg.sender == _owner, "Only owner can reset hasFollowedSinceDelegate status");
         _hasFollowedSinceDelegate[user][follower] = false;
     }
-
 }
