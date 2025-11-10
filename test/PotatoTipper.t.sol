@@ -19,7 +19,7 @@ import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7D
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {LSP2Utils} from "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
 import {LSP6Utils} from "@lukso/lsp6-contracts/contracts/LSP6Utils.sol";
-import {PotatoLib} from "../src/PotatoLib.sol";
+import "../src/PotatoTipperSettingsLib.sol" as SettingsLib;
 
 // constants
 import {
@@ -37,7 +37,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     using Strings for address;
     using LSP2Utils for *;
     using LSP6Utils for *;
-    using PotatoLib for bytes;
+    using {SettingsLib.loadTipSettingsRaw} for IERC725Y;
+    using {SettingsLib.decodeTipSettings} for bytes;
 
     // TODO: Move to a parent `Config` contract added to the inheritance of the PotatoTipper contract
     // So that dApps can fetch the data key to configure easily without needing to encode with erc725.js
@@ -762,12 +763,16 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
         );
 
+        bytes memory rawSettingsValue = IERC725Y(address(user)).loadTipSettingsRaw();
+
+        (, SettingsLib.TipSettings memory tipSettings,) = rawSettingsValue.decodeTipSettings();
+
         (
-            /* bool decodingSuccess */,
             uint256 tipAmountSetInProfile,
             uint256 minFollowerRequiredSetInProfile,
             uint256 minPotatoBalanceRequiredSetInProfile
-        ) = IERC725Y(address(user)).getData(POTATO_TIPPER_SETTINGS_DATA_KEY).decodeSettings();
+        ) = (tipSettings.tipAmount, tipSettings.minimumFollowers, tipSettings.minimumPotatoBalance);
+
         assertEq(tipAmountSetInProfile, TIP_AMOUNT);
         assertEq(minFollowerRequiredSetInProfile, MIN_FOLLOWER_REQUIRED);
         assertEq(minPotatoBalanceRequiredSetInProfile, MIN_POTATO_BALANCE_REQUIRED);
@@ -824,9 +829,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     // TODO: change this test (logic changed)
     function test_doesNotRunOnUnfollow() public {
         vm.skip(true);
-        bytes32 lsp1DelegateOnUnfollowDataKey =
-        // forge-lint: disable-next-line(unsafe-typecast)
-        _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
+        bytes32 lsp1DelegateOnUnfollowDataKey = _LSP1_DELEGATE_PREFIX // forge-lint: disable-next-line(unsafe-typecast)
+            .generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
 
         // Assume the user connected the POTATO Tipper with the data key
         // LSP1UniversalReceiverDelegate:_TYPEID_LSP26_UNFOLLOW
@@ -1081,7 +1085,10 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             address(_FOLLOWER_REGISTRY), 0, _TYPEID_LSP26_UNFOLLOW, abi.encodePacked(address(newFollower))
         );
 
-        assertEq(returnedData, unicode"👋🏻 Assuming existing follower BPT is unfollowing (not eligible for a tip if re-follow). Goodbye!");
+        assertEq(
+            returnedData,
+            unicode"👋🏻 Assuming existing follower BPT is unfollowing (not eligible for a tip if re-follow). Goodbye!"
+        );
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
 
         assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
