@@ -2,8 +2,11 @@
 pragma solidity ^0.8.28;
 
 /// @title PotatoLib
+/// @author Jean Cavallera (CJ42)
 /// @notice Library for parsing PotatoTipper settings stored in the LSP2 ERC725Y data key `PotatoTipper:Settings`.
 library PotatoLib {
+    /// @notice Helper function to decode the tipping settings stored on a user's UP.
+    ///
     /// @dev Parses the raw bytes value stored under the `PotatoTipper:Settings` data key and decodes its tuple
     /// components: - tipAmount (uint256) = 32 bytes long
     /// - minimumFollowers (uint256) = 32 bytes long

@@ -229,7 +229,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         if (isFollowing) return unicode"❌ Not a legitimate unfollow";
 
         // Don't do anything if follower already received a tip (legitimate unfollow APT)
-        if (_tipped[msg.sender][address_]) return "";
+        if (_tipped[msg.sender][address_]) return unicode"👋🏻 Already tipped, now unfollowing. Goodbye!";
 
         // If `address_` never followed the user after it connected the Potato Tipper,
         // this proves that `address_` was an existing follower at install time BPT.
@@ -238,13 +238,13 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         // Lock them out and prevent from tipping them if they try to re-follow.
         if (!_hasFollowedSinceDelegate[msg.sender][address_]) {
             _wasFollowing[msg.sender][address_] = true;
-            return "";
+            return unicode"👋🏻 Assuming existing follower BPT is unfollowing (not eligible for a tip if re-follow). Goodbye!";
         }
 
         // Allow new followers to unfollow -> re-follow to try to get a tip again
         // (e.g: if tipped failed because not enough 🥔 in user's balance, tipping budget, or transfer
         // failed). This allows an `address_` APT to re-follow and still be eligible for a tip.
-        return "";
+        return unicode"👋🏻 Sorry to see you go. Hope you follow again soon! Goodbye!";
     }
 
     /// @notice Internal function to send 🥔 $POTATO tokens as tips to the new follower
