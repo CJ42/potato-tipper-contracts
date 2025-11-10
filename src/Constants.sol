@@ -17,7 +17,7 @@ import {ILSP26FollowerSystem as ILSP26} from "@lukso/lsp26-contracts/contracts/I
 //     name: "PotatoTipper:Settings",
 //     key: 0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a,
 //     keyType: "Mapping",
-//     valueType: "(uint256,uint16,uint256)",
+//     valueType: "(uint256,uint256,uint256)",
 //     valueContent: "(Number,Number,Number)"
 // }
 bytes32 constant POTATO_TIPPER_SETTINGS_DATA_KEY = 0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a;

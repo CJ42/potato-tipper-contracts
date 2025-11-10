@@ -262,12 +262,13 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         // Fetch configs from user's UP metadata
         bytes memory settingsValue = IERC725Y(msg.sender).getData(POTATO_TIPPER_SETTINGS_DATA_KEY);
 
-        // Tip amount MUST be encoded in wei ($POTATO token has 18 decimals)
-        if (settingsValue.length != 66) {
-            return unicode"❌ Invalid settings. Must be encoded as (uint256,uint16,uint256)";
-        }
+        (bool decodingSuccess, uint256 tipAmount, uint256 minimumFollowers, uint256 minimumPotatoBalance) =
+            settingsValue.decodeSettings();
 
-        (uint256 tipAmount, uint16 minimumFollowers, uint256 minimumPotatoBalance) = settingsValue.getSettings();
+        // CHECK if the settings value is valid
+        if (!decodingSuccess) {
+            return unicode"❌ Invalid settings value. Must be 96 bytes long encoded as (uint256,uint256,uint256)";
+        }
 
         // CHECK the address being followed has enough 🥔 to tip.
         if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {

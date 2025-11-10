@@ -74,7 +74,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     // contract to test
     PotatoTipper potatoTipper;
     uint256 constant TIP_AMOUNT = 1e18; // 1 $POTATO token
-    uint16 constant MIN_FOLLOWER_REQUIRED = 0;
+    uint256 constant MIN_FOLLOWER_REQUIRED = 0;
     uint256 constant MIN_POTATO_BALANCE_REQUIRED = 0;
 
     function setUp() public override {
@@ -95,8 +95,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         user.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
         user.setData(_LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
         user.setData(
-            POTATO_TIPPER_SETTINGS_DATA_KEY,
-            abi.encodePacked(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
+            POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
         );
         vm.stopPrank();
 
@@ -104,8 +103,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         anotherUser.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
         anotherUser.setData(_LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
         anotherUser.setData(
-            POTATO_TIPPER_SETTINGS_DATA_KEY,
-            abi.encodePacked(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
+            POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
         );
         vm.stopPrank();
     }
@@ -495,7 +493,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     }
 
     function test_customTipSettingsIncorrectlySetDontTriggerTip(bytes memory badEncodedDataValue) public {
-        vm.assume(badEncodedDataValue.length != 66);
+        vm.assume(badEncodedDataValue.length != 96);
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
         uint256 followerPotatoBalanceBefore = potatoToken.balanceOf(address(newFollower));
 
@@ -531,7 +529,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"❌ Invalid tip amount. Must be encoded as uint256"
+            logs,
+            address(newFollower),
+            unicode"❌ Invalid settings value. Must be 96 bytes long encoded as (uint256,uint256,uint256)"
         );
     }
 
@@ -715,13 +715,16 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // Set custom tip amount to 5 POTATO tokens
         vm.prank(userBrowserExtensionController);
-        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT));
+        user.setData(
+            POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
+        );
 
         (
+            /* bool decodingSuccess */,
             uint256 tipAmountSetInProfile,
             uint256 minFollowerRequiredSetInProfile,
             uint256 minPotatoBalanceRequiredSetInProfile
-        ) = IERC725Y(address(user)).getData(POTATO_TIPPER_SETTINGS_DATA_KEY).getSettings();
+        ) = IERC725Y(address(user)).getData(POTATO_TIPPER_SETTINGS_DATA_KEY).decodeSettings();
         assertEq(tipAmountSetInProfile, TIP_AMOUNT);
         assertEq(minFollowerRequiredSetInProfile, MIN_FOLLOWER_REQUIRED);
         assertEq(minPotatoBalanceRequiredSetInProfile, MIN_POTATO_BALANCE_REQUIRED);
