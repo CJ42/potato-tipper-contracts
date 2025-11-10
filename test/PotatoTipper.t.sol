@@ -531,7 +531,47 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"❌ Invalid settings value. Must be 96 bytes long encoded as (uint256,uint256,uint256)"
+            unicode"❌ Invalid settings: settings value must be encoded as a 96 bytes long tuple of (uint256,uint256,uint256)"
+        );
+    }
+
+    function test_customTipAmountZeroDontTriggerTip() public {
+        uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
+        uint256 followerPotatoBalanceBefore = potatoToken.balanceOf(address(newFollower));
+
+        uint256 tippingBudget = 10 * TIP_AMOUNT;
+
+        // Set an incorrect value for the tip amount
+        vm.prank(userBrowserExtensionController);
+        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(0, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED));
+
+        // Authorize the Potato Tipper contract to be able to transfer $POTATO tokens
+        vm.prank(address(user));
+        potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
+
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+
+        // CHECK that follower has not received a tip yet
+        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+
+        vm.recordLogs();
+
+        vm.prank(address(newFollower));
+        _FOLLOWER_REGISTRY.follow(address(user));
+
+        // CHECK that follower has NOT received a tip (tipping was not triggered)
+        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore);
+
+        // CHECK that the user's did NOT give a tip
+        // - user's $POTATO balance has NOT changed
+        // - `POTATOTipper` allowance has NOT changed
+        assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs, address(newFollower), unicode"❌ Invalid settings: cannot set tip amount to 0"
         );
     }
 

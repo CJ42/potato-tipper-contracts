@@ -267,8 +267,11 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
         // CHECK if the settings value is valid
         if (!decodingSuccess) {
-            return unicode"❌ Invalid settings value. Must be 96 bytes long encoded as (uint256,uint256,uint256)";
+            return unicode"❌ Invalid settings: settings value must be encoded as a 96 bytes long tuple of (uint256,uint256,uint256)";
         }
+
+        // CHECK the tip amount is not 0 to not trigger a token transfer with 0 value
+        if (tipAmount == 0) return unicode"❌ Invalid settings: cannot set tip amount to 0";
 
         // CHECK the address being followed has enough 🥔 to tip.
         if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
