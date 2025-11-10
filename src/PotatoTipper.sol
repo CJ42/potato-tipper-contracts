@@ -312,6 +312,10 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             emit TipSent({from: msg.sender, to: follower, amount: tipAmount});
             return abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
+            // If the token transfer failed (because `universalReceiver(...)` function reverted
+            // when notifying sender or recipient), revert state and do not mark the follower as tipped.
+            _tipped[msg.sender][follower] = false;
+
             emit TipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
             return unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
         }

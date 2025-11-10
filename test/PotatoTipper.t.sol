@@ -10,6 +10,9 @@ import {LSP1DelegateRevertsOnLSP7TokensReceived} from "./helpers/LSP1DelegateRev
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
 import {ILSP1UniversalReceiver} from "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiver.sol";
+import {
+    ILSP1UniversalReceiverDelegate as ILSP1Delegate
+} from "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiverDelegate.sol";
 import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7DigitalAsset.sol";
 
 // utils
@@ -87,9 +90,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         anotherUserBrowserExtensionController = _getControllerAtIndex(anotherUser, 1);
         newFollowerBrowserExtensionController = _getControllerAtIndex(newFollower, 1);
 
-        _grantAddLsp1DelegatePermissionToController(user, userBrowserExtensionController);
-        _grantAddLsp1DelegatePermissionToController(anotherUser, anotherUserBrowserExtensionController);
-        _grantAddLsp1DelegatePermissionToController(newFollower, newFollowerBrowserExtensionController);
+        _grantAddAndEditLsp1DelegatePermissionToController(user, userBrowserExtensionController);
+        _grantAddAndEditLsp1DelegatePermissionToController(anotherUser, anotherUserBrowserExtensionController);
+        _grantAddAndEditLsp1DelegatePermissionToController(newFollower, newFollowerBrowserExtensionController);
 
         vm.startPrank(userBrowserExtensionController);
         user.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
@@ -1279,7 +1282,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.balanceOf(address(newFollower)), newFollowerPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
-        assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+
+        // CHECK the the follower has not been marked as tipped
+        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
@@ -1300,5 +1305,34 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             assertEq(string(returnedDataDefaultLsp1Delegate), "LSP1: typeId out of scope");
             assertEq(returnedDataPotatoTipper, expectedMessage);
         }
+
+        // Unfollow and re-follow to test that the follower can re-try to follow to receive a tip
+        vm.prank(address(newFollower));
+        _FOLLOWER_REGISTRY.unfollow(address(user));
+
+        // Remove the specific LSP1 delegate that reverts on token received
+        _setUpSpecificLsp1DelegateForTokensReceived(
+            newFollower, newFollowerBrowserExtensionController, ILSP1Delegate(address(0))
+        );
+
+        vm.recordLogs();
+
+        vm.prank(address(newFollower));
+        _FOLLOWER_REGISTRY.follow(address(user));
+
+        // CHECK that follower has NOT received a tip (tipping failed)
+        assertEq(potatoToken.balanceOf(address(newFollower)), newFollowerPotatoBalanceBefore + TIP_AMOUNT);
+        assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore - TIP_AMOUNT);
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget - TIP_AMOUNT);
+
+        // CHECK the the follower has not been marked as tipped
+        assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+
+        Vm.Log[] memory newLogs = vm.getRecordedLogs();
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            newLogs,
+            address(newFollower),
+            unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+        );
     }
 }
