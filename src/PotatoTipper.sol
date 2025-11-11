@@ -11,13 +11,13 @@ import {
 // libraries
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {PotatoLib} from "./PotatoLib.sol";
+import "./PotatoTipperSettingsLib.sol" as SettingsLib;
 
 // constants
 import {_INTERFACEID_LSP0} from "@lukso/lsp0-contracts/contracts/LSP0Constants.sol";
 import {_INTERFACEID_LSP1_DELEGATE} from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
-import {POTATO_TIPPER_SETTINGS_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
+import {_FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
 
 // events
 import {TipSent, TipFailed} from "./Events.sol";
@@ -52,7 +52,10 @@ import {TipSent, TipFailed} from "./Events.sol";
 // ⠀⠀⠀⠀⠀⠀⠈⠻⣿⣷⣹⢞⡽⢮⣝⡳⣎⢷⡹⣎⢷⡹⣎⢷⣿⣧⣟⢮⣳⣛⡾⣝⡻⣞⣽⢿⡽⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 // ⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⢻⡿⣼⡳⣎⢷⡹⣎⢷⡹⣎⢷⡹⣾⣿⣿⢿⣫⣿⣿⡜⣧⢟⡾⠜⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 // ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⠿⣹⡞⡵⢯⡞⣵⣫⣞⣵⣳⡞⣼⢣⡷⣻⡼⠽⠚⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-// ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠑⠛⠒⠛⠚⠓⠓⠛⠊⠉⠉⠀⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+// ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠑⠛⠒⠛⠚⠓⠓⠛⠊⠉⠉⠀⠁⠀⠀⠀⠀⠀⠀
+using {SettingsLib.loadTipSettingsRaw} for IERC725Y;
+using {SettingsLib.decodeTipSettings} for bytes;
+using {ERC165Checker.supportsInterface} for address;
 
 /**
  * @title The PotatoTipper contract allows a 🆙 to react when receiving a new follower,
@@ -68,9 +71,7 @@ import {TipSent, TipFailed} from "./Events.sol";
  * auditor. The contract does not guarantee to be bug free. Use responsibly at your own risk.
  */
 contract PotatoTipper is IERC165, ILSP1Delegate {
-    using ERC165Checker for address;
     using Strings for address;
-    using PotatoLib for bytes;
 
     /// @dev Track `follower` addresses that received a tip already from a `user`'s UP
     mapping(address user => mapping(address follower => bool tippedAPT)) internal _tipped;
@@ -149,12 +150,12 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @param typeId The type ID of the notification (follow or unfollow)
     /// @param data Sent by the LSP26 Follower registry when notifying user (MUST be a 20 bytes long address)
     ///
-    /// @return message A human-readable message that can be decoded from the `UniversalReceiver` event log
+    /// @return message A human-readable message that can be decoded from the `UniversalReceiver` event.
     ///
     // solhint-disable-next-line use-natspec
     function universalReceiverDelegate(
         address sender,
-        uint256, /* value */
+        uint256, // value (unused parameter)
         bytes32 typeId,
         bytes calldata data
     )
@@ -166,6 +167,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
         // Retrieve follower address from the notification data sent by the LSP26 Follower Registry
         if (data.length != 20) return unicode"❌ Invalid data received. Must be a 20 bytes long address";
+
         // casting to 'bytes20' is safe because of check above
         // forge-lint: disable-next-line(unsafe-typecast)
         address follower = address(bytes20(data));
@@ -180,7 +182,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         return unicode"❌ Not a follow or unfollow notification";
     }
 
-    /// Internal functions
+    /// Internal handlers
     /// ------------------
 
     /// @notice Handle a new follower notification and tip 🥔 $POTATO tokens if eligible
@@ -213,7 +215,25 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             return unicode"🙅🏻 Follower followed before. Not eligible for a tip";
         }
 
-        return _sendTip(follower);
+        // Fetch the tipping settings saved in the user's 🆙 metadata and CHECK if these settings are valid
+        bytes memory settingsValue = IERC725Y(msg.sender).loadTipSettingsRaw();
+        (bool decodingSuccess, SettingsLib.TipSettings memory tipSettings, bytes memory decodingError) =
+            settingsValue.decodeTipSettings();
+        if (!decodingSuccess) return decodingError;
+
+        // CHECK the follower is eligible to receive a tip according to user's settings
+        (bool isEligible, bytes memory eligibilityError) =
+            _validateTipEligibilityCriterias(follower, tipSettings.minimumFollowers, tipSettings.minimumPotatoBalance);
+        if (!isEligible) return eligibilityError;
+
+        /// pre-transfer CHECKS to ensure the tip can be sent (sufficient 🥔 balance and tipping budget left, as
+        /// enough allowance left for the PotatoTipper contract) These checks are also done in LSP7 (inside the Potato
+        /// token contract), but performed earlier to avoid consuming gas during the token transfer and returning large
+        /// error data on failed token transfer.
+        (bool canTransferTip, bytes memory preTransferError) = _validateCanTransferTip(tipSettings.tipAmount);
+        if (!canTransferTip) return preTransferError;
+
+        return _transferTip(follower, tipSettings.tipAmount);
     }
 
     /// @notice Handle an unfollow notification
@@ -229,7 +249,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         if (isFollowing) return unicode"❌ Not a legitimate unfollow";
 
         // Don't do anything if follower already received a tip (legitimate unfollow APT)
-        if (_tipped[msg.sender][address_]) return "";
+        if (_tipped[msg.sender][address_]) return unicode"👋🏻 Already tipped, now unfollowing. Goodbye!";
 
         // If `address_` never followed the user after it connected the Potato Tipper,
         // this proves that `address_` was an existing follower at install time BPT.
@@ -238,57 +258,81 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         // Lock them out and prevent from tipping them if they try to re-follow.
         if (!_hasFollowedSinceDelegate[msg.sender][address_]) {
             _wasFollowing[msg.sender][address_] = true;
-            return "";
+            return unicode"👋🏻 Assuming existing follower BPT is unfollowing (not eligible for a tip if re-follow). Goodbye!";
         }
 
         // Allow new followers to unfollow -> re-follow to try to get a tip again
         // (e.g: if tipped failed because not enough 🥔 in user's balance, tipping budget, or transfer
         // failed). This allows an `address_` APT to re-follow and still be eligible for a tip.
-        return "";
+        return unicode"👋🏻 Sorry to see you go. Hope you follow again soon! Goodbye!";
     }
 
-    /// @notice Internal function to send 🥔 $POTATO tokens as tips to the new follower
-    ///
-    /// @dev This function fetch the tip settings from the ERC725Y storage of the user's 🆙,
-    /// and performs pre-checks (e.g: sufficient balance, allowance, etc...) to ensure the tip can be sent.
-    /// Tipping is handled via `try {} catch {}` and emit `TipSent` or `TipFailed` events.
-    /// Note that if the $POTATO token transfer fails due to any nested calls to the `universalReceiver(...)`
-    /// function of the `follower` or `user`'s UP reverting, the follower will still be marked as having been
-    /// tipped. See function `hasBeenTipped(...)` above for details.
-    ///
-    /// @param follower The address of the new follower that will receive a tip
-    /// @return A human-readable message that can be decoded from the `UniversalReceiver` event
-    function _sendTip(address follower) internal returns (bytes memory) {
-        // Fetch configs from user's UP metadata
-        bytes memory settingsValue = IERC725Y(msg.sender).getData(POTATO_TIPPER_SETTINGS_DATA_KEY);
+    // Internal helpers
+    // ----------------
 
-        // Tip amount MUST be encoded in wei ($POTATO token has 18 decimals)
-        if (settingsValue.length != 66) {
-            return unicode"❌ Invalid settings. Must be encoded as (uint256,uint16,uint256)";
+    /// @notice Internal function to validate if a follower is eligible to receive a tip
+    /// @dev Tip eligibility criterias are checked against the Potato Token contract and the LSP26 Follower Registry.
+    ///
+    /// @param follower The address of the follower to check for tip eligibility.
+    /// @param minimumFollowersRequired The minimum number of followers required
+    /// @param minimumPotatoBalanceRequired The minimum amount of $POTATO tokens required
+    ///
+    /// @return isEligible True if the follower is eligible to receive a tip, false otherwise
+    /// @return errorMessage A human-readable error message if the follower is not eligible to receive a tip
+    function _validateTipEligibilityCriterias(
+        address follower,
+        uint256 minimumFollowersRequired,
+        uint256 minimumPotatoBalanceRequired
+    ) internal view returns (bool isEligible, bytes memory errorMessage) {
+        // CHECK the follower has the minimum number of followers required
+        if (_FOLLOWER_REGISTRY.followerCount(follower) < minimumFollowersRequired) {
+            return (false, unicode"❌ Not eligible for tip: minimum follower required not met");
         }
 
-        (uint256 tipAmount, uint16 minimumFollowers, uint256 minimumPotatoBalance) = settingsValue.getSettings();
+        // CHECK if the followers has the minimum amount of $POTATO tokens required
+        if (_POTATO_TOKEN.balanceOf(follower) < minimumPotatoBalanceRequired) {
+            return (false, unicode"❌ Not eligible for tip: minimum 🥔 balance required not met");
+        }
 
+        return (true, "");
+    }
+
+    /// @notice Internal function to validate if the Potato Tipper contract can transfer a tip
+    ///
+    /// @dev This function checks if the user has enough 🥔 in their balance and if the Potato Tipper contract
+    /// has enough left in its tipping budget.
+    ///
+    /// @param tipAmount The amount of 🥔 $POTATO tokens to tip
+    /// @return canTransferTip True if the tip can be transferred, false otherwise
+    /// @return errorMessage A human-readable error message if the tip cannot be transferred
+    function _validateCanTransferTip(uint256 tipAmount)
+        internal
+        view
+        returns (bool canTransferTip, bytes memory errorMessage)
+    {
         // CHECK the address being followed has enough 🥔 to tip.
         if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
-            return unicode"🤷🏻‍♂️ Not enough 🥔 left in balance";
+            return (false, unicode"🤷🏻‍♂️ Not enough 🥔 left in balance");
         }
 
         // CHECK if the Potato Tipper contract has enough left in its tipping budget
         if (_POTATO_TOKEN.authorizedAmountFor(address(this), msg.sender) < tipAmount) {
-            return unicode"❌ Not enough 🥔 left in tipping budget";
+            return (false, unicode"❌ Not enough 🥔 left in tipping budget");
         }
 
-        // CHECK the follower has the minimum number of followers required
-        if (_FOLLOWER_REGISTRY.followerCount(follower) < minimumFollowers) {
-            return unicode"❌ Not eligible for tip: minimum follower required not met";
-        }
+        return (true, "");
+    }
 
-        // CHECK if the followers has the minimum amount of $POTATO tokens required
-        if (_POTATO_TOKEN.balanceOf(follower) < minimumPotatoBalance) {
-            return unicode"❌ Not eligible for tip: minimum 🥔 balance required not met";
-        }
-
+    /// @notice Transfer `tipAmount` of 🥔 $POTATO tokens as a tip to the new follower
+    ///
+    /// @dev Tipping is handled via `try {} catch {}` to prevent token transfer revert and emit `TipSent` or `TipFailed`
+    /// events. If the $POTATO token transfer fails due to any nested calls to the `universalReceiver(...)`
+    /// function of the `follower` or `user`'s UP reverting, the follower will NOT be marked as having been tipped.
+    ///
+    /// @param follower The address of the new follower that will receive a tip
+    /// @param tipAmount The amount of 🥔 $POTATO tokens to tip to the new follower
+    /// @return successOrErrorMessage human-readable message that can be decoded from the `UniversalReceiver` event
+    function _transferTip(address follower, uint256 tipAmount) internal returns (bytes memory successOrErrorMessage) {
         _tipped[msg.sender][follower] = true;
 
         // Transfer 🥔 $POTATO 🥔 tokens as tip to the new follower
@@ -308,6 +352,10 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             emit TipSent({from: msg.sender, to: follower, amount: tipAmount});
             return abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
+            // If the token transfer failed (because `universalReceiver(...)` function reverted
+            // when notifying sender or recipient), revert state and do not mark the follower as tipped.
+            _tipped[msg.sender][follower] = false;
+
             emit TipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
             return unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
         }

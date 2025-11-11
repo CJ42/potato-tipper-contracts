@@ -31,7 +31,8 @@ import {
     _PERMISSION_REENTRANCY,
     _PERMISSION_SUPER_SETDATA,
     ALL_REGULAR_PERMISSIONS,
-    _PERMISSION_ADDUNIVERSALRECEIVERDELEGATE
+    _PERMISSION_ADDUNIVERSALRECEIVERDELEGATE,
+    _PERMISSION_CHANGEUNIVERSALRECEIVERDELEGATE
 } from "@lukso/lsp6-contracts/contracts/LSP6Constants.sol";
 import {
     _TYPEID_LSP7_TOKENSSENDER,
@@ -176,12 +177,13 @@ contract UniversalProfileTestHelpers is Test {
     }
 
     /// @dev Give permission to add LSP1 Delegate
-    function _grantAddLsp1DelegatePermissionToController(UniversalProfile profile, address controller) internal {
+    function _grantAddAndEditLsp1DelegatePermissionToController(UniversalProfile profile, address controller) internal {
         bytes32 currentPermissions = IERC725Y(address(profile)).getPermissionsFor(controller);
 
-        bytes32[] memory newPermissionsList = new bytes32[](2);
+        bytes32[] memory newPermissionsList = new bytes32[](3);
         newPermissionsList[0] = currentPermissions;
         newPermissionsList[1] = _PERMISSION_ADDUNIVERSALRECEIVERDELEGATE;
+        newPermissionsList[2] = _PERMISSION_CHANGEUNIVERSALRECEIVERDELEGATE;
 
         bytes32 newPermissions = newPermissionsList.combinePermissions();
 

@@ -49,16 +49,40 @@ A brand could tip its new followers in LYX, other tokens, tokens created by the 
 
 ## Data Keys
 
-The Potato Tipper stores the configurations such as the custom tip amount and tip eligibility criterias under each user's 🆙. Below is the LSP2 JSON Schema for tip settings:
+The configurations and settings for tipping new followers are stored under a specific data key under each user's 🆙. 
+
+The data key is of `Mapping` key type and named after the Potato Tipper for the first part of the map name, to make it easy to remember and for future proofing (if more data keys related to the Potato Tipper should be introduced in future, new or forked versions).
+
+Below is the LSP2 JSON Schema for tip settings:
 
 ```json
 {
     "name": "PotatoTipper:Settings",
     "key": "0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a",
     "keyType": "Mapping",
-    "valueType": "(uint256,uint16,uint256)",
+    "valueType": "(uint256,uint256,uint256)",
     "valueContent": "(Number,Number,Number)"
 }
+```
+
+Below is an example of how the data is encoded and can be decoded. The data value is essentially abi-encoded and can be-decoded by any libraries like ethers.js, viem or erc725.js. 
+
+> Note that the values for the tip amount and minimum $POTATO tokens required in follower balance **are encoded in wei value, since the $POTATO token has 18 decimals.**
+
+```js
+example: 0x0000000000000000000000000000000000000000000000000de0b6b3a764000000000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000056bc75e2d63100000
+
+- tipAmount (uint256) = 32 bytes long
+// 0000000000000000000000000000000000000000000000000de0b6b3a7640000 (in hex) = 1,000,000,000,000,000,000 (in decimals)
+
+- minimumFollowers (uint256) = 32 bytes long
+// 0000000000000000000000000000000000000000000000000000000000000005
+
+- minimumPotatoBalance (uint256) = 32 bytes long
+// 0000000000000000000000000000000000000000000000056bc75e2d63100000 (in hex) = 100,000,000,000,000,000,000 (in decimals)
+
+- Final decoded result
+// => (1 $POTATO token as tip amount, 5 minimum followers, 100 $POTATO token minimum in follower balance)
 ```
 
 ## Order of emitted events
