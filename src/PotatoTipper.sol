@@ -93,7 +93,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     }
 
     /// @notice Check if a `follower` has already been tipped by a `user`.
-    function hasBeenTipped(address follower, address user) external view returns (bool) {
+    function hasReceivedTip(address follower, address user) external view returns (bool) {
         return _tipped[user][follower];
     }
 

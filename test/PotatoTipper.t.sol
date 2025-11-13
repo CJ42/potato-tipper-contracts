@@ -124,7 +124,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(follower), userTipping));
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasBeenTipped(address(follower), userTipping));
+        assertFalse(potatoTipper.hasReceivedTip(address(follower), userTipping));
     }
 
     // Post tipping checks:
@@ -144,7 +144,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(followerReceivingTip), userTipping));
 
         // CHECK that follower has received a tip (POTATO balance has increased by the tip amount)
-        assertTrue(potatoTipper.hasBeenTipped(address(followerReceivingTip), userTipping));
+        assertTrue(potatoTipper.hasReceivedTip(address(followerReceivingTip), userTipping));
         assertEq(potatoToken.balanceOf(address(followerReceivingTip)), followerPotatoBalanceBefore + tipAmount);
 
         // CHECK that the user's gave a tip
@@ -275,7 +275,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         uint256 followerPotatoBalanceBefore = potatoToken.balanceOf(address(newFollower));
 
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         vm.prank(address(newFollower));
         _FOLLOWER_REGISTRY.follow(address(user));
@@ -286,7 +286,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // CHECK that the follower is still now following the user
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
     }
 
     function test_tippingOnFollowAfterAuthorizingPotatoTipperAsOperator() public {
@@ -328,7 +328,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoTipperAllowanceBefore, tippingBudget);
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         vm.recordLogs();
 
@@ -336,7 +336,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _FOLLOWER_REGISTRY.follow(address(user));
 
         // CHECK that follower has received a tip (POTATO balance has increased by the tip amount)
-        assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore + TIP_AMOUNT);
 
         // CHECK that the user's gave a tip
@@ -368,7 +368,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         logs = vm.getRecordedLogs();
 
         // CHECK that follower has not received a second tip
-        assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore + TIP_AMOUNT);
 
         // CHECK that the user's did not give a second tip
@@ -452,8 +452,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         );
 
         // CHECK that follower has received a tip from both users
-        assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
-        assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(anotherUser)));
+        assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+        assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(anotherUser)));
 
         // CHECK that follower's balance has increased by the tip amount x 2 from both users
         assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore + (TIP_AMOUNT * 2));
@@ -514,7 +514,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         vm.recordLogs();
 
@@ -522,7 +522,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _FOLLOWER_REGISTRY.follow(address(user));
 
         // CHECK that follower has NOT received a tip (tipping was not triggered)
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
@@ -556,7 +556,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         vm.recordLogs();
 
@@ -564,7 +564,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _FOLLOWER_REGISTRY.follow(address(user));
 
         // CHECK that follower has NOT received a tip (tipping was not triggered)
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
@@ -613,7 +613,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         vm.recordLogs();
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
@@ -622,7 +622,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _FOLLOWER_REGISTRY.follow(address(user));
 
         // CHECK that follower has NOT received a tip (tipping was not triggered)
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
@@ -663,7 +663,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         vm.recordLogs();
 
@@ -671,7 +671,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _FOLLOWER_REGISTRY.follow(address(user));
 
         // CHECK that follower has NOT received a tip (tipping was not triggered)
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
@@ -729,7 +729,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         uint256 anotherFollowerPotatoBalanceBefore = potatoToken.balanceOf(address(anotherFollower));
 
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(anotherFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(anotherFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(anotherFollower), address(user)));
 
         vm.recordLogs();
 
@@ -742,7 +742,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // CHECK that the follower is still now following the user
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(anotherFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(anotherFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(anotherFollower), address(user)));
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
@@ -802,7 +802,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         uint256 anotherFollowerPotatoBalanceBefore = potatoToken.balanceOf(address(anotherFollower));
 
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(anotherFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(anotherFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(anotherFollower), address(user)));
 
         vm.recordLogs();
 
@@ -815,7 +815,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // CHECK that the follower is still now following the user
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(anotherFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(anotherFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(anotherFollower), address(user)));
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
@@ -882,7 +882,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         vm.recordLogs();
 
@@ -890,7 +890,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         user.universalReceiver(_TYPEID_LSP26_FOLLOW, abi.encodePacked(address(existingFollower)));
 
         // CHECK that follower did NOT receive a tip (tipping was not triggered)
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(existingFollower)), existingFollowerPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
@@ -919,7 +919,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasBeenTipped(address(caller), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(caller), address(user)));
 
         vm.recordLogs();
 
@@ -927,7 +927,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         user.universalReceiver(_TYPEID_LSP26_FOLLOW, abi.encodePacked(caller));
 
         // CHECK that follower did NOT receive a tip (tipping was not triggered)
-        assertFalse(potatoTipper.hasBeenTipped(caller, address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(caller, address(user)));
         assertEq(potatoToken.balanceOf(caller), callerPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
@@ -964,7 +964,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // CHECK that follower has not received a tip yet
-        assertFalse(potatoTipper.hasBeenTipped(eoa, address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(eoa, address(user)));
 
         vm.recordLogs();
 
@@ -972,7 +972,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _FOLLOWER_REGISTRY.follow(address(user));
 
         // CHECK that follower did NOT receive a tip (tipping was not triggered)
-        assertFalse(potatoTipper.hasBeenTipped(eoa, address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(eoa, address(user)));
         assertEq(potatoToken.balanceOf(eoa), eoaPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
@@ -1050,10 +1050,10 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
 
-        assertFalse(potatoTipper.hasBeenTipped(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
         // TODO: this is also not logical, but skipped here I guess?
-        // assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(existingFollower), address(user)));
-        assertFalse(potatoTipper.followedAfterPotatoTipper(address(existingFollower), address(user)));
+        // assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
 
         vm.prank(address(user));
         potatoTipper.universalReceiverDelegate(
@@ -1063,11 +1063,11 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
 
         // TODO: fix these tests
-        // assertFalse(potatoTipper.hasBeenTipped(address(existingFollower), address(user)));
+        // assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
         // TODO: fix the code in the PotatoTippper contract to fix this test
         // This allows the user to censor other users, which is a problem
-        // assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(newFollower), address(user)));
-        // assertFalse(potatoTipper.followedAfterPotatoTipper(address(existingFollower), address(user)));
+        // assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
+        // assertFalse(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
     }
 
     function test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndAddressThatDoesNotActuallyFollow() public {
@@ -1076,9 +1076,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
 
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
-        assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(newFollower), address(user)));
-        assertFalse(potatoTipper.followedAfterPotatoTipper(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
 
         vm.prank(address(user));
         bytes memory returnedData = potatoTipper.universalReceiverDelegate(
@@ -1091,11 +1091,11 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         );
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
 
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         // TODO: fix the code in the PotatoTippper contract to fix this test
         // This allows the user to censor other users, which is a problem
-        // assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(newFollower), address(user)));
-        assertFalse(potatoTipper.followedAfterPotatoTipper(address(newFollower), address(user)));
+        // assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
     }
 
     function test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndExistingFollower() public {
@@ -1104,10 +1104,10 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
 
-        assertFalse(potatoTipper.hasBeenTipped(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
         // TODO: this is also not logical, but skipped here I guess?
-        // assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(newFollower), address(user)));
-        assertFalse(potatoTipper.followedAfterPotatoTipper(address(newFollower), address(user)));
+        // assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
 
         vm.prank(address(user));
         bytes memory returnedData = potatoTipper.universalReceiverDelegate(
@@ -1117,9 +1117,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(returnedData, unicode"❌ Not a legitimate unfollow");
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
 
-        assertFalse(potatoTipper.hasBeenTipped(address(existingFollower), address(user)));
-        assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(existingFollower), address(user)));
-        assertFalse(potatoTipper.followedAfterPotatoTipper(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
     }
 
     function test_ExistingFollowerUnfollowsAndRefollowDoesNotTriggerTip() public {
@@ -1130,17 +1130,17 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         uint256 existingFollowerPotatoBalanceBefore = potatoToken.balanceOf(address(existingFollower));
 
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(existingFollower), address(user)));
-        assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(existingFollower), address(user)));
-        assertFalse(potatoTipper.followedAfterPotatoTipper(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
 
         vm.prank(address(existingFollower));
         _FOLLOWER_REGISTRY.unfollow(address(user));
 
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(existingFollower), address(user)));
-        assertTrue(potatoTipper.wasFollowingBeforePotatoTipper(address(existingFollower), address(user)));
-        assertFalse(potatoTipper.followedAfterPotatoTipper(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
+        assertTrue(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
 
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(existingFollower)), existingFollowerPotatoBalanceBefore);
@@ -1150,11 +1150,11 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _FOLLOWER_REGISTRY.follow(address(user));
 
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(existingFollower), address(user)));
-        assertTrue(potatoTipper.wasFollowingBeforePotatoTipper(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
+        assertTrue(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
 
         // TODO: fix this test and define what to do
-        // assertTrue(potatoTipper.followedAfterPotatoTipper(address(existingFollower), address(user)));
+        // assertTrue(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
 
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(existingFollower)), existingFollowerPotatoBalanceBefore);
@@ -1172,8 +1172,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         _preTippingChecks(address(user), address(newFollower), tippingBudget);
-        assertFalse(potatoTipper.followedAfterPotatoTipper(address(newFollower), address(user)));
-        assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
 
         vm.prank(address(newFollower));
         _FOLLOWER_REGISTRY.follow(address(user));
@@ -1184,16 +1184,16 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.balanceOf(address(newFollower)), newFollowerPotatoBalanceBefore);
 
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
-        assertTrue(potatoTipper.followedAfterPotatoTipper(address(newFollower), address(user)));
-        assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(newFollower), address(user)));
+        assertTrue(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
 
         vm.prank(address(newFollower));
         _FOLLOWER_REGISTRY.unfollow(address(user));
 
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
-        assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(newFollower), address(user)));
-        assertTrue(potatoTipper.followedAfterPotatoTipper(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
+        assertTrue(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
 
         // Increase Potato Tipper allowance
         vm.prank(address(user));
@@ -1214,9 +1214,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             tippingBudget + 10
         );
 
-        assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
-        assertFalse(potatoTipper.wasFollowingBeforePotatoTipper(address(newFollower), address(user)));
-        assertTrue(potatoTipper.followedAfterPotatoTipper(address(newFollower), address(user)));
+        assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
+        assertTrue(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
     }
 
     // test if a user Alice (a UP) called the other user’s UP (who has the Potato Tipper connected) and
@@ -1243,7 +1243,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         user.universalReceiver(_TYPEID_LSP26_FOLLOW, abi.encodePacked(address(newFollower)));
 
         // CHECK that Alice did NOT receive a tip (tipping was not triggered)
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertEq(potatoToken.balanceOf(address(newFollower)), callerPotatoBalanceBefore);
 
         // CHECK that the user's did NOT give a tip
@@ -1291,7 +1291,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
 
         // CHECK the the follower has not been marked as tipped
-        assertFalse(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
@@ -1333,7 +1333,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget - TIP_AMOUNT);
 
         // CHECK the the follower has not been marked as tipped
-        assertTrue(potatoTipper.hasBeenTipped(address(newFollower), address(user)));
+        assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
 
         Vm.Log[] memory newLogs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
