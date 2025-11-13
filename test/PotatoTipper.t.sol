@@ -322,7 +322,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         );
     }
 
-    // TODO: use helper functions pre + post tipping here for first occurence of following
     function test_cannotTipTwiceTheSameNewFollowerIfFollowedUnfollowAndRefollow() public {
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
         uint256 followerPotatoBalanceBefore = potatoToken.balanceOf(address(newFollower));
@@ -469,15 +468,24 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         uint256 tippingBudget = 10 * customTipAmount;
 
         // Set custom tip amount to 5 POTATO tokens
-        vm.prank(userBrowserExtensionController);
-        user.setData(
-            POTATO_TIPPER_SETTINGS_DATA_KEY,
-            abi.encodePacked(customTipAmount, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
-        );
+        SettingsLib.TipSettings memory tipSettings = SettingsLib.TipSettings({
+            tipAmount: customTipAmount,
+            minimumFollowers: MIN_FOLLOWER_REQUIRED,
+            minimumPotatoBalance: MIN_POTATO_BALANCE_REQUIRED
+        });
 
-        assertEq(
-            abi.decode(IERC725Y(address(user)).getData(POTATO_TIPPER_SETTINGS_DATA_KEY), (uint256)), customTipAmount
-        );
+        bytes memory encodedTipSettings = abi.encode(tipSettings);
+
+        vm.prank(userBrowserExtensionController);
+        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, encodedTipSettings);
+
+        bytes memory tipSettingsDataValue = IERC725Y(address(user)).getData(POTATO_TIPPER_SETTINGS_DATA_KEY);
+
+        assertEq(tipSettingsDataValue, encodedTipSettings);
+        (uint256 tipAmount, uint256 minimumFollowers, uint256 minimumPotatoBalance) = abi.decode(tipSettingsDataValue, (uint256, uint256, uint256));
+        assertEq(tipAmount, customTipAmount);
+        assertEq(minimumFollowers, MIN_FOLLOWER_REQUIRED);
+        assertEq(minimumPotatoBalance, MIN_POTATO_BALANCE_REQUIRED);
 
         // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
         vm.prank(address(user));
@@ -495,6 +503,48 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             followerPotatoBalanceBefore,
             userPotatoBalanceBefore,
             tippingBudget
+        );
+    }
+
+    function test_doesNotTipIfTipSettingsDataKeyNotSet() public {
+        uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
+        uint256 followerPotatoBalanceBefore = potatoToken.balanceOf(address(newFollower));
+
+        uint256 tippingBudget = 10 * TIP_AMOUNT;
+
+        // Set an incorrect value for the tip amount
+        vm.prank(userBrowserExtensionController);
+        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, bytes(""));
+
+        // Authorize the Potato Tipper contract to be able to transfer up to 50 POTATO tokens
+        vm.prank(address(user));
+        potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
+
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+
+        // CHECK that follower has not received a tip yet
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+
+        vm.recordLogs();
+
+        vm.prank(address(newFollower));
+        _FOLLOWER_REGISTRY.follow(address(user));
+
+        // CHECK that follower has NOT received a tip (tipping was not triggered)
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+        assertEq(potatoToken.balanceOf(address(newFollower)), followerPotatoBalanceBefore);
+
+        // CHECK that the user's did NOT give a tip
+        // - user's $POTATO balance has NOT changed
+        // - `POTATOTipper` allowance has NOT changed
+        assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs,
+            address(newFollower),
+            unicode"❌ Invalid settings: settings value must be encoded as a 96 bytes long tuple of (uint256,uint256,uint256)"
         );
     }
 
@@ -581,27 +631,15 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         );
     }
 
-    // TODO: fix this test
     function test_customTipAmountGreaterThanUserBalanceButLessThanTippingBudgetDontTriggerTip(
         uint256 customTipAmount,
         uint256 tippingBudget
     ) public {
-        vm.skip(true);
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
-        tippingBudget = bound(tippingBudget, customTipAmount + 1, userPotatoBalanceBefore);
-        customTipAmount = bound(customTipAmount, userPotatoBalanceBefore + 1, tippingBudget);
+        tippingBudget = bound(tippingBudget, userPotatoBalanceBefore + 2, type(uint256).max);
+        customTipAmount = bound(customTipAmount, userPotatoBalanceBefore + 1, tippingBudget - 1);
 
         uint256 followerPotatoBalanceBefore = potatoToken.balanceOf(address(newFollower));
-
-        // 0x0000000000000000000000000000000000000000000000000000000000000040
-        //.  0000000000000000000000000000000000000000000000000000000000000080
-        //.  0000000000000000000000000000000000000000000000000000000000000019
-        //.  4c5350313a20747970654964206f7574206f662073636f706500000000000000
-        //   0000000000000000000000000000000000000000000000000000000000000031
-        //.
-        // f09fa4b7f09f8fbbe2808de29982efb88f204e6f7420656e6f75676820f09fa59420746f2074697020666f6c6c6f776572000000000000000000000000000000;
-
-        // 0x0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000194c5350313a20747970654964206f7574206f662073636f7065000000000000000000000000000000000000000000000000000000000000000000000000000025e29d8c204e6f7420656e6f756768206c65667420696e2074697070696e6720627564676574000000000000000000000000000000000000000000000000000000
 
         vm.prank(userBrowserExtensionController);
         user.setData(
