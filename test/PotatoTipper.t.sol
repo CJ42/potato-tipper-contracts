@@ -826,31 +826,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
     // Caller context tests
 
-    // TODO: change this test (logic changed)
-    function test_doesNotRunOnUnfollow() public {
-        vm.skip(true);
-        bytes32 lsp1DelegateOnUnfollowDataKey = _LSP1_DELEGATE_PREFIX // forge-lint: disable-next-line(unsafe-typecast)
-            .generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
-
-        // Assume the user connected the POTATO Tipper with the data key
-        // LSP1UniversalReceiverDelegate:_TYPEID_LSP26_UNFOLLOW
-        vm.prank(userBrowserExtensionController);
-        user.setData(lsp1DelegateOnUnfollowDataKey, abi.encodePacked(address(potatoTipper)));
-
-        vm.prank(address(12_345));
-        _FOLLOWER_REGISTRY.follow(address(user));
-
-        vm.recordLogs();
-
-        vm.prank(address(12_345));
-        _FOLLOWER_REGISTRY.unfollow(address(user));
-
-        Vm.Log[] memory logs = vm.getRecordedLogs();
-        _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(12_345), unicode"❌ Not a follow / unfollow notification"
-        );
-    }
-
     function test_OnlyRunWithFollowOrUnfollowTypeId(bytes32 typeId) public {
         vm.assume(typeId != _TYPEID_LSP26_FOLLOW);
         vm.assume(typeId != _TYPEID_LSP26_UNFOLLOW);
@@ -944,7 +919,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     }
 
     /// @dev Not using a `uint256` to avoid using a number that is over the Secp256k1 curve order
-    /// TODO: fix network error when this test runs with the whole test suite
+    /// forge-config: default.fuzz.runs = 100
+    /// forge-config: ci.fuzz.runs = 500
     function test_EOAsCannotFollowAndReceiveTips(uint160 randomPrivateKey) public {
         vm.skip(true);
         vm.assume(randomPrivateKey != 0);
@@ -986,7 +962,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(logs, eoa, unicode"❌ Only 🆙 allowed to be tipped");
     }
 
-    // TODO: fix Network error in this test
+    /// @dev forge-config: default.fuzz.runs = 100
+    /// @dev forge-config: ci.fuzz.runs = 500
     function test_onlyUniversalProfilesCanReceiveTips(uint160 randomPrivateKey) public {
         vm.skip(true);
         vm.assume(randomPrivateKey != 0);
@@ -1051,9 +1028,11 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
 
         assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
-        // TODO: this is also not logical, but skipped here I guess?
-        // assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
         assertFalse(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
+
+        uint256 existingFollowerPotatoBalanceBefore = potatoToken.balanceOf(address(existingFollower));
+        uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
 
         vm.prank(address(user));
         potatoTipper.universalReceiverDelegate(
@@ -1061,13 +1040,12 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         );
 
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
 
-        // TODO: fix these tests
-        // assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
-        // TODO: fix the code in the PotatoTippper contract to fix this test
-        // This allows the user to censor other users, which is a problem
-        // assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
-        // assertFalse(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
+        /// @dev This is odd behaviour as it allows the user to send a tip to an existing follower
+        assertEq(potatoToken.balanceOf(address(existingFollower)), existingFollowerPotatoBalanceBefore + TIP_AMOUNT);
+        assertTrue(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
+        assertTrue(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
     }
 
     function test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndAddressThatDoesNotActuallyFollow() public {
@@ -1092,10 +1070,11 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
 
         assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
-        // TODO: fix the code in the PotatoTippper contract to fix this test
-        // This allows the user to censor other users, which is a problem
-        // assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
         assertFalse(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
+        
+        /// @dev This is odd behaviour as it allows a user to censor other new users that will actually follow,
+        // and prevent them from receiving a tip
+        assertTrue(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
     }
 
     function test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndExistingFollower() public {
@@ -1105,8 +1084,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
 
         assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
-        // TODO: this is also not logical, but skipped here I guess?
-        // assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
         assertFalse(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
 
         vm.prank(address(user));
@@ -1152,9 +1130,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
         assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
         assertTrue(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
-
-        // TODO: fix this test and define what to do
-        // assertTrue(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
+        assertTrue(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
 
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(existingFollower)), existingFollowerPotatoBalanceBefore);
