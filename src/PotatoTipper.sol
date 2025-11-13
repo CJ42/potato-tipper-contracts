@@ -108,18 +108,21 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         return _existingFollowerUnfollowedPostInstall[user][follower];
     }
 
-    /// Write functions
+    /// Handler functions
     /// ---------------
 
     /// @notice Handle follow/unfollow notifications + automatically tip 🥔 tokens to new follower.
     ///
-    /// @dev Called by the `universalReceiver(...)` function from the user's 🆙 after receiving a notification from
-    /// the LSP26 Follower Registry about a new follower or an unfollow action.
+    /// @dev Called by the `universalReceiver(...)` function from a user's 🆙.
+    ///
+    /// LSP26 notification calls don't revert, but calls from a 🆙 to this function could revert.
+    /// Avoid reverting to not make the internal callstack trace show revert errors, and return a `messageStatus`
+    /// that can be decoded from the `returnedData` parameter of the `UniversalReceiver` event on the user's 🆙.
     ///
     /// @param sender The address that notified the user's UP (MUST be the LSP26 Follower Registry)
     /// @param typeId MUST be a follow or unfollow notification type ID
-    /// @param data MUST be the follower / unfollower address sent by the LSP26 Follower registry when notifying
-    /// @return message A human-readable message that can be decoded from the `UniversalReceiver` event on user's 🆙
+    /// @param data MUST be the follower address sent by the LSP26 Follower registry when notifying
+    /// @return messageStatus A user-friendly message describing how the call was handled
     function universalReceiverDelegate(
         address sender,
         uint256, // value (unused parameter)
@@ -127,7 +130,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         bytes calldata data
     )
         external
-        returns (bytes memory)
+        returns (bytes memory messageStatus)
     {
         if (sender != address(_FOLLOWER_REGISTRY)) return unicode"❌ Not triggered by the Follower Registry";
         if (data.length != 20) return unicode"❌ Invalid data received. Must be a 20 bytes long address";
@@ -144,9 +147,6 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
         return unicode"❌ Not a follow or unfollow notification";
     }
-
-    /// Internal handlers
-    /// ------------------
 
     /// @notice Handle a new follower notification and tip 🥔 $POTATO tokens if the follower is eligible.
     ///
@@ -192,8 +192,8 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// a legitimate unfollow notification and not from a spoofed call. Existing followers are tracked if we observe
     /// an unfollow without any prior follow registration AFTER the user connected the Potato Tipper (APT).
     ///
-    /// @return message A human-readable message returned to the `universalReceiver(...)` function.
-    function _handleOnUnfollow(address follower) internal returns (bytes memory) {
+    /// @return message A human-readable message to describe the context of the unfollow action.
+    function _handleOnUnfollow(address follower) internal returns (bytes memory message) {
         bool isFollowing = _FOLLOWER_REGISTRY.isFollowing(follower, msg.sender);
         if (isFollowing) return unicode"❌ Not a legitimate unfollow";
 
@@ -211,9 +211,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     // ----------------
 
     /// @dev Check if a follower is eligible to receive a tip according to the provided user's tip settings.
-    ///
-    /// @return isEligible True if the follower is eligible to receive a tip, false otherwise
-    /// @return errorMessage A human-readable error message if the follower is not eligible to receive a tip
+    /// Returns an error message if the follower is not eligible to explain why.
     function _validateTipEligibilityCriterias(
         address follower,
         uint256 minimumFollowerCountRequired,
@@ -230,18 +228,12 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         return (true, "");
     }
 
-    /// @notice Validate if this contract can transfer `tipAmount` of 🥔 $POTATO tokens to the new follower on behalf
-    /// of the user. Including checking that the user has enough 🥔 tokens to tip and that the Potato Tipper contract
-    /// has enough allowance (= tipping budget).
+    /// @notice Ensure this contract can transfer `tipAmount` of 🥔 $POTATO tokens on behalf of the user.
+    /// Returns an error message if the tip cannot be transferred to explain why.
     ///
-    /// @dev These checks are also done inside the Potato token contract (LSP7), but performed earlier to prevent early
-    /// token transfer from reverting which would make the follower consume more gas and return large error data. But
-    /// mainly to return a clear error message
-    /// to the `UniversalReceiver` event (in the `returnedData` parameter), so that it can be decoded from logs and
-    /// displayed to users in UI.
-    ///
-    /// @return canTransferTip True if the tip can be transferred, false otherwise
-    /// @return errorMessage A human-readable error message explaining why the tip cannot be transferred
+    /// @dev These checks are also done inside the Potato token contract (LSP7), but performed earlier to:
+    /// 1. Avoid making the follower pay the gas cost of a token transfer reverting (external call + return error data).
+    /// 2. Return an early error message and pass it to the `returnedData` of the `UniversalReceiver` event.
     function _validateCanTransferTip(uint256 tipAmount)
         internal
         view
@@ -260,12 +252,8 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
     /// @notice Transfer `tipAmount` of 🥔 $POTATO tokens to the new `follower`.
     ///
-    /// @dev Tipping is handled via `try {} catch {}` to prevent token transfer from potentially reverting in any
-    /// sub-calls (e.g: when notifying the sender / recipient via LSP1) A user friendly success or error message is
-    /// returned so it can be passed back to the `returnedData` parameter of the `UniversalReceiver` event.
-    /// If the $POTATO token transfer fails, the follower will NOT be marked as having been tipped.
-    ///
-    /// @return successOrErrorMessage A success or error message depending if the tip transfer succeeded or failed
+    /// @dev Use `try {} catch {}` to transfer the tip to prevent any sub-calls from making the whole call revert.
+    /// Returns a success or error message to describe if the tip transfer was successful or not.
     function _transferTip(address follower, uint256 tipAmount) internal returns (bytes memory successOrErrorMessage) {
         _tipped[msg.sender][follower] = true;
 
@@ -279,8 +267,8 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
             emit TipSent({from: msg.sender, to: follower, amount: tipAmount});
             return abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
-            // If the token transfer failed (because `universalReceiver(...)` function reverted when notifying sender /
-            // recipient, or any sub-calls), we revert state and do not mark the follower as tipped.
+            // If the token transfer failed (because the call to the `universalReceiver(...)` function reverted when
+            // notifying sender / recipient, or any sub-calls), revert state and mark the follower as not tipped.
             _tipped[msg.sender][follower] = false;
 
             emit TipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
