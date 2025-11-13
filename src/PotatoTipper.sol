@@ -166,7 +166,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
         // Existing followers are not eligible. A user does not gain any benefit from tipping them if they re-follow
         if (_existingFollowerUnfollowedPostInstall[msg.sender][follower]) {
-            return unicode"🙅🏻 Follower followed before. Not eligible for a tip";
+            return unicode"🙅🏻 Existing followers not eligible for a tip";
         }
 
         bytes memory settingsValue = IERC725Y(msg.sender).loadTipSettingsRaw();
