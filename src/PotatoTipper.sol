@@ -75,8 +75,8 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @dev Track `follower` addresses that received a tip already from a `user`
     mapping(address user => mapping(address follower => bool tippedAPT)) internal _tipped;
 
-    /// @dev Track followers that followed a `user` AFTER it connected the Potato Tipper
-    /// Regardless if they received a tip or not (because of LSP7 failed token transfer)
+    /// @dev Track followers that followed a `user` AFTER it connected the Potato Tipper.
+    /// Regardless of whether they received a tip (because of LSP7 failed token transfer)
     mapping(address user => mapping(address follower => bool followedAPT)) internal _hasFollowedPostInstall;
 
     /// @dev Track existing followers BEFORE the user connected the Potato Tipper, to make them not eligible for a tip.
@@ -103,7 +103,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     }
 
     /// @notice Returns true if `follower` was already a follower of `user` before it connected the Potato Tipper and
-    /// later unfollowed. To define existing follower not eligible for a tip.
+    /// later unfollowed. Defines existing followers that are not eligible for a tip.
     function existingFollowerUnfollowedPostInstall(address follower, address user) external view returns (bool) {
         return _existingFollowerUnfollowedPostInstall[user][follower];
     }
@@ -116,7 +116,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     /// @dev Called by the `universalReceiver(...)` function from a user's 🆙.
     ///
     /// LSP26 notification calls don't revert, but calls from a 🆙 to this function could revert.
-    /// Avoid reverting to not make the internal callstack trace show revert errors, and return a `messageStatus`
+    /// Avoid reverting so the internal call stack trace stays clear of revert errors, and return a `messageStatus`
     /// that can be decoded from the `returnedData` parameter of the `UniversalReceiver` event on the user's 🆙.
     ///
     /// @param sender The address that notified the user's UP (MUST be the LSP26 Follower Registry)
@@ -164,7 +164,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         // Prevent unfollow -> re-follow to get tips again, or existing followers trying to re-follow 🥔 🚜
         if (_tipped[msg.sender][follower]) return unicode"🙅🏻 Already tipped a potato";
 
-        // Existing followers are not eligible. A user does not gain any benefit for tipping them if they re-follow
+        // Existing followers are not eligible. A user does not gain any benefit from tipping them if they re-follow
         if (_existingFollowerUnfollowedPostInstall[msg.sender][follower]) {
             return unicode"🙅🏻 Follower followed before. Not eligible for a tip";
         }
@@ -173,7 +173,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         (bool decodingSuccess, SettingsLib.TipSettings memory tipSettings, bytes memory decodingError) =
             settingsValue.decodeTipSettings();
 
-        // Decoding also validate the tip settings
+        // Decoding also validates the tip settings
         if (!decodingSuccess) return decodingError;
 
         (bool isEligible, bytes memory eligibilityError) =
@@ -211,7 +211,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     // ----------------
 
     /// @dev Check if a follower is eligible to receive a tip according to the provided user's tip settings.
-    /// Returns an error message if the follower is not eligible to explain why.
+    /// Returns an error message explaining why the follower is not eligible.
     function _validateTipEligibilityCriterias(
         address follower,
         uint256 minimumFollowerCountRequired,
@@ -229,7 +229,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
     }
 
     /// @notice Ensure this contract can transfer `tipAmount` of 🥔 $POTATO tokens on behalf of the user.
-    /// Returns an error message if the tip cannot be transferred to explain why.
+    /// Returns an error message explaining why the tip cannot be transferred.
     ///
     /// @dev These checks are also done inside the Potato token contract (LSP7), but performed earlier to:
     /// 1. Avoid making the follower pay the gas cost of a token transfer reverting (external call + return error data).

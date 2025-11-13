@@ -7,7 +7,7 @@ import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.so
 // constants
 import {POTATO_TIPPER_SETTINGS_DATA_KEY} from "./Constants.sol";
 
-/// @notice Object storing the tipping settings (tip amount and tip eligibility criterias).
+/// @notice Object storing the tipping settings (tip amount and tip eligibility criteria).
 /// @dev The tip amount and minimum potato balance are encoded "in wei", since the $POTATO token has 18 decimals.
 struct TipSettings {
     uint256 tipAmount;
@@ -28,9 +28,9 @@ function loadTipSettingsRaw(IERC725Y erc725YStorage) view returns (bytes memory)
 ///
 /// @param rawValue The raw encoded bytes for the tip settings (fetched from the `PotatoTipper:Settings` data key)
 ///
-/// @return decodingSuccess Return if the data is correctly encoded (MUST be 96 bytes long) and the tip amount is not 0.
+/// @return decodingSuccess True if the data is correctly encoded (MUST be 96 bytes long) and the tip amount is not 0.
 /// @return settings The decoded tip settings as a struct object.
-/// @return decodingErrorMessage A human-readable error message if the decoding failed, empty string if successful.
+/// @return decodingErrorMessage An error message explaining why the decoding failed, empty string if successful.
 function decodeTipSettings(bytes memory rawValue)
     pure
     returns (bool decodingSuccess, TipSettings memory settings, bytes memory decodingErrorMessage)
