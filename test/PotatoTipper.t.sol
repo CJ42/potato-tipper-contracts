@@ -2,12 +2,12 @@
 pragma solidity ^0.8.13;
 
 // test libraries
-import {Vm, console} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Test.sol";
 import {UniversalProfileTestHelpers} from "./helpers/UniversalProfileTestHelpers.sol";
-import {LSP1DelegateRevertsOnLSP7TokensReceived} from "./helpers/LSP1DelegateRevertsOnLSP7TokensReceived.sol";
+import {LSP1DelegateRevertsOnLSP7TokensReceived} from "./mocks/LSP1DelegateRevertsOnLSP7TokensReceived.sol";
+import {MinimalLSP1Implementer} from "./mocks/MinimalLSP1Implementer.sol";
 
 // interfaces
-import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
 import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
 import {ILSP1UniversalReceiver} from "@lukso/lsp1-contracts/contracts/ILSP1UniversalReceiver.sol";
 import {
@@ -544,7 +544,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"❌ Invalid settings: settings value must be encoded as a 96 bytes long tuple of (uint256,uint256,uint256)"
+            unicode"❌ Invalid settings: must be encoded as a 96 bytes long tuple of (uint256,uint256,uint256)"
         );
     }
 
@@ -587,7 +587,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"❌ Invalid settings: settings value must be encoded as a 96 bytes long tuple of (uint256,uint256,uint256)"
+            unicode"❌ Invalid settings: must be encoded as a 96 bytes long tuple of (uint256,uint256,uint256)"
         );
     }
 
@@ -957,17 +957,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         );
     }
 
-    /// @dev Not using a `uint256` to avoid using a number that is over the Secp256k1 curve order
-    /// forge-config: default.fuzz.runs = 100
-    /// forge-config: ci.fuzz.runs = 500
-    function test_EOAsCannotFollowAndReceiveTips(uint160 randomPrivateKey) public {
-        vm.skip(true);
-        vm.assume(randomPrivateKey != 0);
-
-        address eoa = vm.addr(randomPrivateKey);
-
-        vm.assume(eoa != address(0));
-        vm.assume(eoa.code.length == 0);
+    function test_EOAsCannotReceiveTipsOnFollow() public {
+        address eoa = vm.addr(0x0E0A);
 
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
         uint256 eoaPotatoBalanceBefore = potatoToken.balanceOf(address(eoa));
@@ -1001,30 +992,48 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(logs, eoa, unicode"❌ Only 🆙 allowed to be tipped");
     }
 
-    /// @dev forge-config: default.fuzz.runs = 100
-    /// @dev forge-config: ci.fuzz.runs = 500
-    function test_onlyUniversalProfilesCanReceiveTips(uint160 randomPrivateKey) public {
-        vm.skip(true);
-        vm.assume(randomPrivateKey != 0);
+    function test_onlyUniversalProfilesCanReceiveTips() public {
+        // Mock a minimal LSP1 implementer that does not support the LSP0 interface
+        MinimalLSP1Implementer minimalLsp1Implementer = new MinimalLSP1Implementer();
+
         // Mock a 🆙 minimal proxy pointing to UP implementation v0.12.1
-        address universalProfile = vm.addr(randomPrivateKey);
+        address universalProfile = address(uint160(0x1234));
         vm.etch(
             universalProfile,
             hex"363d3d373d3d3d363d7352c90985af970d4e0dc26cb5d052505278af32a95af43d82803e903d91602b57fd5bf3"
         );
 
         uint256 userPotatoBalanceBefore = potatoToken.balanceOf(address(user));
-        uint256 eoaPotatoBalanceBefore = potatoToken.balanceOf(address(universalProfile));
-
+        uint256 universalProfilePotatoBalanceBefore = potatoToken.balanceOf(address(universalProfile));
         uint256 tippingBudget = 10 * TIP_AMOUNT;
 
         vm.prank(address(user));
         potatoToken.authorizeOperator(address(potatoTipper), tippingBudget, "");
 
+        // Test that it does not work for a contract that only supports LSP1
+        _preTippingChecks(address(user), address(minimalLsp1Implementer), tippingBudget);
+        
+        vm.recordLogs();
+        vm.prank(address(minimalLsp1Implementer));
+        _FOLLOWER_REGISTRY.follow(address(user));
+
+        // CHECK that follower is now following user
+        assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(minimalLsp1Implementer), address(user)));
+
+        // CHECK that follower did NOT receive a tip (tipping was not triggered)
+        assertFalse(potatoTipper.hasReceivedTip(address(minimalLsp1Implementer), address(user)));
+        assertEq(potatoToken.balanceOf(address(minimalLsp1Implementer)), universalProfilePotatoBalanceBefore);
+        assertEq(potatoToken.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs, address(minimalLsp1Implementer), unicode"❌ Only 🆙 allowed to be tipped"
+        );
+
+        // Test that it works for a UP
         _preTippingChecks(address(user), universalProfile, tippingBudget);
 
         vm.recordLogs();
-
         vm.prank(universalProfile);
         _FOLLOWER_REGISTRY.follow(address(user));
 
@@ -1032,12 +1041,12 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             address(user),
             address(universalProfile),
             TIP_AMOUNT,
-            eoaPotatoBalanceBefore,
+            universalProfilePotatoBalanceBefore,
             userPotatoBalanceBefore,
             tippingBudget
         );
 
-        Vm.Log[] memory logs = vm.getRecordedLogs();
+        logs = vm.getRecordedLogs();
 
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
@@ -1104,7 +1113,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         assertEq(
             returnedData,
-            unicode"👋🏻 Assuming existing follower BPT is unfollowing (not eligible for a tip if re-follow). Goodbye!"
+            unicode"👋🏻 Assuming existing follower BPT is unfollowing. Goodbye!"
         );
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
 
