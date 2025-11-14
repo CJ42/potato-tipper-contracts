@@ -1165,8 +1165,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
         assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
-        assertTrue(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
         assertFalse(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
+        assertTrue(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
 
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(existingFollower)), existingFollowerPotatoBalanceBefore);
@@ -1184,8 +1184,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
         assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
+        assertFalse(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
         assertTrue(potatoTipper.existingFollowerUnfollowedPostInstall(address(existingFollower), address(user)));
-        assertTrue(potatoTipper.hasFollowedPostInstall(address(existingFollower), address(user)));
 
         assertEq(potatoToken.balanceOf(address(user)), userPotatoBalanceBefore);
         assertEq(potatoToken.balanceOf(address(existingFollower)), existingFollowerPotatoBalanceBefore);
