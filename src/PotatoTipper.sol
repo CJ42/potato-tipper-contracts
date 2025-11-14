@@ -201,7 +201,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
         if (!_hasFollowedPostInstall[msg.sender][follower]) {
             _existingFollowerUnfollowedPostInstall[msg.sender][follower] = true;
-            return unicode"👋🏻 Assuming existing follower BPT is unfollowing (not eligible for a tip if re-follow). Goodbye!";
+            return unicode"👋🏻 Assuming existing follower BPT is unfollowing. Goodbye!";
         }
 
         return unicode"👋🏻 Sorry to see you go. Hope you follow again soon! Goodbye!";
