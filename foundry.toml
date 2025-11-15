@@ -6,6 +6,7 @@ solc_version = "0.8.30"
 verbosity = 3
 src = "src"
 out = "build"
+test = "tests"
 libs = ["lib", "node_modules"]
 fs_permissions = [{ access = "read", path = "./script/data" }]
 

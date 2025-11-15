@@ -49,7 +49,7 @@ A brand could tip its new followers in LYX, other tokens, tokens created by the 
 
 ## Data Keys
 
-The configurations and settings for tipping new followers are stored under a specific data key under each user's 🆙. 
+The configurations and settings for tipping new followers are stored under a specific data key under each user's 🆙.
 
 The data key is of `Mapping` key type and named after the Potato Tipper for the first part of the map name, to make it easy to remember and for future proofing (if more data keys related to the Potato Tipper should be introduced in future, new or forked versions).
 
@@ -57,15 +57,15 @@ Below is the LSP2 JSON Schema for tip settings:
 
 ```json
 {
-    "name": "PotatoTipper:Settings",
-    "key": "0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a",
-    "keyType": "Mapping",
-    "valueType": "(uint256,uint256,uint256)",
-    "valueContent": "(Number,Number,Number)"
+  "name": "PotatoTipper:Settings",
+  "key": "0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a",
+  "keyType": "Mapping",
+  "valueType": "(uint256,uint256,uint256)",
+  "valueContent": "(Number,Number,Number)"
 }
 ```
 
-Below is an example of how the data is encoded and can be decoded. The data value is essentially abi-encoded and can be-decoded by any libraries like ethers.js, viem or erc725.js. 
+Below is an example of how the data is encoded and can be decoded. The data value is essentially abi-encoded and can be-decoded by any libraries like ethers.js, viem or erc725.js.
 
 > Note that the values for the tip amount and minimum $POTATO tokens required in follower balance **are encoded in wei value, since the $POTATO token has 18 decimals.**
 
@@ -108,6 +108,9 @@ From the logs obtained in foundry via `getRecordedLogs()`
 [4] -> `emit UniversalReceiver`
     = on recipient's UP (follower), with notification type ID "LSP7 Token Received"
 
-[5] -> `emit UniversalReceiver`
+[5] -> `emit TipSent`
+    = on PotatoTipper contract, with user, follower, and tip amount as arguments
+
+[6] -> `emit UniversalReceiver`
     = on sender's UP (user), with notification type ID "New Follower"
 ```

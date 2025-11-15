@@ -1,4 +1,4 @@
-# 🥔🔁 POTATO Tipper **contracts** - [![Build + Test pass](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml/badge.svg)](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml) [![Code coverage](https://img.shields.io/badge/Code_Coverage-87%25-green?logo=codecrafters&logoColor=white)](./README.md#code-coverage)
+# 🥔🔁 POTATO Tipper **contracts** - [![Build + Test pass](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml/badge.svg)](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml) [![Code coverage](https://img.shields.io/badge/Code_Coverage-98%25-green?logo=codecrafters&logoColor=white)](./README.md#code-coverage)
 
 Smart contracts of the POTATO Tipper, a contract that enables you to tip on follow, acting as an incentive mechanism to gain new followers.
 
@@ -8,56 +8,57 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 | LUKSO Testnet | (code will change) `0xf2b2ac53d3A3EeaF2a2a10084b0EC88F2424f066` |
 
 ```
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⢛⠫⡍⢭⡙⢦⢋⠭⠩⢟⠻⠿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠟⢋⢡⢆⡹⠢⠛⠜⢦⡙⠦⢋⢞⡙⢦⠎⣅⠒⠩⣛⢿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠋⣄⠞⡌⣊⣤⣶⣿⣿⣿⢿⡿⣿⢷⣦⡝⢢⢛⡬⣙⢣⣄⠣⢝⠻⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢋⠤⣓⠜⣴⣾⡿⣟⣯⣷⢿⡾⣿⣽⣟⣯⣿⣻⢀⠯⢠⣶⣶⣌⠳⣌⠣⡝⢿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⢡⢇⠛⣠⣿⣿⣳⡿⣿⣽⣯⣿⣻⣷⣻⡾⠻⢓⡡⢎⠞⡤⠛⠯⠿⠃⣌⢳⡘⢎⢻⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⢌⡲⢉⣾⣿⣻⣞⡿⠝⣓⢋⡬⢡⡍⣔⢢⡒⣝⢢⡝⢬⣋⠼⡹⢜⢲⡙⣬⢃⡞⣌⠇⢻⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣈⠖⣡⣿⣟⡾⢋⢅⡲⢍⠮⣱⢊⢗⡸⡌⣇⠞⣬⠲⡈⠑⡬⢣⠝⡊⢕⠚⣤⠫⢴⠈⢸⠈⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⡁⣜⢰⢿⣻⠞⢰⡩⢖⡩⢎⡣⡕⣎⠎⡵⣘⠦⢫⡔⢫⡔⢎⡱⣋⠼⣁⠂⠉⠴⡙⢆⡀⢤⠘⢸⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⡑⣜⠢⣌⢋⢥⡘⠧⡜⣣⡙⢦⢓⡱⣊⠽⡰⣍⠺⣅⠞⡱⡜⢣⠵⣉⢮⠱⡆⡅⠄⠑⢢⡙⢦⠈⠄⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢏⡰⣱⠪⡕⠎⡜⢦⡹⣑⢣⡕⢎⡣⡝⠢⡝⢲⡱⢪⢕⡪⢍⡳⢜⡣⡝⡸⢆⡛⡜⣬⠱⠤⣀⡙⡆⠈⢆⢻
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⢋⡔⢦⠓⣥⠳⣙⢆⡠⠄⢀⡉⠲⡜⢣⡕⢎⡰⢜⢣⡱⢋⢦⡙⣎⡱⢎⢖⡩⡕⢮⠱⣍⠲⣍⢳⡡⡝⠄⡡⢊⢸
-⣿⣿⣿⣿⣿⣿⣿⠟⢁⡜⡲⢜⢣⣋⢦⡹⢌⡞⣰⢋⡖⠴⣣⠹⢥⡚⡥⢋⢮⡑⢮⡙⢦⡹⣐⠧⣍⠺⣔⡹⣌⠳⣌⠇⠈⠰⡱⢎⠐⢄⠣⢸
-⣿⣿⣿⣿⣿⠟⠁⡠⢋⠴⣙⢎⡱⡜⣢⢇⢫⡔⡣⢇⡺⢱⣡⠛⣆⠧⣙⠭⣒⢭⠲⣙⠦⣱⠣⠞⣌⠳⣌⠶⣌⠳⣌⠖⡤⣄⢳⠁⢌⠢⡘⢸
-⣿⣿⣿⣿⢋⡠⢆⠄⣀⢱⡩⢎⢖⡱⠥⡎⠑⣸⠱⣩⠖⣣⠎⡵⣊⢞⡡⢏⡜⢦⠛⡴⡙⢦⡹⢩⢎⠵⣊⠶⣉⠞⣬⢚⡱⡌⡇⠈⡔⢂⠅⣺
-⣿⣿⡿⡑⢦⠹⡜⣊⢖⡣⣜⠣⠞⣌⠳⣜⠲⢥⢛⡤⢛⡤⡛⢴⢃⢮⠱⣎⡜⢎⡹⡒⣝⢢⣍⡓⢎⡣⢇⡳⣉⠞⡴⡩⢖⡱⢀⠱⡈⢆⠂⣿
-⣿⣿⠃⡲⣩⠎⡵⢩⢲⠱⣌⢏⡹⣌⠳⡬⣙⠎⣖⡩⢞⡰⣙⠎⡞⣌⢳⢒⡜⡣⢵⢩⣒⢣⠦⣙⢎⡱⢣⠵⣉⢞⣡⠳⣩⠀⠢⠑⡌⡐⢲⣿
-⣿⡇⠄⡣⡕⢮⢱⢋⡬⢳⡸⢬⡱⣌⠳⢥⢣⣋⠦⡓⢥⡓⣍⠺⡱⣌⡓⠮⣜⠱⣣⢣⢚⢦⡹⠘⢬⢃⠯⡜⣱⢊⡖⡹⠀⢄⠃⠱⠠⠡⣼⣿
-⣿⠠⠀⢧⠹⡜⢪⡱⢎⡕⢮⡑⣖⢩⠞⣡⠳⣌⢣⠉⠂⠙⠬⡓⡵⢢⡝⣱⢊⢧⡱⢎⢣⠖⡱⡄⣎⢭⢲⡙⡴⢋⡴⠃⠨⠄⠀⠀⢡⢃⣿⣿
-⡇⠂⡁⢎⢳⣉⢧⡱⢎⡜⢦⡹⢰⣋⠼⣡⠳⣌⠧⢳⡌⣂⠄⡁⠑⡣⢞⡰⢋⢦⠓⣎⢣⢫⢕⡚⡴⢪⡑⢮⣑⠫⢀⠌⡱⢈⠆⡉⠆⣼⣿⣿
-⡇⠡⡘⠈⡶⢡⢖⡑⠊⢜⡱⡜⢣⣌⢳⣡⠳⡜⣪⠵⡸⣑⠮⡔⢦⡙⢦⡹⢩⢲⠹⣌⢣⢇⠮⡱⢎⡵⡙⢦⠃⡡⢌⠢⡁⢎⠰⢡⢰⣿⣿⣿
-⣇⠁⠰⣁⠘⠧⣎⡔⢦⠚⡴⡩⠧⡜⣒⠦⡛⢴⢃⡞⡱⣌⠳⡜⢣⡙⢦⢍⣇⢫⡜⢬⠣⠎⠓⣭⢒⠖⡹⠂⡌⡐⢢⠑⡌⢢⠑⢢⣿⣿⣿⣿
-⣿⠈⡔⢠⢂⠹⡰⣚⠬⡛⡴⢩⢇⢳⣉⠶⡙⣎⠎⢶⡑⡎⢧⢹⣡⠛⣬⠲⡜⣢⠝⣪⢅⡂⣄⠲⡍⠎⣁⠒⠤⡑⠢⡑⢌⢂⢡⣿⣿⣿⣿⣿
-⣿⡇⠄⠣⢌⠢⢄⠫⡜⣱⠩⣇⠎⡧⢜⡪⢕⣪⡙⢦⡹⢸⡡⢇⠶⡙⣆⢳⡱⡱⢎⡱⢎⡱⢎⢃⢁⠒⠤⡉⢆⠡⢃⠜⡠⢢⣿⣿⣿⣿⣿⣿
-⣿⣿⡈⠔⣈⠒⡌⠰⡈⡁⠷⢬⣙⠲⢭⣘⢣⠦⣙⢦⡙⠀⢙⡎⡵⡙⡴⢃⠶⣙⢬⠓⠎⡁⢆⠰⡈⠜⡠⠑⡌⢢⠁⠎⣰⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣷⡐⠠⢃⠌⡱⢠⠑⡐⢂⠌⡙⠦⢣⢣⢝⡢⢧⡙⢦⢋⡴⢣⠝⡲⡍⠞⣁⠊⡔⢡⠘⡄⢃⠀⠀⢁⠣⡘⢄⠉⣴⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣷⡀⡁⢊⠤⣁⠊⠀⠁⠒⡐⢢⠁⠆⡌⢠⠡⡙⢌⠣⢌⠡⡉⠔⡠⢃⠄⠃⠌⡄⠃⠜⣀⠂⠤⡈⢆⠑⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣄⠂⠐⠠⠀⠀⢀⠰⡁⢆⡉⠒⡌⢢⠑⡌⢢⠘⡄⢣⠘⠤⡑⠌⡌⡁⠄⡠⠁⠂⠤⢉⠆⡑⣀⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣷⣄⠀⠈⠆⡡⢂⡑⠢⢌⠱⡈⢆⠱⡈⢆⠱⡈⠀⠘⠠⡑⠌⠤⢁⠢⢄⠡⠂⡀⢂⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣷⣌⡄⢀⠃⢌⠱⡈⢆⠱⡈⢆⠱⡈⢆⠁⠀⠀⡀⠔⠀⠀⢣⠘⡠⢁⣣⣴⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣬⣀⠆⢡⢊⡐⢡⠊⠔⠡⠊⠌⢡⠃⡜⢈⠄⢃⣂⣥⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣶⣮⣤⣭⣤⣥⣬⣬⣤⣵⣶⣶⣿⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡤⣔⢲⡒⢦⡙⡴⣒⣖⡠⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡴⡞⡹⢆⣝⣤⣣⡙⢦⣙⡴⡡⢦⡙⣱⠺⣭⣖⠤⡀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⠻⣡⢳⠵⠛⠉⠀⠀⠀⡀⢀⠀⡈⠙⢢⡝⡤⢓⠦⡜⠻⣜⡢⣄⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡴⣛⠬⣣⠋⠁⢀⠠⠐⠈⡀⢁⠀⠂⠠⠐⠀⠄⡿⣐⡟⠉⠉⠳⣌⠳⣜⢢⡀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡞⡸⣤⠟⠀⠀⠌⢀⠀⠂⠐⠀⠄⠈⠄⢁⣄⡬⢞⡱⣡⢛⣤⣐⣀⣼⠳⡌⢧⡱⡄⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡳⢍⡶⠁⠀⠄⠡⢀⣢⠬⡴⢓⡞⢲⠫⡝⢭⠢⡝⢢⡓⠴⣃⢆⡣⡍⢦⠓⡼⢡⠳⣸⡄⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⠷⣩⠞⠀⠠⢁⡴⡺⢍⡲⣑⠎⡵⡨⢇⢳⠸⣡⠓⣍⢷⣮⢓⡜⣢⢵⡪⣥⠛⣔⡋⣷⡇⣷⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⢾⠣⡏⡀⠄⣡⡏⢖⡩⢖⡱⢜⢪⠱⣱⢊⠧⣙⡔⢫⡔⢫⡱⢎⠴⣃⠾⣽⣶⣋⢦⡹⢿⡛⣧⡇⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⢮⠣⣝⠳⡴⡚⢧⣘⢣⠜⢦⡙⡬⢎⠵⣂⢏⠲⣅⠺⣡⢎⢣⡜⣊⠶⡑⣎⢹⢺⣻⣮⡝⢦⡙⣷⣻⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡰⢏⠎⣕⢪⣱⢣⡙⢆⠮⡜⢪⡱⢜⢢⣝⢢⡍⢎⡕⡪⢕⡲⢌⡣⢜⢢⢇⡹⢤⢣⠓⣎⣛⠿⢦⢹⣷⡹⡄
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⡴⢫⡙⣬⠚⣌⠦⡹⢟⣻⡿⢶⣍⢣⡜⢪⡱⢏⡣⡜⢎⡴⡙⢦⠱⢎⡱⡩⢖⢪⡑⣎⠲⣍⠲⡌⢞⢢⣻⢞⡵⡇
+⠀⠀⠀⠀⠀⠀⠀⣠⡾⢣⢍⡣⡜⠴⡙⢆⡳⢡⠏⡴⢩⣋⠜⣆⡚⢥⢚⡴⡑⢮⡑⢦⡙⢆⠯⣘⠲⣅⠫⢆⠳⣌⠳⣸⣷⣏⢎⡱⣯⡻⣜⡇
+⠀⠀⠀⠀⠀⣠⣾⢟⡴⣋⠦⡱⢎⢣⠝⡸⡔⢫⢜⡸⢅⡎⠞⣤⠹⣘⠦⣒⠭⡒⣍⠦⣙⠎⣜⣡⠳⣌⠳⣉⠳⣌⠳⣩⢛⠻⡌⣾⡳⣝⢧⡇
+⠀⠀⠀⠀⡴⢟⡹⣻⠿⡎⢖⡱⡩⢎⣚⢱⣮⠇⣎⠖⣩⠜⣱⢊⠵⡡⢞⡰⢣⡙⣤⢋⢦⡙⢆⡖⡱⣊⠵⣉⠶⣡⠓⡥⢎⢳⢸⣷⢫⡽⣺⠅
+⠀⠀⢀⢮⡙⣆⢣⠵⡩⢜⠣⣜⣡⠳⣌⠣⣍⡚⡤⢛⡤⢛⢤⡋⡼⡑⣎⠱⢣⡱⢆⢭⠢⡝⠲⢬⡱⢜⡸⢌⠶⣡⢋⢖⡩⢎⡿⣎⢷⡹⣽⠀
+⠀⠀⣼⢍⠖⣱⢊⡖⡍⣎⠳⡰⢆⠳⣌⢓⠦⣱⠩⢖⡡⢏⠦⣱⢡⠳⡌⡭⢣⢜⡊⡖⠭⡜⣙⠦⡱⢎⡜⣊⠶⡡⠞⣌⠖⣿⣝⣮⢳⢯⡍⠀
+⠀⢸⣻⢜⢪⡑⡎⡴⢓⡌⢇⡓⢎⠳⣌⡚⡜⠴⣙⢬⡚⢬⠲⣅⢎⠳⢬⣑⠣⣎⠜⡜⡥⡙⢆⣧⡓⡼⣐⢣⠎⡵⢩⢆⣿⡻⣼⣎⣟⣞⠃⠀
+⠀⣟⣿⡘⣆⢣⡕⢎⡱⢪⡑⢮⠩⡖⣡⠞⣌⠳⡜⣶⣽⣦⣓⢬⢊⡝⢢⠎⡵⡘⢎⡱⡜⣩⢎⢻⠱⡒⡍⢦⢋⡴⢋⣼⣗⣻⣿⣿⡞⡼⠀⠀
+⢸⣽⢾⡱⡌⠶⡘⢎⡱⢣⡙⢆⡏⠴⣃⠞⣌⠳⣘⡌⢳⠽⣻⢾⣮⢜⡡⢏⡴⡙⣬⠱⡜⡔⡪⢥⢋⡕⢮⡑⠮⣔⡿⣳⢎⡷⣹⢶⣹⠃⠀⠀
+⢸⣞⢧⣷⢉⡞⡩⢮⣵⡣⢎⢣⡜⠳⡌⠞⣌⢣⠕⣊⢇⠮⣑⢫⡙⢦⡙⢆⡖⡍⣆⠳⡜⡸⣑⢎⡱⢊⢦⡙⣼⢞⡳⣝⢾⡱⣏⡞⡏⠀⠀⠀
+⠸⣾⣏⠾⣧⣘⠱⢫⡙⣥⢋⢖⣘⢣⠭⣙⢤⡋⡼⢡⢎⠳⣌⢣⡜⢦⡙⡲⠸⡔⢣⡓⣜⣱⣬⠒⡭⣩⢆⣽⢳⢯⡝⣮⢳⡝⣮⡝⠀⠀⠀⠀
+⠀⣷⢫⡟⡽⣆⢏⠥⣓⢤⢋⡖⡸⡌⠶⣉⢦⠱⣱⡉⢮⢱⡘⡆⠞⣤⠓⣍⢣⠝⣢⠕⡺⢽⠻⣍⢲⣱⠾⣭⣛⢮⣝⢮⡳⡽⡞⠀⠀⠀⠀⠀
+⠀⢸⣻⣜⡳⣝⡻⣔⢣⠎⣖⠸⣱⢘⡣⢕⡪⠕⢦⡙⢆⡇⢞⡸⣉⢦⠹⡌⢎⢎⡱⢎⡱⢎⡱⡼⡾⣭⣛⢶⡹⣞⡼⣣⢟⡝⠀⠀⠀⠀⠀⠀
+⠀⠀⢷⣫⠷⣭⢳⣏⢷⢾⣈⡓⠦⣍⡒⠧⡜⣙⠦⡙⢦⣿⡦⢱⢊⢦⢋⡼⣉⠦⡓⣬⣱⢾⡹⣏⢷⣣⢟⣮⢳⡝⣾⣱⠏⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠈⢯⣟⡼⣳⢎⡟⣮⢯⡽⣳⢦⣙⡜⡜⡢⢝⡘⢦⡙⡴⢋⡜⣢⢍⢲⣡⠾⣵⢫⡞⣧⢻⡼⣿⣿⡾⣜⢧⡻⣶⠋⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠈⢿⢾⡵⣛⠾⣵⣿⣾⣭⢯⡝⣾⣹⢳⡟⣞⢦⡳⣜⡳⣞⢶⣫⢟⡼⣻⣼⣳⢻⣼⣣⠿⣽⣛⢷⡹⣮⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠻⣽⣯⣟⣿⣿⡿⣏⢾⡹⢶⣭⢳⡝⣮⢳⡝⣧⢻⡜⣧⣛⢮⣳⢳⢾⣻⢟⣾⣽⣛⡶⣹⢮⠿⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠈⠻⣿⣷⣹⢞⡽⢮⣝⡳⣎⢷⡹⣎⢷⡹⣎⢷⣿⣧⣟⢮⣳⣛⡾⣝⡻⣞⣽⢿⡽⠟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⢻⡿⣼⡳⣎⢷⡹⣎⢷⡹⣎⢷⡹⣾⣿⣿⢿⣫⣿⣿⡜⣧⢟⡾⠜⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠓⠿⣹⡞⡵⢯⡞⣵⣫⣞⣵⣳⡞⣼⢣⡷⣻⡼⠽⠚⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠑⠛⠒⠛⠚⠓⠓⠛⠊⠉⠉⠀⠁⠀⠀⠀⠀⠀⠀
 ```
 
 > **⚠️ Disclaimer:** the `PotatoTipper.sol` contract is experimental. Use it responsibly and at your own risk.
 >
 > Although it has been thoroughly tested with Foundry and some auditing tools, it has not been formally audited by an external third party auditor.
 >
-> See the [**Security Notes & Limitations**](#security-notes--limitations) section for more details on the auditing tools used and the known trade-offs.
+> See the [**Known Limitations**](#known-limitations) and [**Security**](#security) sections for more details and the known trade-offs.
 
 - [🥔🔁 POTATO Tipper **contracts** - ](#-potato-tipper-contracts----)
   - [Overview](#overview)
+  - [Known Limitations](#known-limitations)
   - [Technical Details](#technical-details)
     - [Smart contract specifics](#smart-contract-specifics)
     - [Interaction Flow](#interaction-flow)
   - [Learning](#learning)
-  - [Security Notes + Limitations](#security-notes--limitations)
+  - [Security](#security)
   - [Code Coverage](#code-coverage)
+  - [Gas report](#gas-report)
 - [Development](#development)
   - [Pre-requisites](#pre-requisites)
-  - [Gas report](#gas-report)
   - [Developing with Foundry](#developing-with-foundry)
 
 ## Overview
@@ -77,10 +78,17 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
   - easily portable (_e.g: if a future Potato Tipper v2 is live, the settings are portable and don’t need to be reset again_)
 
 - ✅🆙 **Only for Universal Profile:** only 🆙 can receive tips (❌🔑 not EOAs)
-  - only one tip per UP they follow.
-  - Existing followers are not eligible to receive tips.
+  - new followers can only get one tip per user. They cannot unfollow and re-follow to try to get many tips.
+  - existing followers are not eligible to receive tips from 🆙 users they already follow
 
-## Technical Details
+## Known Limitations
+
+- The Potato Tipper only works for new followers (therefore the notion of an _"incentive system"_). Existing followers cannot get tipped (as mentioned above). If a user (Alice) connects the Potato Tipper to its UP, and Bob was following Alice before she used the Potato Tipper, Bob will never be able to get a tip from the Potato Tipper contract. Even by trying to unfollow and re-follow Alice.
+- If Alice's UP follows Bob's UP and get tipped some 🥔, this does not guarantee that Alice will keep following Bob's afterwards. If Alice unfollows Bob, Bob will not get the 🥔 he tipped back. The Potato Tipper is not opinionated towards this behaviour as UPs might unfollow each other afterwards for legitimate reasons. The Potato Tipper cannot differentiate that.
+
+## Learning
+
+The [`LEARN.md`](./LEARN.md) file offer resources for those wanting to learn more about the Potato Tipper and its design patterns that use the [LSP1 Universal Receiver Delegate](https://docs.lukso.tech/standards/accounts/lsp1-universal-receiver-delegate/) standard.
 
 ### Smart contract specifics
 
@@ -96,66 +104,22 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 
 ### Interaction Flow
 
-![Interaction flow diagram](assets/interaction-flow-diagram.png)
+![Interaction flow diagram](images/interaction-flow-diagram.png)
 
-## Learning
+## Security
 
-You can learn more about the Potato Tipper and its design patterns that use the [LSP1 Universal Receiver Delegate](https://docs.lukso.tech/standards/accounts/lsp1-universal-receiver-delegate/) standard through the [`LEARN.md`](./LEARN.md) file.
-
-## Security Notes + Limitations
-
-> For security reports and audits using AI auditing tools from Ackee and Nethermind, see the [`audits/`](./audits/) folder.
-
-- New followers can only get tipped once. They cannot unfollow and re-follow to try to get tips many times.
-- The Potato Tipper only works for new followers (therefore the notion of an _"incentive system"_). Existing followers cannot get tipped (as mentioned above). If a user (Alice) connects the Potato Tipper to its UP, and Bob was following Alice before she used the Potato Tipper, Bob will never be able to get a tip from the Potato Tipper contract. Even by trying to unfollow and re-follow Alice.
-- If Alice's UP follows Bob's UP and get tipped some 🥔, this does not guarantee that Alice will keep following Bob's afterwards. If Alice unfollows Bob, Bob will not get the 🥔 he tipped back. The Potato Tipper is not opinionated towards this behaviour as UPs might unfollow each other afterwards for legitimate reasons. The Potato Tipper cannot differentiate that.
+See the [`audits/`](./audits/) folder for security analysis ran on the contracts and the reports generated with AI auditing tools from Ackee and Nethermind, as well as any additional security notes.
 
 ## Code Coverage
 
 ```
-╭----------------------+----------------+----------------+---------------+---------------╮
-| File                 | % Lines        | % Statements   | % Branches    | % Funcs       |
-+========================================================================================+
-| src/PotatoTipper.sol | 95.45% (42/44) | 95.24% (40/42) | 85.71% (6/7)  | 100.00% (8/8) |
-╰----------------------+----------------+----------------+---------------+---------------╯
-
-Uncovered for src/PotatoTipper.sol:
-- Line (location: source ID 102, lines 137..138, bytes 14351..14408, hits: 0)
-- Statement (location: source ID 102, lines 137..138, bytes 14351..14408, hits: 0)
-- Branch (branch: 13, path: 0) (location: source ID 102, lines 234..237, bytes 19179..19277, hits: 0)
-- Line (location: source ID 102, lines 235..236, bytes 19197..19262, hits: 0)
-- Statement (location: source ID 102, lines 235..236, bytes 19197..19262, hits: 0)
-```
-
-# Development
-
-## Pre-requisites
-
-1. Install the [**`bun`** package manager](https://bun.sh/package-manager).
-2. [Install foundry](https://getfoundry.sh/).
-3. Install the dependencies
-
-```bash
-forge install
-bun install
-
-# Compile the contracts (ABI + generated bytecode in `build/` folder)
-bun run build
-
-# Bun commands for tests below uses under the hood the flag `--fork-url https://rpc.mainnet.lukso.network`
-
-# Run fork tests against LUKSO mainnet
-bun run test
-
-# Run fork tests + display gas report
-bun run test:gas
-
-# Run fork tests + show code coverage
-bun run test:coverage
-
-# Format Solidity code
-# Formatting rules can be adjusted under the `[fmt]` section in the `foundry.toml` file
-bun run format
+╭----------------------+----------------+----------------+----------------+-----------------╮
+| File                 | % Lines        | % Statements   | % Branches     | % Funcs         |
++===========================================================================================+
+| src/PotatoTipper.sol | 98.39% (61/62) | 97.33% (73/75) | 95.24% (20/21) | 100.00% (10/10) |
+|----------------------+----------------+----------------+----------------+-----------------|
+| Total                | 98.39% (61/62) | 97.33% (73/75) | 95.24% (20/21) | 100.00% (10/10) |
+╰----------------------+----------------+----------------+----------------+-----------------╯
 ```
 
 ## Gas report
@@ -200,6 +164,37 @@ Ran 29 tests for test/PotatoTipper.t.sol:PotatoTipperTest
 Suite result: ok. 25 passed; 0 failed; 4 skipped; finished in 141.89s (198.01s CPU time)
 
 Ran 1 test suite in 142.35s (141.89s CPU time): 25 tests passed, 0 failed, 4 skipped (29 total tests)
+```
+
+# Development
+
+## Pre-requisites
+
+1. Install the [**`bun`** package manager](https://bun.sh/package-manager).
+2. [Install foundry](https://getfoundry.sh/).
+3. Install the dependencies
+
+```bash
+forge install
+bun install
+
+# Compile the contracts (ABI + generated bytecode in `build/` folder)
+bun run build
+
+# Bun commands for tests below uses under the hood the flag `--fork-url https://rpc.mainnet.lukso.network`
+
+# Run fork tests against LUKSO mainnet
+bun run test
+
+# Run fork tests + display gas report
+bun run test:gas
+
+# Run fork tests + show code coverage
+bun run test:coverage
+
+# Format Solidity code
+# Formatting rules can be adjusted under the `[fmt]` section in the `foundry.toml` file
+bun run format
 ```
 
 ## Developing with Foundry
