@@ -26,3 +26,7 @@ coverage
 *.tgz
 
 .DS_Store
+
+# Others
+.wake/
+.vscode/
