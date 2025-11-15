@@ -159,7 +159,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         bool isFollowing = _FOLLOWER_REGISTRY.isFollowing(follower, msg.sender);
         if (!isFollowing) return unicode"❌ Not a legitimate follow";
 
-        // Prevent double tipping a follower if they unfollow -> re-follow 🥔 🚜
+        // Prevent double tipping a follower if unfollow -> re-follow 🥔 🚜
         if (_tipped[msg.sender][follower]) return unicode"🙅🏻 Already tipped a potato";
 
         // Existing followers are not eligible. A user does not gain any benefit from tipping them if they re-follow
