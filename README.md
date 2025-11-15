@@ -45,7 +45,7 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 >
 > Although it has been thoroughly tested with Foundry and some auditing tools, it has not been formally audited by an external third party auditor.
 >
-> See the [**Known Limitations**](#known-limitations) and [**Security**](#security) sections for more details on the auditing tools used and the known trade-offs.
+> See the [**Known Limitations**](#known-limitations) and [**Security**](#security) sections for more details and the known trade-offs.
 
 - [🥔🔁 POTATO Tipper **contracts** - ](#-potato-tipper-contracts----)
   - [Overview](#overview)
@@ -108,7 +108,7 @@ The [`LEARN.md`](./LEARN.md) file offer resources for those wanting to learn mor
 
 ## Security
 
-See the [`audits/`](./audits/) folder for security reports generated with AI auditing tools from Ackee and Nethermind, and additional security notes.
+See the [`audits/`](./audits/) folder for security analysis ran on the contracts and the reports generated with AI auditing tools from Ackee and Nethermind, as well as any additional security notes.
 
 ## Code Coverage
 

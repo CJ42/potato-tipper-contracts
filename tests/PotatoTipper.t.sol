@@ -656,11 +656,20 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(address(newFollower));
         _FOLLOWER_REGISTRY.follow(address(user));
 
-        _postTippingChecks(address(user), address(newFollower), TIP_AMOUNT, followerPotatoBalanceBefore, userPotatoBalanceBefore, tippingBudget);
+        _postTippingChecks(
+            address(user),
+            address(newFollower),
+            TIP_AMOUNT,
+            followerPotatoBalanceBefore,
+            userPotatoBalanceBefore,
+            tippingBudget
+        );
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+            logs,
+            address(newFollower),
+            unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
         );
     }
 
@@ -669,8 +678,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         uint256 followerPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(newFollower));
 
         uint256 currentFollowerPotatoBalance = _POTATO_TOKEN.balanceOf(address(newFollower));
-        minimumPotatoBalanceRequired = bound(minimumPotatoBalanceRequired, currentFollowerPotatoBalance + 1, type(uint256).max);
-        
+        minimumPotatoBalanceRequired =
+            bound(minimumPotatoBalanceRequired, currentFollowerPotatoBalance + 1, type(uint256).max);
+
         uint256 tippingBudget = 10 * TIP_AMOUNT;
 
         // Set an incorrect value for the tip amount
@@ -729,11 +739,20 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(address(newFollower));
         _FOLLOWER_REGISTRY.follow(address(user));
 
-        _postTippingChecks(address(user), address(newFollower), TIP_AMOUNT, followerPotatoBalanceBefore, userPotatoBalanceBefore, tippingBudget);
+        _postTippingChecks(
+            address(user),
+            address(newFollower),
+            TIP_AMOUNT,
+            followerPotatoBalanceBefore,
+            userPotatoBalanceBefore,
+            tippingBudget
+        );
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+            logs,
+            address(newFollower),
+            unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
         );
     }
 

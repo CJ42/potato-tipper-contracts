@@ -1,5 +1,13 @@
 # Security notes
 
+- [Security notes](#security-notes)
+  - [Audit reports from AI Auditing tools](#audit-reports-from-ai-auditing-tools)
+    - [Ackee Wake - AI Audit Report](#ackee-wake---ai-audit-report)
+  - [Known issues](#known-issues)
+- [Slither outputs - `PotatoTipper.sol`](#slither-outputs---potatotippersol)
+  - [reentrancy-benign](#reentrancy-benign)
+  - [reentrancy-events](#reentrancy-events)
+
 ## Audit reports from AI Auditing tools
 
 This folder contains PDF reports with findings from AI auditing tools, as well as outputs from the static analysis tool Slither and known limitations.
@@ -21,6 +29,30 @@ This folder contains PDF reports with findings from AI auditing tools, as well a
 | M6  | Cascading Failure Through Immutable External Contract Dependencies | ☑️ Acknowledged                      | LSP26 and the Potato token contract are not upgradable and cannot be changed. If these contracts have bugs or stop functioning, users can disconnect the `PotatoTipper` contract from their Universal Profile, remove the settings and remove the allowance of the PotatoTipper contract by interacting with the Potato token contract.                                                                                                      |
 | L1  | Zero Tip Amount Not Validated                                      | ✅ Fixed                             | Fixed in commit `92325a0`.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | W1  | Missing bounds checking in PotatoLib assembly memory access        | ✅ Fixed                             | Fixed with the fix implemented for H1 and commit `14e88b7` that refactored the codebase with the new free functions in `PotatoTipperSettingsLib.sol`.                                                                                                                                                                                                                                                                                        |
+
+## Known issues
+
+Since the `PotatoTipper` contract relies on follow and unfollow notifications activities to attempt to track existing followers (so that they are not eligible for a tip), this is not a 100% reliable mechanism on-chain. It can lead to some odd behaviours in the contract logic, including the ability for a user that connected the `PotatoTipper` contract to their Universal Profile to perform the following:
+
+**1. Tipping Existing Followers Directly**
+
+A user could send a tip directly to any existing follower, by calling from their UP the `universalReceiverDelegate` function on the `PotatoTipper` contract, passing as arguments:
+
+- `sender`: the LSP26 Follower Registry address
+- `data`: an existing follower address
+- `typeId` the LSP26 Follow notification type ID
+
+**Impact:** Low. This is a _"self-harm"_ behaviour. The user would simply waste their own $POTATO tokens by tipping followers who were already following before it started to use the Potato Tipper. If the user wants to reward existing followers, a simple LSP7 `transferBatch` on the $POTATO token contract would achieve the same and would cost less gas for the user.
+
+**2. Pre-emptively Blocking Future Followers**
+
+A user could prevent any potential new follower from receiving a future, by calling directly from their UP the `universalReceiverDelegate` function on the `PotatoTipper` contract, passing as arguments:
+
+- `sender`: the LSP26 Follower Registry address
+- `data`: an address of another user that does not actually follow
+- `typeId`: the LSP26 Unfollow notification type ID
+
+**Impact**: Medium. This allows a user to block specific addresses from receiving a future tip. This is considered as acceptable for meme-coin powered on-chain experiment and an MVP contract. Users abusing this feature can be called out by the community at this stage. A future version of the contract may add better safeguards to make the contract more neutral and prevent this behaviour.
 
 # Slither outputs - `PotatoTipper.sol`
 
