@@ -10,7 +10,14 @@ contract MinimalLSP1Implementer is IERC165, ILSP1UniversalReceiver {
         return interfaceId == type(IERC165).interfaceId || interfaceId == type(ILSP1UniversalReceiver).interfaceId;
     }
 
-    function universalReceiver(bytes32 /* typeId */, bytes calldata /* data */) external payable returns (bytes memory) {
+    function universalReceiver(
+        bytes32, // typeId
+        bytes calldata // data
+    )
+        external
+        payable
+        returns (bytes memory)
+    {
         return "Hey called the universal receiver function!";
     }
 }

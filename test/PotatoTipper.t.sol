@@ -154,7 +154,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // CHECK that the PotatoTipper allowance decreased by tip amount
         assertEq(
-            _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), userTipping), potatoTipperAllowanceBefore - tipAmount
+            _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), userTipping),
+            potatoTipperAllowanceBefore - tipAmount
         );
     }
 
@@ -202,7 +203,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             //   0000000000000000000000000000000000000000000000000000000000000019 .............
             //   4c5350313a20747970654964206f7574206f662073636f706500000000000000 .............
             //   0000000000000000000000000000000000000000000000000000000000000050 .............
-            //   e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
+            // 
+            // e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
 
             (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
                 abi.decode((logs[i].data), (bytes, bytes));
@@ -217,7 +219,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             //   0000000000000000000000000000000000000000000000000000000000000019 -> 25 bytes (characters)
             //   4c5350313a20747970654964206f7574206f662073636f706500000000000000
             //   0000000000000000000000000000000000000000000000000000000000000050 -> 80 bytes (characters)
-            //   e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
+            // 
+            // e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
             assertEq(allReturnedLsp1DelegateValues, abi.encode("LSP1: typeId out of scope", expectedMessage));
 
             // CHECK LSP1 Default Delegate returned the right message
@@ -478,7 +481,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         bytes memory tipSettingsDataValue = IERC725Y(address(user)).getData(POTATO_TIPPER_SETTINGS_DATA_KEY);
 
         assertEq(tipSettingsDataValue, encodedTipSettings);
-        (uint256 tipAmount, uint256 minimumFollowers, uint256 minimumPotatoBalance) = abi.decode(tipSettingsDataValue, (uint256, uint256, uint256));
+        (uint256 tipAmount, uint256 minimumFollowers, uint256 minimumPotatoBalance) =
+            abi.decode(tipSettingsDataValue, (uint256, uint256, uint256));
         assertEq(tipAmount, customTipAmount);
         assertEq(minimumFollowers, MIN_FOLLOWER_REQUIRED);
         assertEq(minimumPotatoBalance, MIN_POTATO_BALANCE_REQUIRED);
@@ -860,7 +864,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     }
 
     function test_canFollowBatchTwoUsersAndGetTipsFromBoth() public {
-
         uint256 userPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(user));
         uint256 anotherUserPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(anotherUser));
         uint256 followerPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(newFollower));
@@ -876,9 +879,11 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(address(anotherUser));
         _POTATO_TOKEN.authorizeOperator(address(potatoTipper), tippingBudget, "");
 
-        uint256 potatoTipperAllowanceForUserBefore = _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(user));
+        uint256 potatoTipperAllowanceForUserBefore =
+            _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(user));
         assertEq(potatoTipperAllowanceForUserBefore, tippingBudget);
-        uint256 potatoTipperAllowanceForAnotherUserBefore = _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(anotherUser));
+        uint256 potatoTipperAllowanceForAnotherUserBefore =
+            _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(anotherUser));
         assertEq(potatoTipperAllowanceForAnotherUserBefore, tippingBudget);
 
         _preTippingChecks(address(user), address(newFollower), tippingBudget);
@@ -910,10 +915,12 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // CHECK that the PotatoTipper allowance decreased by tip amount
         assertEq(
-            _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(user)), potatoTipperAllowanceForUserBefore - TIP_AMOUNT
+            _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(user)),
+            potatoTipperAllowanceForUserBefore - TIP_AMOUNT
         );
         assertEq(
-            _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(anotherUser)), potatoTipperAllowanceForAnotherUserBefore - TIP_AMOUNT
+            _POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(anotherUser)),
+            potatoTipperAllowanceForAnotherUserBefore - TIP_AMOUNT
         );
     }
 
@@ -1066,7 +1073,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // Test that it does not work for a contract that only supports LSP1
         _preTippingChecks(address(user), address(minimalLsp1Implementer), tippingBudget);
-        
+
         vm.recordLogs();
         vm.prank(address(minimalLsp1Implementer));
         _FOLLOWER_REGISTRY.follow(address(user));
@@ -1166,15 +1173,12 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             address(_FOLLOWER_REGISTRY), 0, _TYPEID_LSP26_UNFOLLOW, abi.encodePacked(address(newFollower))
         );
 
-        assertEq(
-            returnedData,
-            unicode"👋🏻 Assuming existing follower BPT is unfollowing. Goodbye!"
-        );
+        assertEq(returnedData, unicode"👋🏻 Assuming existing follower BPT is unfollowing. Goodbye!");
         assertFalse(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
 
         assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertFalse(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
-        
+
         /// @dev This is odd behaviour as it allows a user to censor other new users that will actually follow,
         // and prevent them from receiving a tip
         assertTrue(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
@@ -1394,7 +1398,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
                 assertEq(errorData, abi.encodeWithSignature("Error(string)", "Force revert on LSP7TokensReceived"));
                 continue;
             }
-            
+
             if (logs[ii].topics[0] != ILSP1UniversalReceiver.UniversalReceiver.selector) continue;
             if (bytes32(logs[ii].topics[3]) != _TYPEID_LSP26_FOLLOW) continue;
             (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
