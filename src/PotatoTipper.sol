@@ -159,15 +159,15 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         bool isFollowing = _FOLLOWER_REGISTRY.isFollowing(follower, msg.sender);
         if (!isFollowing) return unicode"❌ Not a legitimate follow";
 
-        if (!_hasFollowedPostInstall[msg.sender][follower]) _hasFollowedPostInstall[msg.sender][follower] = true;
-
-        // Prevent unfollow -> re-follow to get tips again, or existing followers trying to re-follow 🥔 🚜
+        // Prevent double tipping a follower if unfollow -> re-follow 🥔 🚜
         if (_tipped[msg.sender][follower]) return unicode"🙅🏻 Already tipped a potato";
 
         // Existing followers are not eligible. A user does not gain any benefit from tipping them if they re-follow
         if (_existingFollowerUnfollowedPostInstall[msg.sender][follower]) {
-            return unicode"🙅🏻 Follower followed before. Not eligible for a tip";
+            return unicode"🙅🏻 Existing followers not eligible for a tip";
         }
+
+        if (!_hasFollowedPostInstall[msg.sender][follower]) _hasFollowedPostInstall[msg.sender][follower] = true;
 
         bytes memory settingsValue = IERC725Y(msg.sender).loadTipSettingsRaw();
         (bool decodingSuccess, SettingsLib.TipSettings memory tipSettings, bytes memory decodingError) =
@@ -201,7 +201,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
 
         if (!_hasFollowedPostInstall[msg.sender][follower]) {
             _existingFollowerUnfollowedPostInstall[msg.sender][follower] = true;
-            return unicode"👋🏻 Assuming existing follower BPT is unfollowing (not eligible for a tip if re-follow). Goodbye!";
+            return unicode"👋🏻 Assuming existing follower BPT is unfollowing. Goodbye!";
         }
 
         return unicode"👋🏻 Sorry to see you go. Hope you follow again soon! Goodbye!";

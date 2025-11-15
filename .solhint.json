@@ -1,6 +1,7 @@
 {
   "extends": "solhint:recommended",
   "rules": {
-    "use-natspec": "off"
+    "use-natspec": "off",
+    "gas-small-strings": "off"
   }
 }

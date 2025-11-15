@@ -33,6 +33,7 @@
     "test": "forge test --fork-url https://rpc.mainnet.lukso.network",
     "test:gas": "forge test --fork-url https://rpc.mainnet.lukso.network --gas-report",
     "test:snapshot": "forge snapshot --fork-url https://rpc.mainnet.lukso.network",
+    "test:snapshot:compare": "forge snapshot --fork-url https://rpc.mainnet.lukso.network --diff=./gas-snapshots/.gas-snapshot-before-ai-audit",
     "test:coverage": "forge coverage --exclude-tests --fork-url https://rpc.mainnet.lukso.network",
     "format": "forge fmt"
   },
