@@ -24,16 +24,24 @@ This folder contains PDF reports with findings from AI auditing tools, as well a
 
 # Slither outputs - `PotatoTipper.sol`
 
+```
 INFO:Detectors:
 Reentrancy in PotatoTipper.\_transferTip(address,uint256) (src/PotatoTipper.sol#257-277):
-External calls: - \_POTATO_TOKEN.transfer({from:msg.sender,to:follower,amount:tipAmount,force:false,data:Thanks for following! Tipping you some 🥔}) (src/PotatoTipper.sol#260-276)
-State variables written after the call(s): - \_tipped[msg.sender][follower] = false (src/PotatoTipper.sol#272)
+      External calls:
+      - \_POTATO_TOKEN.transfer({from:msg.sender,to:follower,amount:tipAmount,force:false,data:Thanks for following! Tipping you some 🥔}) (src/PotatoTipper.sol#260-276)
+      State variables written after the call(s):
+      - \_tipped[msg.sender][follower] = false (src/PotatoTipper.sol#272)
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-2
 INFO:Detectors:
 Reentrancy in PotatoTipper.\_transferTip(address,uint256) (src/PotatoTipper.sol#257-277):
-External calls: - \_POTATO_TOKEN.transfer({from:msg.sender,to:follower,amount:tipAmount,force:false,data:Thanks for following! Tipping you some 🥔}) (src/PotatoTipper.sol#260-276)
-Event emitted after the call(s): - TipFailed({from:msg.sender,to:follower,amount:tipAmount,errorData:errorData}) (src/PotatoTipper.sol#274) - TipSent({from:msg.sender,to:follower,amount:tipAmount}) (src/PotatoTipper.sol#267)
+      External calls:
+      - \_POTATO_TOKEN.transfer({from:msg.sender,to:follower,amount:tipAmount,force:false,data:Thanks for following! Tipping you some 🥔}) (src/PotatoTipper.sol#260-276)
+      Event emitted after the call(s):
+      - TipFailed({from:msg.sender,to:follower,amount:tipAmount,errorData:errorData}) (src/PotatoTipper.sol#274)
+      - TipSent({from:msg.sender,to:follower,amount:tipAmount}) (src/PotatoTipper.sol#267)
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
+```
+
 Summary
 
 - [reentrancy-benign](#reentrancy-benign) (1 results) (Low)
@@ -49,7 +57,7 @@ Confidence: Medium
       External calls: - [\_POTATO_TOKEN.transfer({from:msg.sender,to:follower,amount:tipAmount,force:false,data:Thanks for following! Tipping you some 🥔})](./auditssrc/PotatoTipper.sol#L260-L276)
       State variables written after the call(s): - [\_tipped[msg.sender][follower] = false](./auditssrc/PotatoTipper.sol#L272)
 
-./auditssrc/PotatoTipper.sol#L257-L277
+./src/PotatoTipper.sol#L257-L277
 
 ## reentrancy-events
 
@@ -61,6 +69,6 @@ Confidence: Medium
       External calls: - [\_POTATO_TOKEN.transfer({from:msg.sender,to:follower,amount:tipAmount,force:false,data:Thanks for following! Tipping you some 🥔})](./auditssrc/PotatoTipper.sol#L260-L276)
       Event emitted after the call(s): - [TipFailed({from:msg.sender,to:follower,amount:tipAmount,errorData:errorData})](./auditssrc/PotatoTipper.sol#L274) - [TipSent({from:msg.sender,to:follower,amount:tipAmount})](./auditssrc/PotatoTipper.sol#L267)
 
-./auditssrc/PotatoTipper.sol#L257-L277
+./src/PotatoTipper.sol#L257-L277
 
 INFO:Slither:src/PotatoTipper.sol analyzed (10 contracts with 100 detectors), 2 result(s) found
