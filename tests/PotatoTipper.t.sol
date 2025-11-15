@@ -591,6 +591,152 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         );
     }
 
+    function test_minimumFollowerRequiredNotMetDontTriggerTip(uint256 minimumFollowerCountRequired) public {
+        uint256 userPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(user));
+        uint256 followerPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(newFollower));
+
+        uint256 currentFollowerCount = _FOLLOWER_REGISTRY.followerCount(address(newFollower));
+        minimumFollowerCountRequired = bound(minimumFollowerCountRequired, currentFollowerCount + 1, type(uint256).max);
+
+        uint256 tippingBudget = 10 * TIP_AMOUNT;
+
+        // Set an incorrect value for the tip amount
+        vm.prank(userBrowserExtensionController);
+        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, minimumFollowerCountRequired, 0));
+
+        // Authorize the Potato Tipper contract to be able to transfer $POTATO tokens
+        vm.prank(address(user));
+        _POTATO_TOKEN.authorizeOperator(address(potatoTipper), tippingBudget, "");
+
+        _preTippingChecks(address(user), address(newFollower), tippingBudget);
+
+        vm.recordLogs();
+
+        vm.prank(address(newFollower));
+        _FOLLOWER_REGISTRY.follow(address(user));
+
+        assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
+
+        assertTrue(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
+
+        // CHECK that follower has NOT received a tip (tipping was not triggered)
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+        assertEq(_POTATO_TOKEN.balanceOf(address(newFollower)), followerPotatoBalanceBefore);
+        assertEq(_POTATO_TOKEN.balanceOf(address(user)), userPotatoBalanceBefore);
+        assertEq(_POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs, address(newFollower), unicode"❌ Not eligible for tip: minimum follower required not met"
+        );
+    }
+
+    function test_minimumFollowerRequiredExactMatchTriggerTip() public {
+        uint256 userPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(user));
+        uint256 followerPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(newFollower));
+
+        uint256 currentFollowerCount = _FOLLOWER_REGISTRY.followerCount(address(newFollower));
+        uint256 minimumFollowerCountRequired = currentFollowerCount;
+
+        uint256 tippingBudget = 10 * TIP_AMOUNT;
+
+        // Set an incorrect value for the tip amount
+        vm.prank(userBrowserExtensionController);
+        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, minimumFollowerCountRequired, 0));
+
+        // Authorize the Potato Tipper contract to be able to transfer $POTATO tokens
+        vm.prank(address(user));
+        _POTATO_TOKEN.authorizeOperator(address(potatoTipper), tippingBudget, "");
+
+        _preTippingChecks(address(user), address(newFollower), tippingBudget);
+
+        vm.recordLogs();
+
+        vm.prank(address(newFollower));
+        _FOLLOWER_REGISTRY.follow(address(user));
+
+        _postTippingChecks(address(user), address(newFollower), TIP_AMOUNT, followerPotatoBalanceBefore, userPotatoBalanceBefore, tippingBudget);
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs, address(newFollower), unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+        );
+    }
+
+    function test_minimumPotatoBalanceRequiredNotMetDontTriggerTip(uint256 minimumPotatoBalanceRequired) public {
+        uint256 userPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(user));
+        uint256 followerPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(newFollower));
+
+        uint256 currentFollowerPotatoBalance = _POTATO_TOKEN.balanceOf(address(newFollower));
+        minimumPotatoBalanceRequired = bound(minimumPotatoBalanceRequired, currentFollowerPotatoBalance + 1, type(uint256).max);
+        
+        uint256 tippingBudget = 10 * TIP_AMOUNT;
+
+        // Set an incorrect value for the tip amount
+        vm.prank(userBrowserExtensionController);
+        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, 0, minimumPotatoBalanceRequired));
+
+        // Authorize the Potato Tipper contract to be able to transfer $POTATO tokens
+        vm.prank(address(user));
+        _POTATO_TOKEN.authorizeOperator(address(potatoTipper), tippingBudget, "");
+
+        _preTippingChecks(address(user), address(newFollower), tippingBudget);
+
+        vm.recordLogs();
+
+        vm.prank(address(newFollower));
+        _FOLLOWER_REGISTRY.follow(address(user));
+
+        assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
+
+        assertTrue(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
+        assertFalse(potatoTipper.existingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
+
+        // CHECK that follower has NOT received a tip (tipping was not triggered)
+        assertFalse(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
+        assertEq(_POTATO_TOKEN.balanceOf(address(newFollower)), followerPotatoBalanceBefore);
+        assertEq(_POTATO_TOKEN.balanceOf(address(user)), userPotatoBalanceBefore);
+        assertEq(_POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget);
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs, address(newFollower), unicode"❌ Not eligible for tip: minimum 🥔 balance required not met"
+        );
+    }
+
+    function test_minimumPotatoBalanceRequiredExactMatchTriggerTip() public {
+        uint256 userPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(user));
+        uint256 followerPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(newFollower));
+
+        uint256 currentFollowerPotatoBalance = _POTATO_TOKEN.balanceOf(address(newFollower));
+        uint256 minimumPotatoBalanceRequired = currentFollowerPotatoBalance;
+
+        uint256 tippingBudget = 10 * TIP_AMOUNT;
+
+        // Set an incorrect value for the tip amount
+        vm.prank(userBrowserExtensionController);
+        user.setData(POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, 0, minimumPotatoBalanceRequired));
+
+        // Authorize the Potato Tipper contract to be able to transfer $POTATO tokens
+        vm.prank(address(user));
+        _POTATO_TOKEN.authorizeOperator(address(potatoTipper), tippingBudget, "");
+
+        _preTippingChecks(address(user), address(newFollower), tippingBudget);
+
+        vm.recordLogs();
+
+        vm.prank(address(newFollower));
+        _FOLLOWER_REGISTRY.follow(address(user));
+
+        _postTippingChecks(address(user), address(newFollower), TIP_AMOUNT, followerPotatoBalanceBefore, userPotatoBalanceBefore, tippingBudget);
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs, address(newFollower), unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+        );
+    }
+
     function test_customTipAmountSetToZeroDontTriggerTip() public {
         uint256 userPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(user));
         uint256 followerPotatoBalanceBefore = _POTATO_TOKEN.balanceOf(address(newFollower));
