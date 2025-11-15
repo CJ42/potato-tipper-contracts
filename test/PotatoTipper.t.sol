@@ -203,7 +203,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             //   0000000000000000000000000000000000000000000000000000000000000019 .............
             //   4c5350313a20747970654964206f7574206f662073636f706500000000000000 .............
             //   0000000000000000000000000000000000000000000000000000000000000050 .............
-            // 
+            //
             // e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
 
             (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
@@ -219,7 +219,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             //   0000000000000000000000000000000000000000000000000000000000000019 -> 25 bytes (characters)
             //   4c5350313a20747970654964206f7574206f662073636f706500000000000000
             //   0000000000000000000000000000000000000000000000000000000000000050 -> 80 bytes (characters)
-            // 
+            //
             // e29c85f09f8da0205375636365737366756c6c792074697070656420312024504f5441544f20746f6b656e20746f206e657720666f6c6c6f7765722ebbe88a2f48eaa2ef04411e356d193ba3c1b3720000000000000000000000000000000000
             assertEq(allReturnedLsp1DelegateValues, abi.encode("LSP1: typeId out of scope", expectedMessage));
 
@@ -544,7 +544,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"❌ Invalid settings: must be encoded as a 96 bytes long tuple of (uint256,uint256,uint256)"
+            unicode"❌ Invalid settings: must be encoded as 96 bytes (uint256,uint256,uint256)"
         );
     }
 
@@ -587,7 +587,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"❌ Invalid settings: must be encoded as a 96 bytes long tuple of (uint256,uint256,uint256)"
+            unicode"❌ Invalid settings: must be encoded as 96 bytes (uint256,uint256,uint256)"
         );
     }
 
