@@ -33,7 +33,7 @@ function decodeTipSettings(bytes memory rawValue)
     returns (bool decodingSuccess, TipSettings memory settings, bytes memory decodingErrorMessage)
 {
     if (rawValue.length != 96) {
-        decodingErrorMessage = unicode"⚙️⚠️ Invalid settings: must be encoded as 96 bytes (uint256,uint256,uint256)";
+        decodingErrorMessage = unicode"⚙️⚠️ Invalid settings: must be 96 bytes (uint256,uint256,uint256)";
         return (false, settings, decodingErrorMessage);
     }
 

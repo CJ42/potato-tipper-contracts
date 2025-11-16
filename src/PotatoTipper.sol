@@ -135,12 +135,13 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         external
         returns (bytes memory messageStatus)
     {
-        if (sender != address(_FOLLOWER_REGISTRY)) return unicode"⛓️‍💥❌ Not triggered by the LSP26 Follower Registry";
+        if (sender != address(_FOLLOWER_REGISTRY)) return unicode"⛓️‍💥❌ Not called by Follower Registry";
         if (data.length != 20) return unicode"⛓️‍💥❌ Invalid data received. Must be a 20 bytes address";
 
         // Only 🆙✅ allowed to receive tips, 🔑❌ not EOAs
         address follower = address(bytes20(data));
-        if (!follower.supportsInterface(_INTERFACEID_LSP0)) return unicode"⛓️‍💥❌ Only 🆙 allowed to receive tips";
+        bool isErc725Account = follower.supportsInterface(_INTERFACEID_LSP0);
+        if (!isErc725Account) return unicode"⛓️‍💥❌ Only 🆙 allowed to receive tips";
 
         if (typeId == _TYPEID_LSP26_FOLLOW) return _handleOnFollow(follower);
         if (typeId == _TYPEID_LSP26_UNFOLLOW) return _handleOnUnfollow(follower);
@@ -268,11 +269,13 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
             return abi.encodePacked(unicode"🥔✅ Successfully sent tip to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
             // If the token transfer failed (because the call to the `universalReceiver(...)` function reverted when
-            // notifying sender / recipient, or any sub-calls), revert state and mark the follower as not tipped.
+            // notifying sender/recipient, or any sub-calls), revert state and mark the follower as not tipped.
             delete _tipped[msg.sender][follower];
 
             emit PotatoTipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
-            return abi.encodePacked(unicode"🥔❌ Failed to send tip to ", follower.toHexString(), ". LSP7 transfer reverted");
+            return abi.encodePacked(
+                unicode"🥔❌ Failed to send tip to ", follower.toHexString(), ". LSP7 transfer reverted"
+            );
         }
     }
 }

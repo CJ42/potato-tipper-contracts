@@ -581,7 +581,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"⚙️⚠️ Invalid settings: must be encoded as 96 bytes (uint256,uint256,uint256)"
+            unicode"⚙️⚠️ Invalid settings: must be 96 bytes (uint256,uint256,uint256)"
         );
     }
 
@@ -624,7 +624,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"⚙️⚠️ Invalid settings: must be encoded as 96 bytes (uint256,uint256,uint256)"
+            unicode"⚙️⚠️ Invalid settings: must be 96 bytes (uint256,uint256,uint256)"
         );
     }
 
@@ -1179,7 +1179,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(existingFollower), unicode"⛓️‍💥❌ Not triggered by the LSP26 Follower Registry"
+            logs, address(existingFollower), unicode"⛓️‍💥❌ Not called by Follower Registry"
         );
     }
 
@@ -1216,7 +1216,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, caller, unicode"⛓️‍💥❌ Not triggered by the LSP26 Follower Registry"
+            logs, caller, unicode"⛓️‍💥❌ Not called by Follower Registry"
         );
     }
 
@@ -1252,7 +1252,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
-        _checkReturnedDataEmittedInUniversalReceiverEvent(logs, eoa, unicode"⛓️‍💥❌ Only 🆙 allowed to receive tips");
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs, eoa, unicode"⛓️‍💥❌ Only 🆙 allowed to receive tips"
+        );
     }
 
     function test_onlyUniversalProfilesCanReceiveTips() public {
@@ -1547,7 +1549,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"⛓️‍💥❌ Not triggered by the LSP26 Follower Registry"
+            logs, address(newFollower), unicode"⛓️‍💥❌ Not called by Follower Registry"
         );
     }
 
@@ -1606,7 +1608,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
                 abi.decode((logs[ii].data), (bytes, bytes));
 
-            bytes memory expectedMessage = unicode"🥔❌ Failed to send tip to 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200. LSP7 transfer reverted";
+            bytes memory expectedMessage =
+                unicode"🥔❌ Failed to send tip to 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200. LSP7 transfer reverted";
 
             // CHECK LSP26 Follower registry sent follower address as notification data
             assertEq(receivedNotificationData, abi.encodePacked(address(newFollower)));
@@ -1650,7 +1653,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             newLogs,
             address(newFollower),
-            unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+            unicode"🥔✅ Successfully sent tip to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
         );
     }
 }
