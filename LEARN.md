@@ -1,4 +1,14 @@
-# Docs
+# Documentation & Learn
+
+- [Documentation \& Learn](#documentation--learn)
+  - [Motivation](#motivation)
+  - [Design pattern](#design-pattern)
+    - [Pattern 1: Tip-on-Follow (React on Follow)](#pattern-1-tip-on-follow-react-on-follow)
+    - [Pattern 2: Self-Documenting ERC725Y Data Keys Configurations](#pattern-2-self-documenting-erc725y-data-keys-configurations)
+  - [Expanding \& Moving Forward](#expanding--moving-forward)
+  - [Adapting for other tokens and NFTs](#adapting-for-other-tokens-and-nfts)
+  - [Data Keys](#data-keys)
+  - [Order of emitted events](#order-of-emitted-events)
 
 This page describes the business logic of how the Potato Tipper contract works, as well as some potential ideas to expand its concept. If you are a developer building on LUKSO, you might find this page useful and maybe draw some inspiration from it to build your own product or protocol using this design pattern in tandem with the LSP smart contracts.
 
@@ -17,7 +27,7 @@ The Potato Tipper follows what I call the Tip-On-Follow (TOF) or Follow-Then-Tip
 - the **something** is _"I received a new follower"_
 - the **action** being done is _"transfer some 🥔 tokens to the new follower"_.
 
-### Pattern 2: Self-Documenting ERC725Y Data Keys Configuration
+### Pattern 2: Self-Documenting ERC725Y Data Keys Configurations
 
 The [`PotatoTipperConfig`](./src/PotatoTipperConfig.sol) contract exposes all required ERC725Y data keys to be configured by a user
 through view functions, making it easy for dApp developers and users to discover configuration requirements and set them.
