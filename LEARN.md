@@ -153,7 +153,7 @@ From the logs obtained in foundry via `getRecordedLogs()`
 [4] -> `emit UniversalReceiver`
     = on recipient's UP (follower), with notification type ID "LSP7 Token Received"
 
-[5] -> `emit TipSent`
+[5] -> `emit PotatoTipSent`
     = on PotatoTipper contract, with user, follower, and tip amount as arguments
 
 [6] -> `emit UniversalReceiver`

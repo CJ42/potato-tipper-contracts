@@ -35,7 +35,7 @@ import {
 } from "../src/PotatoTipperConfig.sol";
 
 // events
-import {TipSent, TipFailed} from "../src/Events.sol";
+import {PotatoTipSent, PotatoTipFailed} from "../src/Events.sol";
 
 // contracts to test
 import {UniversalProfile} from "@lukso/universalprofile-contracts/contracts/UniversalProfile.sol";
@@ -1590,7 +1590,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         for (uint256 ii = 0; ii < logs.length; ii++) {
-            if (logs[ii].topics[0] == TipFailed.selector) {
+            if (logs[ii].topics[0] == PotatoTipFailed.selector) {
                 assertEq(bytes32(logs[ii].topics[1]), bytes32(abi.encode(address(user))));
                 assertEq(bytes32(logs[ii].topics[2]), bytes32(abi.encode(address(newFollower))));
                 assertEq(bytes32(logs[ii].topics[3]), bytes32(abi.encode(TIP_AMOUNT)));

@@ -69,8 +69,8 @@ Reentrancy in PotatoTipper.\_transferTip(address,uint256) (src/PotatoTipper.sol#
       External calls:
       - \_POTATO_TOKEN.transfer({from:msg.sender,to:follower,amount:tipAmount,force:false,data:Thanks for following! Tipping you some 🥔}) (src/PotatoTipper.sol#260-276)
       Event emitted after the call(s):
-      - TipFailed({from:msg.sender,to:follower,amount:tipAmount,errorData:errorData}) (src/PotatoTipper.sol#274)
-      - TipSent({from:msg.sender,to:follower,amount:tipAmount}) (src/PotatoTipper.sol#267)
+      - PotatoTipFailed({from:msg.sender,to:follower,amount:tipAmount,errorData:errorData}) (src/PotatoTipper.sol#274)
+      - PotatoTipSent({from:msg.sender,to:follower,amount:tipAmount}) (src/PotatoTipper.sol#267)
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#reentrancy-vulnerabilities-3
 ```
 
@@ -99,7 +99,7 @@ Confidence: Medium
 - [ ] ID-1
       Reentrancy in [PotatoTipper.\_transferTip(address,uint256)](./auditssrc/PotatoTipper.sol#L257-L277):
       External calls: - [\_POTATO_TOKEN.transfer({from:msg.sender,to:follower,amount:tipAmount,force:false,data:Thanks for following! Tipping you some 🥔})](./auditssrc/PotatoTipper.sol#L260-L276)
-      Event emitted after the call(s): - [TipFailed({from:msg.sender,to:follower,amount:tipAmount,errorData:errorData})](./auditssrc/PotatoTipper.sol#L274) - [TipSent({from:msg.sender,to:follower,amount:tipAmount})](./auditssrc/PotatoTipper.sol#L267)
+      Event emitted after the call(s): - [PotatoTipFailed({from:msg.sender,to:follower,amount:tipAmount,errorData:errorData})](./auditssrc/PotatoTipper.sol#L274) - [PotatoTipSent({from:msg.sender,to:follower,amount:tipAmount})](./auditssrc/PotatoTipper.sol#L267)
 
 ./src/PotatoTipper.sol#L257-L277
 

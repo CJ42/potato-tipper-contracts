@@ -22,7 +22,7 @@ import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contrac
 import {_FOLLOWER_REGISTRY, _POTATO_TOKEN} from "./Constants.sol";
 
 // events
-import {TipSent, TipFailed} from "./Events.sol";
+import {PotatoTipSent, PotatoTipFailed} from "./Events.sol";
 
 // ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡤⣔⢲⡒⢦⡙⡴⣒⣖⡠⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 // ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡴⡞⡹⢆⣝⣤⣣⡙⢦⣙⡴⡡⢦⡙⣱⠺⣭⣖⠤⡀⠀⠀⠀⠀⠀⠀⠀⠀
@@ -264,14 +264,14 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
             force: false, // Default to false, but already checked that follower is a 🆙, so we know it supports LSP1
             data: unicode"Thanks for following! Tipping you some 🥔" // context for the token transfer
         }) {
-            emit TipSent({from: msg.sender, to: follower, amount: tipAmount});
+            emit PotatoTipSent({from: msg.sender, to: follower, amount: tipAmount});
             return abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
             // If the token transfer failed (because the call to the `universalReceiver(...)` function reverted when
             // notifying sender / recipient, or any sub-calls), revert state and mark the follower as not tipped.
             delete _tipped[msg.sender][follower];
 
-            emit TipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
+            emit PotatoTipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
             return unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
         }
     }
