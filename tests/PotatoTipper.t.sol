@@ -26,7 +26,8 @@ import {
     _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX as _LSP1_DELEGATE_PREFIX
 } from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
-import {POTATO_TIPPER_SETTINGS_DATA_KEY, _FOLLOWER_REGISTRY, _POTATO_TOKEN} from "../src/Constants.sol";
+import {_FOLLOWER_REGISTRY, _POTATO_TOKEN} from "../src/Constants.sol";
+import {POTATO_TIPPER_SETTINGS_DATA_KEY} from "../src/PotatoTipperConfig.sol";
 
 // events
 import {TipSent, TipFailed} from "../src/Events.sol";
@@ -85,8 +86,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     function setUp() public override {
         super.setUp();
 
-        potatoTipper = new PotatoTipper();
-
         // Fetch the main controller of these users`
         userBrowserExtensionController = _getControllerAtIndex(user, 3);
         anotherUserBrowserExtensionController = _getControllerAtIndex(anotherUser, 1);
@@ -96,21 +95,21 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _grantAddAndEditLsp1DelegatePermissionToController(anotherUser, anotherUserBrowserExtensionController);
         _grantAddAndEditLsp1DelegatePermissionToController(newFollower, newFollowerBrowserExtensionController);
 
-        vm.startPrank(userBrowserExtensionController);
-        user.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
-        user.setData(_LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
-        user.setData(
-            POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
-        );
-        vm.stopPrank();
+        // Deploy and configure the Potato Tipper
+        potatoTipper = new PotatoTipper();
+        
+        SettingsLib.TipSettings memory tipSettings = SettingsLib.TipSettings({
+            tipAmount: TIP_AMOUNT,
+            minimumFollowers: MIN_FOLLOWER_REQUIRED,
+            minimumPotatoBalance: MIN_POTATO_BALANCE_REQUIRED
+        });
+        (bytes32[] memory dataKeys, bytes[] memory dataValues) = potatoTipper.encodeConfigDataKeysValues(tipSettings);
 
-        vm.startPrank(anotherUserBrowserExtensionController);
-        anotherUser.setData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
-        anotherUser.setData(_LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY, abi.encodePacked(address(potatoTipper)));
-        anotherUser.setData(
-            POTATO_TIPPER_SETTINGS_DATA_KEY, abi.encode(TIP_AMOUNT, MIN_FOLLOWER_REQUIRED, MIN_POTATO_BALANCE_REQUIRED)
-        );
-        vm.stopPrank();
+        vm.prank(userBrowserExtensionController);
+        user.setDataBatch(dataKeys, dataValues);
+
+        vm.prank(anotherUserBrowserExtensionController);
+        anotherUser.setDataBatch(dataKeys, dataValues);
     }
 
     // Pre tipping checks:

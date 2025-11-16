@@ -12,7 +12,7 @@ import {
     _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX as _LSP1_DELEGATE_PREFIX
 } from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
-import {POTATO_TIPPER_SETTINGS_DATA_KEY, _POTATO_TOKEN} from "./Constants.sol";
+import {_POTATO_TOKEN} from "./Constants.sol";
 import {TipSettings} from "./PotatoTipperSettingsLib.sol";
 
 struct ConfigDataKeys {
@@ -21,17 +21,39 @@ struct ConfigDataKeys {
     bytes32 lsp1DelegateReactOnUnfollowDataKey;
 }
 
+/// @dev ERC725Y data key where the tip settings are stored.
+///
+/// ```
+/// keccak256("PotatoTipper") = 0xd1d57abed02d4c2d7ce037580f0abe6e7bf141f9a07e2d0d09d90ed7d5f9128a
+/// keccak256("Settings") = 0xe8211998bb257be214c7b0997830cd295066cc6adf46c8dea63a2079d60c88d3
+/// ```
+///
+/// key = bytes10(keccak256("PotatoTipper")) + 0000 + bytes20(keccak256("Settings"))
+/// value = (tip amount, min nb of followers, min $POTATO balance)
+/// -------------------------------------------------------------------------------------------------------
+/// LSP2 ERC725Y JSON Schema
+/// {
+///     name: "PotatoTipper:Settings",
+///     key: 0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a,
+///     keyType: "Mapping",
+///     valueType: "(uint256,uint256,uint256)",
+///     valueContent: "(Number,Number,Number)"
+/// }
+bytes32 constant POTATO_TIPPER_SETTINGS_DATA_KEY = 0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a;
+
 /// @notice Configurations to set to use the Potato Tipper contract
 abstract contract PotatoTipperConfig {
     using LSP2Utils for bytes10;
 
-    bytes32 immutable _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY =
+    /// @dev ERC725Y data key where an LSP1 Delegate contract address is stored to react on follow / unfollow.
+    bytes32 internal immutable _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY =
         _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_FOLLOW));
-    bytes32 immutable _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY =
+    bytes32 internal immutable _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY =
         _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
 
-    /// @notice Return a configuration object describing the data keys to set to connect the Potato Tipper contract, and
-    /// setup tips
+    /// @notice Return a configuration object describing the data keys to set to:
+    /// - connect the Potato Tipper contract
+    /// - configure the tip settings
     function configDataKeys() public view returns (ConfigDataKeys memory) {
         return ConfigDataKeys({
             tipSettingsDataKey: POTATO_TIPPER_SETTINGS_DATA_KEY,
@@ -40,8 +62,8 @@ abstract contract PotatoTipperConfig {
         });
     }
 
-    /// @notice Return an array of data keys to configure the PotatoTipper. Useful to be used with
-    /// `setDataBatch(bytes32[],bytes[])`
+    /// @notice Return an array of data keys to configure the PotatoTipper.
+    /// Useful to be used with `setDataBatch(bytes32[],bytes[])`.
     function configDataKeysList() public view returns (bytes32[] memory) {
         bytes32[] memory dataKeys = new bytes32[](3);
         dataKeys[0] = POTATO_TIPPER_SETTINGS_DATA_KEY;
@@ -50,8 +72,10 @@ abstract contract PotatoTipperConfig {
         return dataKeys;
     }
 
-    /// @notice Return a list of config data keys and values ready set via `setDataBatch(bytes32[],bytes[])` to
-    /// configure the PotatoTipper @dev Example usage:
+    /// @notice Return two lists of config data keys and values ready to be set via `setDataBatch(bytes32[],bytes[])`
+    /// to configure the PotatoTipper contract.
+    ///
+    /// @dev Example usage:
     ///
     /// ```
     /// bytes memory tipSettings = TipSettings(
@@ -60,7 +84,7 @@ abstract contract PotatoTipperConfig {
     ///     minimumPotatoBalance: 100 ether
     /// );
     /// (bytes32[] memory dataKeys, bytes[] memory dataValues) =
-    /// tipper.encodeConfigDataKeysValues(abi.encode(tipSettings)); 
+    /// tipper.encodeConfigDataKeysValues(abi.encode(tipSettings));
     /// universalProfile.setDataBatch(dataKeys, dataValues);
     /// ```
     function encodeConfigDataKeysValues(TipSettings memory tipSettings)
@@ -81,7 +105,7 @@ abstract contract PotatoTipperConfig {
         return (configDataKeysToSet, configDataValuesToSet);
     }
 
-    /// @notice LSP7 token used to send tip new followers
+    /// @notice LSP7 token used to send tips to new followers
     function token() public pure returns (ILSP7) {
         return _POTATO_TOKEN;
     }
