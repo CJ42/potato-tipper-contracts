@@ -8,10 +8,6 @@ import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7D
 import {LSP2Utils} from "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
 
 // constants
-import {
-    _LSP1_UNIVERSAL_RECEIVER_DELEGATE_PREFIX as _LSP1_DELEGATE_PREFIX
-} from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
-import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {_POTATO_TOKEN} from "./Constants.sol";
 import {TipSettings} from "./PotatoTipperSettingsLib.sol";
 
@@ -41,34 +37,32 @@ struct ConfigDataKeys {
 /// }
 bytes32 constant POTATO_TIPPER_SETTINGS_DATA_KEY = 0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a;
 
+/// @dev ERC725Y data key where an LSP1 Delegate contract address is stored to react on follow / unfollow.
+bytes32 constant LSP1DELEGATE_ON_FOLLOW_DATA_KEY = 0x0cfc51aec37c55a4d0b1000071e02f9f05bcd5816ec4f3134aa2e5a916669537;
+bytes32 constant LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY = 0x0cfc51aec37c55a4d0b100009d3c0b4012b69658977b099bdaa51eff0f0460f4;
+
 /// @notice Configurations to set to use the Potato Tipper contract
 abstract contract PotatoTipperConfig {
     using LSP2Utils for bytes10;
 
-    /// @dev ERC725Y data key where an LSP1 Delegate contract address is stored to react on follow / unfollow.
-    bytes32 internal immutable _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY =
-        _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_FOLLOW));
-    bytes32 internal immutable _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY =
-        _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
-
     /// @notice Return a configuration object describing the data keys to set to:
     /// - connect the Potato Tipper contract
     /// - configure the tip settings
-    function configDataKeys() public view returns (ConfigDataKeys memory) {
+    function configDataKeys() public pure returns (ConfigDataKeys memory) {
         return ConfigDataKeys({
             tipSettingsDataKey: POTATO_TIPPER_SETTINGS_DATA_KEY,
-            lsp1DelegateReactOnFollowDataKey: _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY,
-            lsp1DelegateReactOnUnfollowDataKey: _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY
+            lsp1DelegateReactOnFollowDataKey: LSP1DELEGATE_ON_FOLLOW_DATA_KEY,
+            lsp1DelegateReactOnUnfollowDataKey: LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY
         });
     }
 
     /// @notice Return an array of data keys to configure the PotatoTipper.
     /// Useful to be used with `setDataBatch(bytes32[],bytes[])`.
-    function configDataKeysList() public view returns (bytes32[] memory) {
+    function configDataKeysList() public pure returns (bytes32[] memory) {
         bytes32[] memory dataKeys = new bytes32[](3);
         dataKeys[0] = POTATO_TIPPER_SETTINGS_DATA_KEY;
-        dataKeys[1] = _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY;
-        dataKeys[2] = _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY;
+        dataKeys[1] = LSP1DELEGATE_ON_FOLLOW_DATA_KEY;
+        dataKeys[2] = LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY;
         return dataKeys;
     }
 

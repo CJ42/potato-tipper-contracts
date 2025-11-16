@@ -27,7 +27,12 @@ import {
 } from "@lukso/lsp1-contracts/contracts/LSP1Constants.sol";
 import {_TYPEID_LSP26_FOLLOW, _TYPEID_LSP26_UNFOLLOW} from "@lukso/lsp26-contracts/contracts/LSP26Constants.sol";
 import {_FOLLOWER_REGISTRY, _POTATO_TOKEN} from "../src/Constants.sol";
-import {POTATO_TIPPER_SETTINGS_DATA_KEY} from "../src/PotatoTipperConfig.sol";
+import {
+    ConfigDataKeys,
+    POTATO_TIPPER_SETTINGS_DATA_KEY,
+    LSP1DELEGATE_ON_FOLLOW_DATA_KEY,
+    LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY
+} from "../src/PotatoTipperConfig.sol";
 
 // events
 import {TipSent, TipFailed} from "../src/Events.sol";
@@ -43,16 +48,6 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
     using LSP6Utils for *;
     using {SettingsLib.loadTipSettingsRaw} for IERC725Y;
     using {SettingsLib.decodeTipSettings} for bytes;
-
-    // TODO: Move to a parent `Config` contract added to the inheritance of the PotatoTipper contract
-    // So that dApps can fetch the data key to configure easily without needing to encode with erc725.js
-    bytes32 immutable _LSP1_DELEGATE_ON_FOLLOW_DATA_KEY =
-    // forge-lint: disable-next-line(unsafe-typecast)
-    _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_FOLLOW));
-
-    bytes32 immutable _LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY =
-    // forge-lint: disable-next-line(unsafe-typecast)
-    _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
 
     // Contract addresses from LUKSO Mainnet for mainnet fork testing
     // (🆙 users, 🥔 token, and LSP26 Follower Registry)
@@ -97,7 +92,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // Deploy and configure the Potato Tipper
         potatoTipper = new PotatoTipper();
-        
+
         SettingsLib.TipSettings memory tipSettings = SettingsLib.TipSettings({
             tipAmount: TIP_AMOUNT,
             minimumFollowers: MIN_FOLLOWER_REQUIRED,
@@ -251,20 +246,63 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(newFollower), address(user)));
     }
 
+    function test_lsp1DelegateOnFollowDataKeyConstantIsCorrectlyEncoded() public pure {
+        // forge-lint: disable-next-line(unsafe-typecast)
+        bytes32 expectedDataKey = _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_FOLLOW));
+        assertEq(LSP1DELEGATE_ON_FOLLOW_DATA_KEY, expectedDataKey);
+    }
+
+    function test_lsp1DelegateOnUnfollowDataKeyConstantIsCorrectlyEncoded() public pure {
+        // forge-lint: disable-next-line(unsafe-typecast)
+        bytes32 expectedDataKey = _LSP1_DELEGATE_PREFIX.generateMappingKey(bytes20(_TYPEID_LSP26_UNFOLLOW));
+        assertEq(LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY, expectedDataKey);
+    }
+
     // Setup tests
 
     function test_PotatoTipperIsRegisteredForNotificationTypeNewFollower() public view {
-        bytes memory data = user.getData(_LSP1_DELEGATE_ON_FOLLOW_DATA_KEY);
+        bytes memory data = user.getData(LSP1DELEGATE_ON_FOLLOW_DATA_KEY);
         assertEq(data, abi.encodePacked(address(potatoTipper)));
     }
 
     function test_PotatoTipperIsRegisteredForNotificationTypeUnfollow() public view {
-        bytes memory data = user.getData(_LSP1_DELEGATE_ON_UNFOLLOW_DATA_KEY);
+        bytes memory data = user.getData(LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY);
         assertEq(data, abi.encodePacked(address(potatoTipper)));
     }
 
     function test_IsLSP1Delegate() public view {
         assertTrue(potatoTipper.supportsInterface(type(ILSP1Delegate).interfaceId));
+    }
+
+    function test_configDataKeysReturnsCorrectBytes32DataKeys() public view {
+        ConfigDataKeys memory configDataKeys = potatoTipper.configDataKeys();
+        assertEq(configDataKeys.tipSettingsDataKey, POTATO_TIPPER_SETTINGS_DATA_KEY);
+        assertEq(configDataKeys.lsp1DelegateReactOnFollowDataKey, LSP1DELEGATE_ON_FOLLOW_DATA_KEY);
+        assertEq(configDataKeys.lsp1DelegateReactOnUnfollowDataKey, LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY);
+    }
+
+    function test_configDataKeysListReturnsCorrectBytes32DataKeysList() public view {
+        bytes32[] memory configDataKeysList = potatoTipper.configDataKeysList();
+        assertEq(configDataKeysList[0], POTATO_TIPPER_SETTINGS_DATA_KEY);
+        assertEq(configDataKeysList[1], LSP1DELEGATE_ON_FOLLOW_DATA_KEY);
+        assertEq(configDataKeysList[2], LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY);
+    }
+
+    function test_encodeConfigDataKeysValuesReturnsCorrectBytes32AndBytesData(
+        uint256 tipAmount,
+        uint256 minimumFollowers,
+        uint256 minimumPotatoBalance
+    ) public view {
+        SettingsLib.TipSettings memory tipSettings = SettingsLib.TipSettings({
+            tipAmount: tipAmount, minimumFollowers: minimumFollowers, minimumPotatoBalance: minimumPotatoBalance
+        });
+        (bytes32[] memory dataKeys, bytes[] memory dataValues) = potatoTipper.encodeConfigDataKeysValues(tipSettings);
+        assertEq(dataKeys[0], POTATO_TIPPER_SETTINGS_DATA_KEY);
+        assertEq(dataKeys[1], LSP1DELEGATE_ON_FOLLOW_DATA_KEY);
+        assertEq(dataKeys[2], LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY);
+        assertEq(dataValues[0], abi.encode(tipSettings));
+        assertEq(dataValues[1], abi.encodePacked(address(potatoTipper)));
+        assertEq(dataValues[2], abi.encodePacked(address(potatoTipper)));
     }
 
     // Tipping behaviours tests
