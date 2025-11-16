@@ -322,7 +322,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"❌ Not enough 🥔 left in tipping budget"
+            logs, address(newFollower), unicode"⚙️⚠️ Not enough 🥔 left in user's tipping budget"
         );
 
         // CHECK that the follower did not receive any potato token
@@ -390,7 +390,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+            unicode"🥔✅ Successfully sent tip to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
         );
 
         // Test unfollow and re-follow does not trigger a new tip
@@ -429,14 +429,14 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             assertEq(receivedNotificationData, abi.encodePacked(newFollower));
             assertEq(
                 allReturnedLsp1DelegateValues,
-                abi.encode("LSP1: typeId out of scope", unicode"🙅🏻 Already tipped a potato")
+                abi.encode("LSP1: typeId out of scope", unicode"🔍❌ Follower already tipped")
             );
 
             (bytes memory returnedDataDefaultLsp1Delegate, bytes memory returnedDataPotatoTipper) =
                 abi.decode(allReturnedLsp1DelegateValues, (bytes, bytes));
 
             assertEq(string(returnedDataDefaultLsp1Delegate), "LSP1: typeId out of scope");
-            assertEq(string(returnedDataPotatoTipper), unicode"🙅🏻 Already tipped a potato");
+            assertEq(string(returnedDataPotatoTipper), unicode"🔍❌ Follower already tipped");
         }
     }
 
@@ -581,7 +581,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"❌ Invalid settings: must be encoded as 96 bytes (uint256,uint256,uint256)"
+            unicode"⚙️⚠️ Invalid settings: must be 96 bytes (uint256,uint256,uint256)"
         );
     }
 
@@ -624,7 +624,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"❌ Invalid settings: must be encoded as 96 bytes (uint256,uint256,uint256)"
+            unicode"⚙️⚠️ Invalid settings: must be 96 bytes (uint256,uint256,uint256)"
         );
     }
 
@@ -665,7 +665,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"❌ Not eligible for tip: minimum follower required not met"
+            logs, address(newFollower), unicode"🔍❌ Not eligible for tip: minimum follower required not met"
         );
     }
 
@@ -706,7 +706,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+            unicode"🥔✅ Successfully sent tip to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
         );
     }
 
@@ -748,7 +748,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"❌ Not eligible for tip: minimum 🥔 balance required not met"
+            logs, address(newFollower), unicode"🔍❌ Not eligible for tip: minimum 🥔 balance required not met"
         );
     }
 
@@ -789,7 +789,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             address(newFollower),
-            unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+            unicode"🥔✅ Successfully sent tip to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
         );
     }
 
@@ -829,7 +829,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"❌ Invalid settings: cannot set tip amount to 0"
+            logs, address(newFollower), unicode"⚙️⚠️ Invalid settings: cannot set tip amount to 0"
         );
     }
 
@@ -875,7 +875,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"🤷🏻‍♂️ Not enough 🥔 left in balance"
+            logs, address(newFollower), unicode"⚙️⚠️ Not enough 🥔 left in user's balance"
         );
     }
 
@@ -925,7 +925,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"❌ Not enough 🥔 left in tipping budget"
+            logs, address(newFollower), unicode"⚙️⚠️ Not enough 🥔 left in user's tipping budget"
         );
     }
 
@@ -988,7 +988,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(anotherFollower), unicode"❌ Not enough 🥔 left in tipping budget"
+            logs, address(anotherFollower), unicode"⚙️⚠️ Not enough 🥔 left in user's tipping budget"
         );
     }
 
@@ -1061,7 +1061,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         Vm.Log[] memory logs = vm.getRecordedLogs();
 
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(anotherFollower), unicode"❌ Not enough 🥔 left in tipping budget"
+            logs, address(anotherFollower), unicode"⚙️⚠️ Not enough 🥔 left in user's tipping budget"
         );
     }
 
@@ -1141,7 +1141,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(12_345), unicode"❌ Not a follow or unfollow notification"
+            logs, address(12_345), unicode"❌ Not a follow/unfollow notification"
         );
     }
 
@@ -1179,7 +1179,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(existingFollower), unicode"❌ Not triggered by the Follower Registry"
+            logs, address(existingFollower), unicode"⛓️‍💥❌ Not called by Follower Registry"
         );
     }
 
@@ -1216,7 +1216,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, caller, unicode"❌ Not triggered by the Follower Registry"
+            logs, caller, unicode"⛓️‍💥❌ Not called by Follower Registry"
         );
     }
 
@@ -1252,7 +1252,9 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
-        _checkReturnedDataEmittedInUniversalReceiverEvent(logs, eoa, unicode"❌ Only 🆙 allowed to be tipped");
+        _checkReturnedDataEmittedInUniversalReceiverEvent(
+            logs, eoa, unicode"⛓️‍💥❌ Only 🆙 allowed to receive tips"
+        );
     }
 
     function test_onlyUniversalProfilesCanReceiveTips() public {
@@ -1290,7 +1292,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(minimalLsp1Implementer), unicode"❌ Only 🆙 allowed to be tipped"
+            logs, address(minimalLsp1Implementer), unicode"⛓️‍💥❌ Only 🆙 allowed to receive tips"
         );
 
         // Test that it works for a UP
@@ -1314,7 +1316,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             logs,
             universalProfile,
-            string.concat(unicode"✅ Successfully tipped 🍠 to new follower: ", universalProfile.toHexString())
+            string.concat(unicode"🥔✅ Successfully sent tip to new follower: ", universalProfile.toHexString())
         );
     }
 
@@ -1329,7 +1331,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             address(_FOLLOWER_REGISTRY), 0, _TYPEID_LSP26_FOLLOW, abi.encodePacked(address(newFollower))
         );
 
-        assertEq(returnedData, unicode"❌ Not a legitimate follow");
+        assertEq(returnedData, unicode"⛓️‍💥❌ Not a legitimate follow");
     }
 
     function test_userCallsDirectlyPotatoTipperWithTypeIdFollowAndExistingFollower() public {
@@ -1401,7 +1403,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             address(_FOLLOWER_REGISTRY), 0, _TYPEID_LSP26_UNFOLLOW, abi.encodePacked(address(existingFollower))
         );
 
-        assertEq(returnedData, unicode"❌ Not a legitimate unfollow");
+        assertEq(returnedData, unicode"⛓️‍💥❌ Not a legitimate unfollow");
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
 
         assertFalse(potatoTipper.hasReceivedTip(address(existingFollower), address(user)));
@@ -1440,7 +1442,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(existingFollower), unicode"🙅🏻 Existing followers not eligible for a tip"
+            logs, address(existingFollower), unicode"🔍❌ Existing followers not eligible to receive tips"
         );
 
         assertTrue(_FOLLOWER_REGISTRY.isFollowing(address(existingFollower), address(user)));
@@ -1547,7 +1549,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         // CHECK for right data returned by Potato Tipper and emitted in the `UniversalReceiver` event
         Vm.Log[] memory logs = vm.getRecordedLogs();
         _checkReturnedDataEmittedInUniversalReceiverEvent(
-            logs, address(newFollower), unicode"❌ Not triggered by the Follower Registry"
+            logs, address(newFollower), unicode"⛓️‍💥❌ Not called by Follower Registry"
         );
     }
 
@@ -1606,7 +1608,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             (bytes memory receivedNotificationData, bytes memory allReturnedLsp1DelegateValues) =
                 abi.decode((logs[ii].data), (bytes, bytes));
 
-            bytes memory expectedMessage = unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
+            bytes memory expectedMessage =
+                unicode"🥔❌ Failed to send tip to 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200. LSP7 transfer reverted";
 
             // CHECK LSP26 Follower registry sent follower address as notification data
             assertEq(receivedNotificationData, abi.encodePacked(address(newFollower)));
@@ -1650,7 +1653,7 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         _checkReturnedDataEmittedInUniversalReceiverEvent(
             newLogs,
             address(newFollower),
-            unicode"✅ Successfully tipped 🍠 to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
+            unicode"🥔✅ Successfully sent tip to new follower: 0xbbe88a2f48eaa2ef04411e356d193ba3c1b37200"
         );
     }
 }
