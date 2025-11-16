@@ -25,7 +25,7 @@ struct ConfigDataKeys {
 /// ```
 ///
 /// key = bytes10(keccak256("PotatoTipper")) + 0000 + bytes20(keccak256("Settings"))
-/// value = (tip amount, min nb of followers, min $POTATO balance)
+/// value = (tip amount, minimum number of followers, minimum $POTATO balance)
 /// -------------------------------------------------------------------------------------------------------
 /// LSP2 ERC725Y JSON Schema
 /// {
@@ -37,7 +37,7 @@ struct ConfigDataKeys {
 /// }
 bytes32 constant POTATO_TIPPER_SETTINGS_DATA_KEY = 0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a;
 
-/// @dev ERC725Y data key where an LSP1 Delegate contract address is stored to react on follow / unfollow.
+/// @dev ERC725Y data keys where LSP1 Delegate contract addresses are stored to react on follow/unfollow.
 bytes32 constant LSP1DELEGATE_ON_FOLLOW_DATA_KEY = 0x0cfc51aec37c55a4d0b1000071e02f9f05bcd5816ec4f3134aa2e5a916669537;
 bytes32 constant LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY = 0x0cfc51aec37c55a4d0b100009d3c0b4012b69658977b099bdaa51eff0f0460f4;
 
@@ -45,9 +45,9 @@ bytes32 constant LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY = 0x0cfc51aec37c55a4d0b100009
 abstract contract PotatoTipperConfig {
     using LSP2Utils for bytes10;
 
-    /// @notice Return a configuration object describing the data keys to set to:
-    /// - connect the Potato Tipper contract
-    /// - configure the tip settings
+    /// @notice Returns a configuration object describing the data keys needed to:
+    /// - Connect the Potato Tipper contract
+    /// - Configure the tip settings
     function configDataKeys() public pure returns (ConfigDataKeys memory) {
         return ConfigDataKeys({
             tipSettingsDataKey: POTATO_TIPPER_SETTINGS_DATA_KEY,
@@ -56,8 +56,8 @@ abstract contract PotatoTipperConfig {
         });
     }
 
-    /// @notice Return an array of data keys to configure the PotatoTipper.
-    /// Useful to be used with `setDataBatch(bytes32[],bytes[])`.
+    /// @notice Returns an array of data keys to configure the PotatoTipper.
+    /// Useful for use with `setDataBatch(bytes32[],bytes[])`.
     function configDataKeysList() public pure returns (bytes32[] memory) {
         bytes32[] memory dataKeys = new bytes32[](3);
         dataKeys[0] = POTATO_TIPPER_SETTINGS_DATA_KEY;
@@ -66,7 +66,7 @@ abstract contract PotatoTipperConfig {
         return dataKeys;
     }
 
-    /// @notice Return two lists of config data keys and values ready to be set via `setDataBatch(bytes32[],bytes[])`
+    /// @notice Returns two lists of config data keys and values ready to be set via `setDataBatch(bytes32[],bytes[])`
     /// to configure the PotatoTipper contract.
     ///
     /// @dev Example usage:
@@ -99,7 +99,7 @@ abstract contract PotatoTipperConfig {
         return (configDataKeysToSet, configDataValuesToSet);
     }
 
-    /// @notice LSP7 token used to send tips to new followers
+    /// @notice Returns the LSP7 token used to send tips to new followers.
     function token() public pure returns (ILSP7) {
         return _POTATO_TOKEN;
     }
