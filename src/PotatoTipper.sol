@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.28;
 
+// modules
+import {PotatoTipperConfig} from "./PotatoTipperConfig.sol";
+
 // interfaces
 import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
 import {IERC165} from "@openzeppelin/contracts/interfaces/IERC165.sol";
@@ -69,7 +72,7 @@ using {ERC165Checker.supportsInterface} for address;
 /// @notice ⚠️ Disclaimer: this contract has not been formally audited by an external third party
 /// auditor. The contract does not guarantee to be bug free. Use responsibly at your own risk.
 ///
-contract PotatoTipper is IERC165, ILSP1Delegate {
+contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
     using Strings for address;
 
     /// @dev Track `follower` addresses that received a tip already from a `user`
@@ -135,11 +138,8 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         if (sender != address(_FOLLOWER_REGISTRY)) return unicode"❌ Not triggered by the Follower Registry";
         if (data.length != 20) return unicode"❌ Invalid data received. Must be a 20 bytes long address";
 
-        // casting to 'bytes20' is safe because of check above
-        // forge-lint: disable-next-line(unsafe-typecast)
-        address follower = address(bytes20(data));
-
         // Only 🆙✅ allowed to receive tips, 🔑❌ not EOAs
+        address follower = address(bytes20(data));
         if (!follower.supportsInterface(_INTERFACEID_LSP0)) return unicode"❌ Only 🆙 allowed to be tipped";
 
         if (typeId == _TYPEID_LSP26_FOLLOW) return _handleOnFollow(follower);
@@ -269,7 +269,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate {
         } catch (bytes memory errorData) {
             // If the token transfer failed (because the call to the `universalReceiver(...)` function reverted when
             // notifying sender / recipient, or any sub-calls), revert state and mark the follower as not tipped.
-            _tipped[msg.sender][follower] = false;
+            delete _tipped[msg.sender][follower];
 
             emit TipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
             return unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
