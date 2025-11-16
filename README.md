@@ -1,4 +1,4 @@
-# 🥔🔁 POTATO Tipper **contracts** - [![Build + Test pass](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml/badge.svg)](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml) [![Code coverage](https://img.shields.io/badge/Code_Coverage-98%25-green?logo=codecrafters&logoColor=white)](./README.md#code-coverage)
+# 🥔🔁 POTATO Tipper **contracts** - [![Build + Test pass](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml/badge.svg)](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml) [![Code coverage](https://img.shields.io/badge/Code_Coverage-96%25-green?logo=codecrafters&logoColor=white)](./README.md#code-coverage)
 
 Smart contracts of the POTATO Tipper, a contract that enables you to tip on follow, acting as an incentive mechanism to gain new followers.
 
