@@ -1,4 +1,4 @@
-# 🥔🔁 POTATO Tipper **contracts** - [![Build + Test pass](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml/badge.svg)](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml) [![Code coverage](https://img.shields.io/badge/Code_Coverage-98%25-green?logo=codecrafters&logoColor=white)](./README.md#code-coverage)
+# 🥔🔁 POTATO Tipper **contracts** - [![Build + Test pass](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml/badge.svg)](https://github.com/CJ42/potato-tipper-contract/actions/workflows/test.yml) [![Code coverage](https://img.shields.io/badge/Code_Coverage-96%25-green?logo=codecrafters&logoColor=white)](./README.md#code-coverage)
 
 Smart contracts of the POTATO Tipper, a contract that enables you to tip on follow, acting as an incentive mechanism to gain new followers.
 
@@ -113,13 +113,15 @@ See the [`audits/`](./audits/) folder for security analysis ran on the contracts
 ## Code Coverage
 
 ```
-╭----------------------+----------------+----------------+----------------+-----------------╮
-| File                 | % Lines        | % Statements   | % Branches     | % Funcs         |
-+===========================================================================================+
-| src/PotatoTipper.sol | 98.39% (61/62) | 97.33% (73/75) | 95.24% (20/21) | 100.00% (10/10) |
-|----------------------+----------------+----------------+----------------+-----------------|
-| Total                | 98.39% (61/62) | 97.33% (73/75) | 95.24% (20/21) | 100.00% (10/10) |
-╰----------------------+----------------+----------------+----------------+-----------------╯
+╭----------------------------+----------------+----------------+----------------+-----------------╮
+| File                       | % Lines        | % Statements   | % Branches     | % Funcs         |
++=================================================================================================+
+| src/PotatoTipper.sol       | 98.39% (61/62) | 97.40% (75/77) | 95.24% (20/21) | 100.00% (10/10) |
+|----------------------------+----------------+----------------+----------------+-----------------|
+| src/PotatoTipperConfig.sol | 89.47% (17/19) | 94.44% (17/18) | 100.00% (0/0)  | 75.00% (3/4)    |
+|----------------------------+----------------+----------------+----------------+-----------------|
+| Total                      | 96.30% (78/81) | 96.84% (92/95) | 95.24% (20/21) | 92.86% (13/14)  |
+╰----------------------------+----------------+----------------+----------------+-----------------╯
 ```
 
 ## Gas report
