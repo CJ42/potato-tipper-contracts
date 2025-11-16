@@ -135,17 +135,17 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         external
         returns (bytes memory messageStatus)
     {
-        if (sender != address(_FOLLOWER_REGISTRY)) return unicode"❌ Not triggered by the Follower Registry";
-        if (data.length != 20) return unicode"❌ Invalid data received. Must be a 20 bytes long address";
+        if (sender != address(_FOLLOWER_REGISTRY)) return unicode"⛓️‍💥❌ Not triggered by the LSP26 Follower Registry";
+        if (data.length != 20) return unicode"⛓️‍💥❌ Invalid data received. Must be a 20 bytes address";
 
         // Only 🆙✅ allowed to receive tips, 🔑❌ not EOAs
         address follower = address(bytes20(data));
-        if (!follower.supportsInterface(_INTERFACEID_LSP0)) return unicode"❌ Only 🆙 allowed to be tipped";
+        if (!follower.supportsInterface(_INTERFACEID_LSP0)) return unicode"⛓️‍💥❌ Only 🆙 allowed to receive tips";
 
         if (typeId == _TYPEID_LSP26_FOLLOW) return _handleOnFollow(follower);
         if (typeId == _TYPEID_LSP26_UNFOLLOW) return _handleOnUnfollow(follower);
 
-        return unicode"❌ Not a follow or unfollow notification";
+        return unicode"⛓️‍💥❌ Not a follow/unfollow notification";
     }
 
     /// @notice Handle a new follower notification and tip 🥔 $POTATO tokens if the follower is eligible.
@@ -157,14 +157,14 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
     /// @return message A human-readable message returned to indicate successful tip, or an error reason.
     function _handleOnFollow(address follower) internal returns (bytes memory message) {
         bool isFollowing = _FOLLOWER_REGISTRY.isFollowing(follower, msg.sender);
-        if (!isFollowing) return unicode"❌ Not a legitimate follow";
+        if (!isFollowing) return unicode"⛓️‍💥❌ Not a legitimate follow";
 
         // Prevent double tipping a follower if unfollow -> re-follow 🥔 🚜
-        if (_tipped[msg.sender][follower]) return unicode"🙅🏻 Already tipped a potato";
+        if (_tipped[msg.sender][follower]) return unicode"🔍❌ Follower already tipped";
 
         // Existing followers are not eligible. A user does not gain any benefit from tipping them if they re-follow
         if (_existingFollowerUnfollowedPostInstall[msg.sender][follower]) {
-            return unicode"🙅🏻 Existing followers not eligible for a tip";
+            return unicode"🔍❌ Existing followers not eligible to receive tips";
         }
 
         if (!_hasFollowedPostInstall[msg.sender][follower]) _hasFollowedPostInstall[msg.sender][follower] = true;
@@ -195,7 +195,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
     /// @return message A human-readable message to describe the context of the unfollow action.
     function _handleOnUnfollow(address follower) internal returns (bytes memory message) {
         bool isFollowing = _FOLLOWER_REGISTRY.isFollowing(follower, msg.sender);
-        if (isFollowing) return unicode"❌ Not a legitimate unfollow";
+        if (isFollowing) return unicode"⛓️‍💥❌ Not a legitimate unfollow";
 
         if (_tipped[msg.sender][follower]) return unicode"👋🏻 Already tipped, now unfollowing. Goodbye!";
 
@@ -204,7 +204,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
             return unicode"👋🏻 Assuming existing follower BPT is unfollowing. Goodbye!";
         }
 
-        return unicode"👋🏻 Sorry to see you go. Hope you follow again soon! Goodbye!";
+        return unicode"👋🏻 Sorry to see you go. Hope you re-follow soon! Goodbye!";
     }
 
     // Internal helpers
@@ -218,11 +218,11 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         uint256 minimumPotatoBalanceRequired
     ) internal view returns (bool isEligible, bytes memory errorMessage) {
         if (_FOLLOWER_REGISTRY.followerCount(follower) < minimumFollowerCountRequired) {
-            return (false, unicode"❌ Not eligible for tip: minimum follower required not met");
+            return (false, unicode"🔍❌ Not eligible for tip: minimum follower required not met");
         }
 
         if (_POTATO_TOKEN.balanceOf(follower) < minimumPotatoBalanceRequired) {
-            return (false, unicode"❌ Not eligible for tip: minimum 🥔 balance required not met");
+            return (false, unicode"🔍❌ Not eligible for tip: minimum 🥔 balance required not met");
         }
 
         return (true, "");
@@ -240,11 +240,11 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         returns (bool canTransferTip, bytes memory errorMessage)
     {
         if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
-            return (false, unicode"🤷🏻‍♂️ Not enough 🥔 left in balance");
+            return (false, unicode"⚙️⚠️ Not enough 🥔 left in user's balance");
         }
 
         if (_POTATO_TOKEN.authorizedAmountFor(address(this), msg.sender) < tipAmount) {
-            return (false, unicode"❌ Not enough 🥔 left in tipping budget");
+            return (false, unicode"⚙️⚠️ Not enough 🥔 left in user's tipping budget");
         }
 
         return (true, "");
@@ -265,14 +265,14 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
             data: unicode"Thanks for following! Tipping you some 🥔" // context for the token transfer
         }) {
             emit PotatoTipSent({from: msg.sender, to: follower, amount: tipAmount});
-            return abi.encodePacked(unicode"✅ Successfully tipped 🍠 to new follower: ", follower.toHexString());
+            return abi.encodePacked(unicode"🥔✅ Successfully sent tip to new follower: ", follower.toHexString());
         } catch (bytes memory errorData) {
             // If the token transfer failed (because the call to the `universalReceiver(...)` function reverted when
             // notifying sender / recipient, or any sub-calls), revert state and mark the follower as not tipped.
             delete _tipped[msg.sender][follower];
 
             emit PotatoTipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
-            return unicode"❌ Failed tipping 🥔. LSP7 transfer reverted";
+            return abi.encodePacked(unicode"🥔❌ Failed to send tip to ", follower.toHexString(), ". LSP7 transfer reverted");
         }
     }
 }
