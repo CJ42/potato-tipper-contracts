@@ -75,7 +75,7 @@ using {ERC165Checker.supportsInterface} for address;
 contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
     using Strings for address;
 
-    /// @dev Track `follower` addresses that already received a tip from a `user`
+    /// @dev Track `follower` addresses that received a tip from a `user`
     mapping(address follower => mapping(address user => bool)) internal _tippedFollowers;
 
     /// @dev Track followers that followed a user since it connected the Potato Tipper.
@@ -149,7 +149,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
 
     /// @notice Handle a new follower notification and tip 🥔 $POTATO tokens if the follower is eligible.
     ///
-    /// @dev Before attempting to transfer a tip, re-validate against the LSP26 Follower Registry to ensure
+    /// @dev Before attempting to send a tip, re-validate against the LSP26 Follower Registry to ensure
     /// this function is running in the context of a legitimate follow notification and not from a spoofed call.
     /// Also rejects re-follow attempts from pre-existing followers.
     ///
@@ -180,10 +180,10 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
             _validateTipEligibilityCriterias(follower, tipSettings.minimumFollowers, tipSettings.minimumPotatoBalance);
         if (!isEligible) return eligibilityError;
 
-        (bool canTransferTip, bytes memory preTransferError) = _validateCanTransferTip(tipSettings.tipAmount);
-        if (!canTransferTip) return preTransferError;
+        (bool canSendTip, bytes memory tipValidationError) = _validateCanSendTip(tipSettings.tipAmount);
+        if (!canSendTip) return tipValidationError;
 
-        return _transferTip(follower, tipSettings.tipAmount);
+        return _sendTip(follower, tipSettings.tipAmount);
     }
 
     /// @notice Monitor unfollow activity to mark existing followers BPT as ineligible for a tip if they re-follow.
@@ -231,16 +231,16 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         return (true, "");
     }
 
-    /// @notice Ensure this contract can transfer `tipAmount` of 🥔 $POTATO tokens on behalf of the user.
-    /// Returns an error message explaining why the tip cannot be transferred.
+    /// @notice Ensure this contract can send `tipAmount` of 🥔 $POTATO tokens on behalf of the user.
+    /// Returns an error message explaining why the tip cannot be sent.
     ///
     /// @dev These checks are also done inside the Potato token contract (LSP7), but performed earlier to:
     /// 1. Avoid making the follower pay the gas cost of a token transfer reverting (external call + return error data).
     /// 2. Return an early error message and pass it to the `returnedData` of the `UniversalReceiver` event.
-    function _validateCanTransferTip(uint256 tipAmount)
+    function _validateCanSendTip(uint256 tipAmount)
         internal
         view
-        returns (bool canTransferTip, bytes memory errorMessage)
+        returns (bool canSendTip, bytes memory errorMessage)
     {
         if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
             return (false, unicode"⚙️⚠️ Not enough 🥔 left in user's balance");
@@ -253,11 +253,11 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         return (true, "");
     }
 
-    /// @notice Transfer `tipAmount` of 🥔 $POTATO tokens to the new `follower`.
+    /// @notice Send `tipAmount` of 🥔 $POTATO tokens to the new `follower`.
     ///
-    /// @dev Use `try {} catch {}` to transfer the tip to prevent any sub-calls from making the whole call revert.
-    /// Returns a success or error message to describe if the tip transfer was successful or not.
-    function _transferTip(address follower, uint256 tipAmount) internal returns (bytes memory successOrErrorMessage) {
+    /// @dev Use `try {} catch {}` to send the tip to prevent any sub-calls from making the whole call revert.
+    /// Returns a success or error message to describe if the tip was sent successfully or not.
+    function _sendTip(address follower, uint256 tipAmount) internal returns (bytes memory successOrErrorMessage) {
         _tippedFollowers[follower][msg.sender] = true;
 
         try _POTATO_TOKEN.transfer({
