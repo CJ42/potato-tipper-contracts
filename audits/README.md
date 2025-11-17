@@ -13,7 +13,7 @@
 This folder contains PDF reports with findings from AI auditing tools, as well as outputs from the static analysis tool Slither and known limitations.
 
 - [Wake Arena (by Ackee)](./wake-arena-ai-audit-report.pdf)
-- AI Audit Agent (by Nethermind)
+- [AI Audit Agent (by Nethermind)](./nethermind-ai-audit-agent-report.pdf)
 
 ### Ackee Wake - AI Audit Report
 
@@ -29,6 +29,14 @@ This folder contains PDF reports with findings from AI auditing tools, as well a
 | M6  | Cascading Failure Through Immutable External Contract Dependencies | ☑️ Acknowledged                      | LSP26 and the Potato token contract are not upgradable and cannot be changed. If these contracts have bugs or stop functioning, users can disconnect the `PotatoTipper` contract from their Universal Profile, remove the settings and remove the allowance of the PotatoTipper contract by interacting with the Potato token contract.                                                                                                      |
 | L1  | Zero Tip Amount Not Validated                                      | ✅ Fixed                             | Fixed in commit `92325a0`.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | W1  | Missing bounds checking in PotatoLib assembly memory access        | ✅ Fixed                             | Fixed with the fix implemented for H1 and commit `14e88b7` that refactored the codebase with the new free functions in `PotatoTipperSettingsLib.sol`.                                                                                                                                                                                                                                                                                        |
+
+### Nethermind AI Audit Agent - AI Audit Report
+
+| Ref | Title                                                                    | Status            | Comments                                                                                                                                                                                                                                                                 |
+| :-- | :----------------------------------------------------------------------- | :---------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1  | POTATO tokens can become stuck if forcibly sent to the delegate contract | ☑️ Acknowledged   | Not implementing as this can be the case for any token sent using `force=true`. This is a user enforced issue. Implementing an LSP1 Universal Receiver interface as well would make the contract too complex and lead to more attack vectors to mitigate this low issue. |
+| L1  | Follower count manipulation through Sybil networks                       | ☑️ Acknowledged   | Same feedback as for the similar issue reported in Ackee Wake audit finding above.                                                                                                                                                                                       |
+| I1  | Front-Running Vulnerability in Tipping Mechanism                         | ❌ False Positive | Same feedback as for the similar issue reported in Ackee Wake audit finding above.                                                                                                                                                                                       |
 
 ## Known issues
 
