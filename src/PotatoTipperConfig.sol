@@ -4,9 +4,6 @@ pragma solidity ^0.8.28;
 // interfaces
 import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7DigitalAsset.sol";
 
-// utils
-import {LSP2Utils} from "@lukso/lsp2-contracts/contracts/LSP2Utils.sol";
-
 // constants
 import {_POTATO_TOKEN} from "./Constants.sol";
 import {TipSettings} from "./PotatoTipperSettingsLib.sol";
@@ -43,8 +40,6 @@ bytes32 constant LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY = 0x0cfc51aec37c55a4d0b100009
 
 /// @notice Configurations to set to use the Potato Tipper contract
 abstract contract PotatoTipperConfig {
-    using LSP2Utils for bytes10;
-
     /// @notice Returns a configuration object describing the data keys needed to:
     /// - Connect the Potato Tipper contract
     /// - Configure the tip settings
