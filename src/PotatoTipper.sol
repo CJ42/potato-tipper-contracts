@@ -75,25 +75,25 @@ using {ERC165Checker.supportsInterface} for address;
 contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
     using Strings for address;
 
-    /// @dev Track follower addresses that have received a tip from a user.
+    /// @dev Track `follower` addresses that have received a tip from a `user`
     mapping(address follower => mapping(address user => bool)) internal _tippedFollowers;
 
-    /// @dev Track followers that have followed a user since it connected the Potato Tipper.
+    /// @dev Track `follower` addresses that have followed a `user` since it connected the Potato Tipper
     mapping(address follower => mapping(address user => bool)) internal _postInstallFollowers;
 
-    /// @dev Track existing followers that were already following a user before it connected the Potato Tipper.
+    /// @dev Track existing `follower` that were already following a `user` before it connected the Potato Tipper.
     /// Tracked via `_handleOnUnfollow(...)` to mark them as ineligible for a tip if they re-follow.
     mapping(address follower => mapping(address user => bool)) internal _existingFollowersUnfollowedPostInstall;
 
     /// Read functions
     /// ---------------
 
-    /// @notice This contract only supports the LSP1 Universal Receiver Delegate and ERC165 interfaces.
+    /// @notice This contract only supports the LSP1 Universal Receiver Delegate and ERC165 interfaces
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         return interfaceId == type(ILSP1Delegate).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 
-    /// @notice Check if a `follower` has already been tipped by a `user`.
+    /// @notice Check if a `follower` has already been tipped by a `user`
     function hasReceivedTip(address follower, address user) external view returns (bool) {
         return _tippedFollowers[follower][user];
     }
