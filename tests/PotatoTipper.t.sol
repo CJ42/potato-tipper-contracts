@@ -1639,12 +1639,12 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
         vm.prank(address(newFollower));
         _FOLLOWER_REGISTRY.follow(address(user));
 
-        // CHECK that follower has NOT received a tip (tipping failed)
+        // CHECK that follower has received a tip (tipping succeeded the 2nd time)
         assertEq(_POTATO_TOKEN.balanceOf(address(newFollower)), newFollowerPotatoBalanceBefore + TIP_AMOUNT);
         assertEq(_POTATO_TOKEN.balanceOf(address(user)), userPotatoBalanceBefore - TIP_AMOUNT);
         assertEq(_POTATO_TOKEN.authorizedAmountFor(address(potatoTipper), address(user)), tippingBudget - TIP_AMOUNT);
 
-        // CHECK the the follower has not been marked as tipped
+        // CHECK the the follower has been marked as tipped
         assertTrue(potatoTipper.hasReceivedTip(address(newFollower), address(user)));
         assertTrue(potatoTipper.hasFollowedPostInstall(address(newFollower), address(user)));
         assertFalse(potatoTipper.hasExistingFollowerUnfollowedPostInstall(address(newFollower), address(user)));
