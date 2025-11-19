@@ -67,7 +67,7 @@ using {ERC165Checker.supportsInterface} for address;
 ///
 /// @dev Terminology:
 /// - BPT = "Before Potato Tipper" = for followers that already followed a user before it connected the Potato Tipper
-/// - APT = "After Potato Tipper" = for followers that followed a user after it connected the Potato Tipper"
+/// - APT = "After Potato Tipper" = for followers that followed a user after it connected the Potato Tipper
 ///
 /// @notice ⚠️ Disclaimer: this contract has not been formally audited by an external third party
 /// auditor. The contract does not guarantee to be bug free. Use responsibly at your own risk.
@@ -75,46 +75,44 @@ using {ERC165Checker.supportsInterface} for address;
 contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
     using Strings for address;
 
-    /// @dev Track `follower` addresses that received a tip already from a `user`
-    mapping(address user => mapping(address follower => bool tippedAPT)) internal _tipped;
+    /// @dev Track `follower` addresses that have received a tip from a `user`
+    mapping(address follower => mapping(address user => bool)) internal _tippedFollowers;
 
-    /// @dev Track followers that followed a `user` AFTER it connected the Potato Tipper.
-    /// Regardless of whether they received a tip (because of LSP7 failed token transfer)
-    mapping(address user => mapping(address follower => bool followedAPT)) internal _hasFollowedPostInstall;
+    /// @dev Track `follower` addresses that have followed a `user` since it connected the Potato Tipper
+    mapping(address follower => mapping(address user => bool)) internal _postInstallFollowers;
 
-    /// @dev Track existing followers BEFORE the user connected the Potato Tipper, to make them not eligible for a tip.
-    /// Populated via `_handleOnUnfollow(...)`. Used to keep them ineligible for a tip if they re-follow.
-    mapping(address user => mapping(address follower => bool followedBPT)) internal
-        _existingFollowerUnfollowedPostInstall;
+    /// @dev Track existing `follower` that were already following a `user` before it connected the Potato Tipper.
+    /// Tracked via `_handleOnUnfollow(...)` to mark them as ineligible for a tip if they re-follow.
+    mapping(address follower => mapping(address user => bool)) internal _existingFollowersUnfollowedPostInstall;
 
     /// Read functions
     /// ---------------
 
-    /// @notice This contract only supports the LSP1 Universal Receiver Delegate and ERC165 interfaces.
+    /// @notice This contract only supports the LSP1 Universal Receiver Delegate and ERC165 interfaces
     function supportsInterface(bytes4 interfaceId) external pure returns (bool) {
         return interfaceId == type(ILSP1Delegate).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 
-    /// @notice Check if a `follower` has already been tipped by a `user`.
+    /// @notice Check if a `follower` has already been tipped by a `user`
     function hasReceivedTip(address follower, address user) external view returns (bool) {
-        return _tipped[user][follower];
+        return _tippedFollowers[follower][user];
     }
 
     /// @notice Returns if `follower` has followed `user` since it connected its 🆙 to the Potato Tipper contract.
     function hasFollowedPostInstall(address follower, address user) external view returns (bool) {
-        return _hasFollowedPostInstall[user][follower];
+        return _postInstallFollowers[follower][user];
     }
 
-    /// @notice Returns true if `follower` was already a follower of `user` before it connected the Potato Tipper and
+    /// @notice Returns if `follower` was already a follower of `user` before it connected the Potato Tipper and
     /// later unfollowed. Defines existing followers that are not eligible for a tip.
-    function existingFollowerUnfollowedPostInstall(address follower, address user) external view returns (bool) {
-        return _existingFollowerUnfollowedPostInstall[user][follower];
+    function hasExistingFollowerUnfollowedPostInstall(address follower, address user) external view returns (bool) {
+        return _existingFollowersUnfollowedPostInstall[follower][user];
     }
 
     /// Handler functions
     /// ---------------
 
-    /// @notice Handle follow/unfollow notifications + automatically tip 🥔 tokens to new follower.
+    /// @notice Handle follow/unfollow notifications and automatically tip 🥔 $POTATO tokens to new followers.
     ///
     /// @dev Called by the `universalReceiver(...)` function from a user's 🆙.
     ///
@@ -122,7 +120,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
     /// Avoid reverting so the internal call stack trace stays clear of revert errors, and return a `messageStatus`
     /// that can be decoded from the `returnedData` parameter of the `UniversalReceiver` event on the user's 🆙.
     ///
-    /// @param sender The address that notified the user's UP (MUST be the LSP26 Follower Registry)
+    /// @param sender The address that notified the user's 🆙 (MUST be the LSP26 Follower Registry)
     /// @param typeId MUST be a follow or unfollow notification type ID
     /// @param data MUST be the follower address sent by the LSP26 Follower registry when notifying
     /// @return messageStatus A user-friendly message describing how the call was handled
@@ -149,9 +147,9 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         return unicode"⛓️‍💥❌ Not a follow/unfollow notification";
     }
 
-    /// @notice Handle a new follower notification and tip 🥔 $POTATO tokens if the follower is eligible.
+    /// @notice Handle a new follower notification and tip 🥔 $POTATO tokens to the follower if eligible.
     ///
-    /// @dev Before attempting to transfer a tip, re-validate against the LSP26 Follower Registry to ensure
+    /// @dev Before attempting to send a tip, re-validate against the LSP26 Follower Registry to ensure
     /// this function is running in the context of a legitimate follow notification and not from a spoofed call.
     /// Also rejects re-follow attempts from pre-existing followers.
     ///
@@ -161,14 +159,15 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         if (!isFollowing) return unicode"⛓️‍💥❌ Not a legitimate follow";
 
         // Prevent double tipping a follower if unfollow -> re-follow 🥔 🚜
-        if (_tipped[msg.sender][follower]) return unicode"🔍❌ Follower already tipped";
+        bool isAlreadyTipped = _tippedFollowers[follower][msg.sender];
+        if (isAlreadyTipped) return unicode"🔍❌ Follower already tipped";
 
         // Existing followers are not eligible. A user does not gain any benefit from tipping them if they re-follow
-        if (_existingFollowerUnfollowedPostInstall[msg.sender][follower]) {
-            return unicode"🔍❌ Existing followers not eligible to receive tips";
-        }
+        bool isExistingFollower = _existingFollowersUnfollowedPostInstall[follower][msg.sender];
+        if (isExistingFollower) return unicode"🔍❌ Existing followers not eligible to receive tips";
 
-        if (!_hasFollowedPostInstall[msg.sender][follower]) _hasFollowedPostInstall[msg.sender][follower] = true;
+        bool isNewFollowerRegistered = _postInstallFollowers[follower][msg.sender];
+        if (!isNewFollowerRegistered) _postInstallFollowers[follower][msg.sender] = true;
 
         bytes memory settingsValue = IERC725Y(msg.sender).loadTipSettingsRaw();
         (bool decodingSuccess, SettingsLib.TipSettings memory tipSettings, bytes memory decodingError) =
@@ -178,13 +177,13 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         if (!decodingSuccess) return decodingError;
 
         (bool isEligible, bytes memory eligibilityError) =
-            _validateTipEligibilityCriterias(follower, tipSettings.minimumFollowers, tipSettings.minimumPotatoBalance);
+            _validateTipEligibilityCriteria(follower, tipSettings.minimumFollowers, tipSettings.minimumPotatoBalance);
         if (!isEligible) return eligibilityError;
 
-        (bool canTransferTip, bytes memory preTransferError) = _validateCanTransferTip(tipSettings.tipAmount);
-        if (!canTransferTip) return preTransferError;
+        (bool canSendTip, bytes memory tipValidationError) = _validateCanSendTip(tipSettings.tipAmount);
+        if (!canSendTip) return tipValidationError;
 
-        return _transferTip(follower, tipSettings.tipAmount);
+        return _sendTip(follower, tipSettings.tipAmount);
     }
 
     /// @notice Monitor unfollow activity to mark existing followers BPT as ineligible for a tip if they re-follow.
@@ -198,11 +197,14 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         bool isFollowing = _FOLLOWER_REGISTRY.isFollowing(follower, msg.sender);
         if (isFollowing) return unicode"⛓️‍💥❌ Not a legitimate unfollow";
 
-        if (_tipped[msg.sender][follower]) return unicode"👋🏻 Already tipped, now unfollowing. Goodbye!";
+        bool isAlreadyTipped = _tippedFollowers[follower][msg.sender];
+        if (isAlreadyTipped) return unicode"👋🏻 Already tipped, now unfollowing. Goodbye!";
 
-        if (!_hasFollowedPostInstall[msg.sender][follower]) {
-            _existingFollowerUnfollowedPostInstall[msg.sender][follower] = true;
-            return unicode"👋🏻 Assuming existing follower BPT is unfollowing. Goodbye!";
+        // If the follower was not previously registered, consider them as an existing follower that unfollowed
+        bool wasFollowerRegistered = _postInstallFollowers[follower][msg.sender];
+        if (!wasFollowerRegistered) {
+            _existingFollowersUnfollowedPostInstall[follower][msg.sender] = true;
+            return unicode"👋🏻 Assuming existing follower is unfollowing. Goodbye!";
         }
 
         return unicode"👋🏻 Sorry to see you go. Hope you re-follow soon! Goodbye!";
@@ -213,7 +215,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
 
     /// @dev Check if a follower is eligible to receive a tip according to the provided user's tip settings.
     /// Returns an error message explaining why the follower is not eligible.
-    function _validateTipEligibilityCriterias(
+    function _validateTipEligibilityCriteria(
         address follower,
         uint256 minimumFollowerCountRequired,
         uint256 minimumPotatoBalanceRequired
@@ -229,17 +231,13 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         return (true, "");
     }
 
-    /// @notice Ensure this contract can transfer `tipAmount` of 🥔 $POTATO tokens on behalf of the user.
-    /// Returns an error message explaining why the tip cannot be transferred.
+    /// @notice Ensure this contract can send `tipAmount` of 🥔 $POTATO tokens on behalf of the user.
+    /// Returns an error message explaining why the tip cannot be sent.
     ///
     /// @dev These checks are also done inside the Potato token contract (LSP7), but performed earlier to:
     /// 1. Avoid making the follower pay the gas cost of a token transfer reverting (external call + return error data).
     /// 2. Return an early error message and pass it to the `returnedData` of the `UniversalReceiver` event.
-    function _validateCanTransferTip(uint256 tipAmount)
-        internal
-        view
-        returns (bool canTransferTip, bytes memory errorMessage)
-    {
+    function _validateCanSendTip(uint256 tipAmount) internal view returns (bool canSendTip, bytes memory errorMessage) {
         if (_POTATO_TOKEN.balanceOf(msg.sender) < tipAmount) {
             return (false, unicode"⚙️⚠️ Not enough 🥔 left in user's balance");
         }
@@ -251,12 +249,12 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         return (true, "");
     }
 
-    /// @notice Transfer `tipAmount` of 🥔 $POTATO tokens to the new `follower`.
+    /// @notice Send `tipAmount` of 🥔 $POTATO tokens to the new `follower`.
     ///
-    /// @dev Use `try {} catch {}` to transfer the tip to prevent any sub-calls from making the whole call revert.
-    /// Returns a success or error message to describe if the tip transfer was successful or not.
-    function _transferTip(address follower, uint256 tipAmount) internal returns (bytes memory successOrErrorMessage) {
-        _tipped[msg.sender][follower] = true;
+    /// @dev Use `try {} catch {}` to send the tip to prevent any sub-calls from making the whole call revert.
+    /// Returns a success or error message to describe if the tip was sent successfully or not.
+    function _sendTip(address follower, uint256 tipAmount) internal returns (bytes memory successOrErrorMessage) {
+        _tippedFollowers[follower][msg.sender] = true;
 
         try _POTATO_TOKEN.transfer({
             from: msg.sender, // 🆙 that was ⬅️ followed
@@ -270,7 +268,7 @@ contract PotatoTipper is IERC165, ILSP1Delegate, PotatoTipperConfig {
         } catch (bytes memory errorData) {
             // If the token transfer failed (because the call to the `universalReceiver(...)` function reverted when
             // notifying sender/recipient, or any sub-calls), revert state and mark the follower as not tipped.
-            delete _tipped[msg.sender][follower];
+            delete _tippedFollowers[follower][msg.sender];
 
             emit PotatoTipFailed({from: msg.sender, to: follower, amount: tipAmount, errorData: errorData});
             return abi.encodePacked(
