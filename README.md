@@ -127,45 +127,77 @@ See the [`audits/`](./audits/) folder for security analysis ran on the contracts
 ## Gas report
 
 ```log
-$ forge snapshot --fork-url https://rpc.mainnet.lukso.network
-[⠊] Compiling...
-[⠑] Compiling 2 files with Solc 0.8.30
-[⠘] Solc 0.8.30 finished in 1.65s
-Compiler run successful!
 
-Ran 29 tests for test/PotatoTipper.t.sol:PotatoTipperTest
-[PASS] test_AliceUPCannotCallBobUPUniversalReceiverFunctionToGetTipped() (gas: 175240)
-[SKIP] test_EOAsCannotFollowAndReceiveTips(uint160) (runs: 0, μ: 0, ~: 0)
-[PASS] test_ExistingFollowerUnfollowsAndRefollowDoesNotTriggerTip() (gas: 321610)
-[PASS] test_FallbackToDisplayGenericErrorMessageInUniversalReceiverEventIfTippingFails() (gas: 715078)
-[PASS] test_FollowerDoesNotAlreadyFollowUser() (gas: 15202)
-[PASS] test_FollowerFollowUser() (gas: 201163)
+Ran 40 tests for tests/PotatoTipper.t.sol:PotatoTipperTest
+[PASS] test_EOAsCannotReceiveTipsOnFollow() (gas: 384346)
+[PASS] test_FollowerDoesNotAlreadyFollowUser() (gas: 13099)
+[PASS] test_FollowerFollowUser() (gas: 236248)
 [PASS] test_IsLSP1Delegate() (gas: 8516)
-[PASS] test_NewFollowerFailsToGetTipIsEligibleToUnfollowAndRefollowToGetTip() (gas: 492948)
-[PASS] test_OnlyCallsFromFollowerRegistry(address) (runs: 1030, μ: 164865, ~: 164867)
-[PASS] test_OnlyRunWithFollowOrUnfollowTypeId(bytes32) (runs: 1030, μ: 34793, ~: 34784)
-[PASS] test_PotatoTipperIsRegisteredForNotificationTypeNewFollower() (gas: 17250)
-[PASS] test_PotatoTipperIsRegisteredForNotificationTypeUnfollow() (gas: 17217)
-[PASS] test_TippingFailsAfterTippingBudgetGoesBelowCustomAmount(uint256) (runs: 1030, μ: 644487, ~: 644502)
-[PASS] test_TippingFailsAfterTippingBudgetGoesToZero() (gas: 561483)
-[PASS] test_cannotTipTwiceTheSameNewFollowerIfFollowedUnfollowAndRefollow() (gas: 521577)
-[PASS] test_customTipAmount() (gas: 457728)
-[SKIP] test_customTipAmountGreaterThanUserBalanceButLessThanTippingBudgetDontTriggerTip(uint256,uint256) (runs: 0, μ: 0, ~: 0)
-[PASS] test_customTipAmountIncorrectlySetDontTriggerTip(bytes) (runs: 1022, μ: 379331, ~: 378889)
-[PASS] test_customTipAmountLessThanUserBalanceButGreaterThanTippingBudgetDontTriggerTip(uint256,uint256) (runs: 1013, μ: 360116, ~: 360154)
-[SKIP] test_doesNotRunOnUnfollow() (gas: 0)
-[PASS] test_existingFollowerCannotTriggerDirectlyToGetTipped() (gas: 175513)
-[PASS] test_followerCanReceiveTipsFromTwoDifferentUsersWhoConnectedPotatoTipper() (gas: 799219)
-[SKIP] test_onlyUniversalProfilesCanReceiveTips(uint160) (runs: 0, μ: 0, ~: 0)
-[PASS] test_shouldNotTipButStillFollowIfPotatoTipperConnectedButNotAuthorizedAsOperator() (gas: 217609)
-[PASS] test_tippingOnFollowAfterAuthorizingPotatoTipperAsOperator() (gas: 419474)
-[PASS] test_userCallsDirectlyPotatoTipperWithTypeIdFollowAndExistingFollower() (gas: 246154)
-[PASS] test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndAddressThatDoesNotActuallyFollow() (gas: 175163)
-[PASS] test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndExistingFollower() (gas: 158405)
-[PASS] test_userWhoRegisteredPotatoTipperCannotCallContractDirectlyToTipPeopleIfTheyDontActuallyFollow() (gas: 135178)
-Suite result: ok. 25 passed; 0 failed; 4 skipped; finished in 141.89s (198.01s CPU time)
+[PASS] test_OnlyCallsFromFollowerRegistry(address) (runs: 1000, μ: 259704, ~: 259782)
+[PASS] test_PotatoTipperIsRegisteredForNotificationTypeNewFollower() (gas: 17251)
+[PASS] test_PotatoTipperIsRegisteredForNotificationTypeUnfollow() (gas: 17218)
+[PASS] test_aliceUPCannotCallBobUPUniversalReceiverFunctionToGetTipped() (gas: 278066)
+[PASS] test_canFollowBatchTwoUsersAndGetTipsFromBoth() (gas: 1086722)
+[PASS] test_cannotTipTwiceTheSameNewFollowerIfFollowedUnfollowAndRefollow() (gas: 873355)
+[PASS] test_configDataKeysListReturnsCorrectBytes32DataKeysList() (gas: 10752)
+[PASS] test_configDataKeysReturnsCorrectBytes32DataKeys() (gas: 9552)
+[PASS] test_customTipAmount() (gas: 645714)
+[PASS] test_customTipAmountGreaterThanUserBalanceButLessThanTippingBudgetDontTriggerTip(uint256,uint256) (runs: 1000, μ: 511205, ~: 511073)
+[PASS] test_customTipAmountLessThanUserBalanceButGreaterThanTippingBudgetDontTriggerTip(uint256,uint256) (runs: 1000, μ: 516475, ~: 516512)
+[PASS] test_customTipAmountSetToZeroDontTriggerTip() (gas: 481596)
+[PASS] test_customTipSettingsIncorrectlySetDontTriggerTip(bytes) (runs: 1000, μ: 503970, ~: 492085)
+[PASS] test_doesNotTipIfTipSettingsDataKeyNotSet() (gas: 466681)
+[PASS] test_encodeConfigDataKeysValuesReturnsCorrectBytes32AndBytesData(uint256,uint256,uint256) (runs: 1000, μ: 19665, ~: 19665)
+[PASS] test_existingFollowerCannotTriggerDirectlyToGetTipped() (gas: 282478)
+[PASS] test_existingFollowerUnfollowsAndRefollowDoesNotTriggerTip() (gas: 642493)
+[PASS] test_fallbackToDisplayGenericErrorMessageInUniversalReceiverEventIfTippingFails() (gas: 1511566)
+[PASS] test_followerCanReceiveTipsFromTwoDifferentUsersWhoConnectedPotatoTipper() (gas: 1126496)
+[PASS] test_lsp1DelegateOnFollowDataKeyConstantIsCorrectlyEncoded() (gas: 3441)
+[PASS] test_lsp1DelegateOnUnfollowDataKeyConstantIsCorrectlyEncoded() (gas: 3461)
+[PASS] test_minimumFollowerRequiredExactMatchTriggerTip() (gas: 674374)
+[PASS] test_minimumFollowerRequiredNotMetDontTriggerTip(uint256) (runs: 1000, μ: 569573, ~: 569529)
+[PASS] test_minimumPotatoBalanceRequiredExactMatchTriggerTip() (gas: 669445)
+[PASS] test_minimumPotatoBalanceRequiredNotMetDontTriggerTip(uint256) (runs: 1000, μ: 573745, ~: 573485)
+[PASS] test_newFollowerFailsToGetTipBecauseNotEligibleButCanUnfollowAndRefollowToGetTip() (gas: 1077780)
+[PASS] test_onlyRunWithFollowOrUnfollowTypeId(bytes32) (runs: 1000, μ: 56665, ~: 56805)
+[PASS] test_onlyUniversalProfilesCanReceiveTips() (gas: 1091836)
+[PASS] test_shouldNotTipButStillFollowIfPotatoTipperConnectedButNotAuthorizedAsOperator() (gas: 319732)
+[PASS] test_tippingFailsAfterTippingBudgetGoesBelowCustomAmount(uint256) (runs: 1001, μ: 953411, ~: 953432)
+[PASS] test_tippingFailsAfterTippingBudgetGoesToZero() (gas: 922767)
+[PASS] test_tippingOnFollowAfterAuthorizingPotatoTipperAsOperator() (gas: 553635)
+[PASS] test_userCallsDirectlyPotatoTipperWithTypeIdFollowAndExistingFollower() (gas: 480250)
+[PASS] test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndAddressThatDoesNotActuallyFollow() (gas: 305518)
+[PASS] test_userCallsDirectlyPotatoTipperWithTypeIdUnfollowAndExistingFollower() (gas: 278671)
+[PASS] test_userWhoRegisteredPotatoTipperCannotCallContractDirectlyToTipUsersThatDontActuallyFollow() (gas: 175649)
+Suite result: ok. 40 passed; 0 failed; 0 skipped; finished in 65.13s (97.56s CPU time)
 
-Ran 1 test suite in 142.35s (141.89s CPU time): 25 tests passed, 0 failed, 4 skipped (29 total tests)
+╭--------------------------------------------+-----------------+-------+--------+--------+---------╮
+| src/PotatoTipper.sol:PotatoTipper Contract |                 |       |        |        |         |
++==================================================================================================+
+| Deployment Cost                            | Deployment Size |       |        |        |         |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| 1885376                                    | 8544            |       |        |        |         |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+|                                            |                 |       |        |        |         |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| Function Name                              | Min             | Avg   | Median | Max    | # Calls |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| configDataKeys                             | 458             | 458   | 458    | 458    | 1       |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| configDataKeysList                         | 983             | 983   | 983    | 983    | 1       |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| encodeConfigDataKeysValues                 | 2764            | 2764  | 2764   | 2764   | 296     |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| hasExistingFollowerUnfollowedPostInstall   | 2732            | 2732  | 2732   | 2732   | 528     |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| hasFollowedPostInstall                     | 2754            | 2754  | 2754   | 2754   | 795     |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| hasReceivedTip                             | 2729            | 2729  | 2729   | 2729   | 4154    |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| supportsInterface                          | 350             | 357   | 350    | 367    | 3895    |
+|--------------------------------------------+-----------------+-------+--------+--------+---------|
+| universalReceiverDelegate                  | 42272           | 94703 | 55714  | 225111 | 4       |
+╰--------------------------------------------+-----------------+-------+--------+--------+---------╯
 ```
 
 # Development
