@@ -31,6 +31,10 @@ invariant = { runs = 10 }
 # Speed up compilation and tests during development.
 optimizer = false
 
+[rpc_endpoints]
+luksoTestnet = "${LUKSO_TESTNET_RPC_URL}"
+lukso = "${LUKSO_MAINNET_RPC_URL}"
+
 [fmt]
 bracket_spacing = false
 int_types = "long"

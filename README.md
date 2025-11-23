@@ -2,10 +2,10 @@
 
 Smart contracts of the POTATO Tipper, a contract that enables you to tip on follow, acting as an incentive mechanism to gain new followers.
 
-| Network       | Contract address                                                |
-| :------------ | :-------------------------------------------------------------- |
-| LUKSO Mainnet | 🔜                                                              |
-| LUKSO Testnet | (code will change) `0xf2b2ac53d3A3EeaF2a2a10084b0EC88F2424f066` |
+| Network       | Contract address                                                                                                                                                 |
+| :------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LUKSO Mainnet | 🔜                                                                                                                                                               |
+| LUKSO Testnet | [`0xB844b12313A2D702203109E9487C24aE807e1d66`](https://explorer.execution.testnet.lukso.network/address/0xB844b12313A2D702203109E9487C24aE807e1d66?tab=contract) |
 
 ```
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡤⣔⢲⡒⢦⡙⡴⣒⣖⡠⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
