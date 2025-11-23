@@ -35,7 +35,8 @@
     "test:snapshot": "forge snapshot --fork-url https://rpc.mainnet.lukso.network",
     "test:snapshot:compare": "forge snapshot --fork-url https://rpc.mainnet.lukso.network --diff=./gas-snapshots/.gas-snapshot-before-ai-audit",
     "test:coverage": "forge coverage --exclude-tests --fork-url https://rpc.mainnet.lukso.network",
-    "format": "forge fmt"
+    "format": "forge fmt",
+    "deploy:testnet": "forge script scripts/Deploy.s.sol:Deploy --rpc-url luksoTestnet --broadcast -vvvv --interactives 1"
   },
   "devDependencies": {
     "@remix-project/remixd": "^0.6.56",
