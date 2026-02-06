@@ -345,6 +345,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
 
         _preTippingChecks(address(user), address(newFollower), tippingBudget);
 
+        vm.recordLogs();
+
         vm.prank(address(newFollower));
         _FOLLOWER_REGISTRY.follow(address(user));
 
@@ -356,6 +358,15 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
             userPotatoBalanceBefore,
             tippingBudget
         );
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        for (uint256 ii = 0; ii < logs.length; ii++) {
+            if (logs[ii].topics[0] == PotatoTipSent.selector) {
+                assertEq(bytes32(logs[ii].topics[1]), bytes32(abi.encode(address(user))));
+                assertEq(bytes32(logs[ii].topics[2]), bytes32(abi.encode(address(newFollower))));
+                assertEq(bytes32(logs[ii].topics[3]), bytes32(abi.encode(TIP_AMOUNT)));
+            }
+        }
     }
 
     function test_cannotTipTwiceTheSameNewFollowerIfFollowedUnfollowAndRefollow() public {
@@ -1598,6 +1609,8 @@ contract PotatoTipperTest is UniversalProfileTestHelpers {
                 assertEq(bytes32(logs[ii].topics[3]), bytes32(abi.encode(TIP_AMOUNT)));
 
                 bytes memory errorData = abi.decode(logs[ii].data, (bytes));
+
+                // forge-lint: disable-next-line(unsafe-typecast)
                 assertEq(bytes4(errorData), bytes4(keccak256(bytes("Error(string)"))));
                 assertEq(errorData, abi.encodeWithSignature("Error(string)", "Force revert on LSP7TokensReceived"));
                 continue;

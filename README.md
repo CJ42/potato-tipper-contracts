@@ -4,8 +4,10 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 
 | Network       | Contract address                                                                                                                                                 |
 | :------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| LUKSO Mainnet | 🔜                                                                                                                                                               |
+| LUKSO Mainnet | [`0x5eed04004c2D46C12Fe30C639A90AD5d6F5D573d`](https://explorer.lukso.network/address/0x5eed04004c2D46C12Fe30C639A90AD5d6F5D573d?tab=contract)                   |
 | LUKSO Testnet | [`0xB844b12313A2D702203109E9487C24aE807e1d66`](https://explorer.execution.testnet.lukso.network/address/0xB844b12313A2D702203109E9487C24aE807e1d66?tab=contract) |
+
+> **Note:** the `PotatoTipper` contract was deployed on LUKSO Mainnet using the [`LSP16UniversalFactory`](https://explorer.execution.mainnet.lukso.network/address/0x1600016e23e25D20CA8759338BfB8A8d11563C4e?tab=contract).
 
 ```
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡤⣔⢲⡒⢦⡙⡴⣒⣖⡠⣄⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
