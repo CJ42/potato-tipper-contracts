@@ -100,6 +100,10 @@ The [`LEARN.md`](./LEARN.md) file offer resources for those wanting to learn mor
   - `LSP1UniversalReceiverDelegate:LSP26FollowerSystem_FollowNotification` -> `0x0cfc51aec37c55a4d0b1000071e02f9f05bcd5816ec4f3134aa2e5a916669537`
   - `LSP1UniversalReceiverDelegate:LSP26FollowerSystem_UnfollowNotification` -> `0x0cfc51aec37c55a4d0b100009d3c0b4012b69658977b099bdaa51eff0f0460f4`
 
+- 🗄️ Tipping configurations stored as metadata under the data key `PotatoTipper:Settings` of the user's Universal Profile (ERC725Y contract storage)
+
+  - `0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a` -> see [`LEARN.md > Data Keys`](./LEARN.md#data-keys) section for details on how to encode the tip settings
+
 - 🤝🏻 Act as an operator via [`authorizeOperator(...)`](https://docs.lukso.tech/contracts/contracts/LSP7DigitalAsset/#authorizeoperator) to transfer tokens on behalf of the user's UP.
   - Give it the allocated tipping budget as authorized amount / allowance.
   - No 🥔 tokens need to be transferred to the `PotatoTipper` contract (it transfers them on behalf of the user's 🆙).
