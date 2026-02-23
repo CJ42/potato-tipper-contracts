@@ -83,6 +83,16 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
   - new followers can only get one tip per user. They cannot unfollow and re-follow to try to get many tips.
   - existing followers are not eligible to receive tips from 🆙 users they already follow
 
+
+## Testing on Testnet
+
+The `PotatoTipper` contract is also deployed on **LUKSO Testnet** and can be used for testing.
+
+- **Potato Token (LSP7) on Testnet:** `0xE8280e7f0d54daE39725dC5f500F567Af2854A13`
+
+The Testnet Potato Token contract has a **public `mint` function** that anyone can call directly from the **Blockscout explorer** (free faucet style). This makes it easy to get free 🥔 tokens for testing without having to ask other developers/maintainers.
+
+
 ## Known Limitations
 
 - The Potato Tipper only works for new followers (therefore the notion of an _"incentive system"_). Existing followers cannot get tipped (as mentioned above). If a user (Alice) connects the Potato Tipper to its UP, and Bob was following Alice before she used the Potato Tipper, Bob will never be able to get a tip from the Potato Tipper contract. Even by trying to unfollow and re-follow Alice.
