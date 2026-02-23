@@ -59,6 +59,7 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
   - [Security](#security)
   - [Code Coverage](#code-coverage)
   - [Gas report](#gas-report)
+- [Testing on LUKSO Testnet](#testing-on-lukso-testnet)
 - [Development](#development)
   - [Pre-requisites](#pre-requisites)
   - [Developing with Foundry](#developing-with-foundry)
@@ -82,16 +83,6 @@ Smart contracts of the POTATO Tipper, a contract that enables you to tip on foll
 - ✅🆙 **Only for Universal Profile:** only 🆙 can receive tips (❌🔑 not EOAs)
   - new followers can only get one tip per user. They cannot unfollow and re-follow to try to get many tips.
   - existing followers are not eligible to receive tips from 🆙 users they already follow
-
-
-## Testing on Testnet
-
-The `PotatoTipper` contract is also deployed on **LUKSO Testnet** and can be used for testing.
-
-- **Potato Token (LSP7) on Testnet:** `0xE8280e7f0d54daE39725dC5f500F567Af2854A13`
-
-The Testnet Potato Token contract has a **public `mint` function** that anyone can call directly from the **Blockscout explorer** (free faucet style). This makes it easy to get free 🥔 tokens for testing without having to ask other developers/maintainers.
-
 
 ## Known Limitations
 
@@ -215,6 +206,14 @@ Suite result: ok. 40 passed; 0 failed; 0 skipped; finished in 65.13s (97.56s CPU
 | universalReceiverDelegate                  | 42272           | 94703 | 55714  | 225111 | 4       |
 ╰--------------------------------------------+-----------------+-------+--------+--------+---------╯
 ```
+
+# Testing on LUKSO Testnet
+
+The `PotatoTipper` contract is also deployed on **LUKSO Testnet** and can be used for testing.
+
+- **Potato Token (LSP7) on Testnet:** [`0xE8280e7f0d54daE39725dC5f500F567Af2854A13`](https://explorer.execution.testnet.lukso.network/token/0xE8280e7f0d54daE39725dC5f500F567Af2854A13?tab=write_contract)
+
+The Testnet Potato Token contract has a **public `mint(...)` function** that anyone can call directly from the **Blockscout explorer** (free faucet style). This makes it easy to get free testnet 🥔 tokens for testing purpose without having to ask other developers/maintainers to send you test tokens.
 
 # Development
 
