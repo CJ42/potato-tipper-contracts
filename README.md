@@ -248,6 +248,11 @@ bun run format
 
 ## Developing with Foundry
 
+### Easy Setup
+
+Configure the Potato Tipper on your Universal Profile in minutes — see [`scripts/README.md`](./scripts/README.md) for step-by-step instructions using Foundry or TypeScript.
+
+
 This template repository is based on Foundry, **a blazing fast, portable and modular toolkit for EVM application development written in Rust.** It includes:
 
 - **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).

@@ -36,7 +36,10 @@
     "test:snapshot:compare": "forge snapshot --fork-url https://rpc.mainnet.lukso.network --diff=./gas-snapshots/.gas-snapshot-before-ai-audit",
     "test:coverage": "forge coverage --exclude-tests --fork-url https://rpc.mainnet.lukso.network",
     "format": "forge fmt",
-    "deploy:testnet": "forge script scripts/Deploy.s.sol:Deploy --rpc-url luksoTestnet --broadcast -vvvv --interactives 1"
+    "deploy:testnet": "forge script scripts/Deploy.s.sol:Deploy --rpc-url luksoTestnet --broadcast -vvvv --interactives 1",
+    "precheck": "bun run scripts/precheck-setupPotatoTipper-check.ts",
+    "setup": "bun run scripts/setupPotatoTipper.ts",
+    "postcheck": "bun run scripts/postCheck-setupPotatoTipper.ts"
   },
   "devDependencies": {
     "@remix-project/remixd": "^0.6.56",
@@ -45,6 +48,8 @@
     "solhint": "^6.0.1"
   },
   "dependencies": {
-    "@lukso/lsp-smart-contracts": "latest"
+    "@lukso/lsp-smart-contracts": "latest",
+    "dotenv": "^16.4.5",
+    "viem": "^2.21.0"
   }
 }
