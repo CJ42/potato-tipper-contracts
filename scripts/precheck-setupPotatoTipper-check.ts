@@ -1,78 +1,48 @@
 import "dotenv/config";
-import { createPublicClient, http, getAddress, pad, keccak256, toBytes, toHex, type Hex } from "viem";
-
-// LUKSO Mainnet
-const luksoMainnet = {
-    id: 42,
-    name: "LUKSO Mainnet",
-    network: "lukso",
-    nativeCurrency: { name: "LYX", symbol: "LYX", decimals: 18 },
-    rpcUrls: {
-        default: { http: ["https://rpc.mainnet.lukso.network"] },
-        public: { http: ["https://rpc.mainnet.lukso.network"] },
-    },
-} as const;
-
-// LSP6 permission bit for ADDUNIVERSALRECEIVERDELEGATE
-const PERMISSION_ADDUNIVERSALRECEIVERDELEGATE: Hex =
-    "0x0000000000000000000000000000000000000000000000000000000000000020";
-
-// Build AddressPermissions:Permissions:<address> data key
-// prefix = keccak256("AddressPermissions:Permissions") first 10 bytes (0x4b80742de2bf82acb3630000)
-function buildPermissionsKey(controllerAddress: string): Hex {
-    const prefix = "0x4b80742de2bf82acb3630000";
-    const paddedAddress = controllerAddress.toLowerCase().replace("0x", "").padStart(40, "0");
-    return `${prefix}${paddedAddress}` as Hex;
-}
-
-const ERC725Y_ABI = [
-    {
-        name: "getData",
-        type: "function",
-        stateMutability: "view",
-        inputs: [{ name: "key", type: "bytes32" }],
-        outputs: [{ name: "", type: "bytes" }],
-    },
-] as const;
+import { createPublicClient, http, getAddress, type Hex } from "viem";
+import { lukso } from "viem/chains";
+import { privateKeyToAddress } from "viem/accounts";
+import { PERMISSIONS } from "@lukso/lsp6-contracts/constants";
+import { ERC725 } from "@erc725/erc725.js";
+import { lsp0Erc725AccountAbi } from "@lukso/lsp0-contracts/abi";
 
 async function main() {
-    const upAddressRaw = process.env.UP_ADDRESS;
-    const privateKeyRaw = process.env.PRIVATE_KEY;
+    const { UP_ADDRESS, PRIVATE_KEY } = process.env;
 
-    if (!upAddressRaw) {
+    if (!UP_ADDRESS) {
         console.error("❌ Missing env var: UP_ADDRESS");
         process.exit(1);
     }
-    if (!privateKeyRaw) {
+    if (!PRIVATE_KEY) {
         console.error("❌ Missing env var: PRIVATE_KEY");
         process.exit(1);
     }
 
-    const upAddress = getAddress(upAddressRaw);
+    const upAddress = getAddress(UP_ADDRESS);
+    const controllerAddress = privateKeyToAddress(PRIVATE_KEY as Hex);
 
-    // Derive controller address from private key
-    const { privateKeyToAddress } = await import("viem/accounts");
-    const controllerAddress = privateKeyToAddress(privateKeyRaw as Hex);
-
-    console.log("=== Pre-Check: PotatoTipper Setup ===");
-    console.log(`UP Address:   ${upAddress}`);
-    console.log(`Controller:   ${controllerAddress}`);
+    console.log("=== Pre-Setup Check: PotatoTipper ===");
+    console.log(`🆙 UP Address:  ${upAddress}`);
+    console.log(`🔑 Controller:  ${controllerAddress}`);
     console.log("");
 
     const publicClient = createPublicClient({
-        chain: luksoMainnet,
+        chain: lukso,
         transport: http(),
     });
 
-    const permissionsKey = buildPermissionsKey(controllerAddress);
+    const permissionsKey = ERC725.encodeKeyName(
+        "AddressPermissions:Permissions:<address>",
+        [controllerAddress]
+    ) as `0x${string}`;
 
     let rawPermissions: Hex;
     try {
         rawPermissions = (await publicClient.readContract({
             address: upAddress,
-            abi: ERC725Y_ABI,
+            abi: lsp0Erc725AccountAbi,
             functionName: "getData",
-            args: [permissionsKey as `0x${string}`],
+            args: [permissionsKey],
         })) as Hex;
     } catch (error) {
         console.error("❌ Failed to read permissions from UP:", error);
@@ -87,9 +57,8 @@ async function main() {
         process.exit(1);
     }
 
-    // rawPermissions is a 32-byte hex value
     const permissionsBigInt = BigInt(rawPermissions);
-    const requiredBit = BigInt(PERMISSION_ADDUNIVERSALRECEIVERDELEGATE);
+    const requiredBit = BigInt(PERMISSIONS.ADDUNIVERSALRECEIVERDELEGATE);
     const hasPermission = (permissionsBigInt & requiredBit) !== 0n;
 
     if (hasPermission) {

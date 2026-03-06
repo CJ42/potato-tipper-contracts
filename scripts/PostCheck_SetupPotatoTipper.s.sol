@@ -4,14 +4,13 @@ pragma solidity ^0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
 
-interface IERC725Y {
-    function getData(bytes32 key) external view returns (bytes memory);
-    function getDataBatch(bytes32[] calldata keys) external view returns (bytes[] memory);
-}
-
-interface ILSP7 {
-    function authorizedAmountFor(address operator, address tokenOwner) external view returns (uint256);
-}
+import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
+import {ILSP7DigitalAsset as ILSP7} from "@lukso/lsp7-contracts/contracts/ILSP7DigitalAsset.sol";
+import {
+    POTATO_TIPPER_SETTINGS_DATA_KEY,
+    LSP1DELEGATE_ON_FOLLOW_DATA_KEY,
+    LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY
+} from "../src/PotatoTipperConfig.sol";
 
 /// @title Post-Check: Verify PotatoTipper setup was applied correctly
 /// @notice Reads back the 3 data keys from the UP and verifies they match expected values.
@@ -27,10 +26,6 @@ interface ILSP7 {
 /// - MIN_POTATO_BALANCE: Expected minimum POTATO balance (in wei)
 /// - TIPPING_BUDGET: Expected tipping budget (in wei)
 contract PostCheckSetupPotatoTipper is Script {
-    bytes32 constant LSP1DELEGATE_ON_FOLLOW_DATA_KEY = 0x0cfc51aec37c55a4d0b1000071e02f9f05bcd5816ec4f3134aa2e5a916669537;
-    bytes32 constant LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY = 0x0cfc51aec37c55a4d0b100009d3c0b4012b69658977b099bdaa51eff0f0460f4;
-    bytes32 constant POTATO_TIPPER_SETTINGS_KEY = 0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a;
-
     function run() external view {
         address upAddress = vm.envAddress("UP_ADDRESS");
         address potatoTipperAddress = vm.envAddress("POTATO_TIPPER_ADDRESS");
@@ -48,7 +43,7 @@ contract PostCheckSetupPotatoTipper is Script {
 
         // Read all 3 data keys at once
         bytes32[] memory dataKeys = new bytes32[](3);
-        dataKeys[0] = POTATO_TIPPER_SETTINGS_KEY;
+        dataKeys[0] = POTATO_TIPPER_SETTINGS_DATA_KEY;
         dataKeys[1] = LSP1DELEGATE_ON_FOLLOW_DATA_KEY;
         dataKeys[2] = LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY;
 
@@ -57,7 +52,7 @@ contract PostCheckSetupPotatoTipper is Script {
         // --- Check 1: Settings key ---
         console2.log("--- Check 1: Tip Settings ---");
         if (rawValues[0].length == 0) {
-            console2.log(unicode"❌ POTATO_TIPPER_SETTINGS_KEY is empty — settings were not written.");
+            console2.log(unicode"❌ POTATO_TIPPER_SETTINGS_DATA_KEY is empty — settings were not written.");
         } else {
             (uint256 tipAmount, uint256 minFollowers, uint256 minPotatoBalance) =
                 abi.decode(rawValues[0], (uint256, uint256, uint256));

@@ -8,20 +8,12 @@ import {
     type Hex,
     type Address,
 } from "viem";
+import { lukso } from "viem/chains";
+import { lsp7DigitalAssetAbi } from "@lukso/lsp7-contracts/abi";
+import { lsp0Erc725AccountAbi } from "@lukso/lsp0-contracts/abi";
 
-// LUKSO Mainnet
-const luksoMainnet = {
-    id: 42,
-    name: "LUKSO Mainnet",
-    network: "lukso",
-    nativeCurrency: { name: "LYX", symbol: "LYX", decimals: 18 },
-    rpcUrls: {
-        default: { http: ["https://rpc.mainnet.lukso.network"] },
-        public: { http: ["https://rpc.mainnet.lukso.network"] },
-    },
-} as const;
-
-// Data keys
+// ERC725Y data keys for LSP1 Delegate (LSP1UniversalReceiverDelegate:<typeId>)
+// where typeId = LSP26_TYPE_IDS.LSP26FollowerSystem_FollowNotification / UnfollowNotification
 const LSP1DELEGATE_ON_FOLLOW_DATA_KEY: Hex =
     "0x0cfc51aec37c55a4d0b1000071e02f9f05bcd5816ec4f3134aa2e5a916669537";
 const LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY: Hex =
@@ -29,69 +21,95 @@ const LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY: Hex =
 const POTATO_TIPPER_SETTINGS_KEY: Hex =
     "0xd1d57abed02d4c2d7ce00000e8211998bb257be214c7b0997830cd295066cc6a";
 
-const GET_DATA_BATCH_ABI = [
-    {
-        name: "getDataBatch",
-        type: "function",
-        stateMutability: "view",
-        inputs: [{ name: "keys", type: "bytes32[]" }],
-        outputs: [{ name: "", type: "bytes[]" }],
-    },
-] as const;
-
-const AUTHORIZED_AMOUNT_FOR_ABI = [
-    {
-        name: "authorizedAmountFor",
-        type: "function",
-        stateMutability: "view",
-        inputs: [
-            { name: "operator", type: "address" },
-            { name: "tokenOwner", type: "address" },
-        ],
-        outputs: [{ name: "", type: "uint256" }],
-    },
-] as const;
-
 async function main() {
-    const upAddressRaw = process.env.UP_ADDRESS;
-    const potatoTipperAddressRaw = process.env.POTATO_TIPPER_ADDRESS;
-    const potatoTokenAddressRaw = process.env.POTATO_TOKEN_ADDRESS;
-    const expectedTipAmount = process.env.TIP_AMOUNT ? BigInt(process.env.TIP_AMOUNT) : undefined;
-    const expectedMinFollowers = process.env.MIN_FOLLOWERS ? BigInt(process.env.MIN_FOLLOWERS) : undefined;
-    const expectedMinPotatoBalance = process.env.MIN_POTATO_BALANCE ? BigInt(process.env.MIN_POTATO_BALANCE) : undefined;
-    const expectedTippingBudget = process.env.TIPPING_BUDGET ? BigInt(process.env.TIPPING_BUDGET) : undefined;
+    const {
+        UP_ADDRESS,
+        POTATO_TIPPER_ADDRESS,
+        POTATO_TOKEN_ADDRESS,
+        TIP_AMOUNT,
+        MIN_FOLLOWERS,
+        MIN_POTATO_BALANCE,
+        TIPPING_BUDGET,
+    } = process.env;
 
-    if (!upAddressRaw || !potatoTipperAddressRaw || !potatoTokenAddressRaw) {
-        console.error("❌ Missing required env vars: UP_ADDRESS, POTATO_TIPPER_ADDRESS, POTATO_TOKEN_ADDRESS");
+    if (!UP_ADDRESS) {
+        console.error("❌ Missing env var: UP_ADDRESS");
+        process.exit(1);
+    }
+    if (!POTATO_TIPPER_ADDRESS) {
+        console.error("❌ Missing env var: POTATO_TIPPER_ADDRESS");
+        process.exit(1);
+    }
+    if (!POTATO_TOKEN_ADDRESS) {
+        console.error("❌ Missing env var: POTATO_TOKEN_ADDRESS");
         process.exit(1);
     }
 
-    const upAddress = getAddress(upAddressRaw) as Address;
-    const potatoTipperAddress = getAddress(potatoTipperAddressRaw) as Address;
-    const potatoTokenAddress = getAddress(potatoTokenAddressRaw) as Address;
+    const upAddress = getAddress(UP_ADDRESS) as Address;
+    const potatoTipperAddress = getAddress(POTATO_TIPPER_ADDRESS) as Address;
+    const potatoTokenAddress = getAddress(POTATO_TOKEN_ADDRESS) as Address;
+
+    const expectedTipAmount = TIP_AMOUNT ? BigInt(TIP_AMOUNT) : undefined;
+    const expectedMinFollowers = MIN_FOLLOWERS ? BigInt(MIN_FOLLOWERS) : undefined;
+    const expectedMinPotatoBalance = MIN_POTATO_BALANCE ? BigInt(MIN_POTATO_BALANCE) : undefined;
+    const expectedTippingBudget = TIPPING_BUDGET ? BigInt(TIPPING_BUDGET) : undefined;
 
     console.log("=== Post-Check: PotatoTipper Setup Verification ===");
-    console.log(`UP Address:           ${upAddress}`);
-    console.log(`PotatoTipper Address: ${potatoTipperAddress}`);
-    console.log(`POTATO Token Address: ${potatoTokenAddress}`);
+    console.log(`🆙 UP Address:           ${upAddress}`);
+    console.log(`🤎 PotatoTipper Address: ${potatoTipperAddress}`);
+    console.log(`🪙 POTATO Token Address: ${potatoTokenAddress}`);
     console.log("");
 
     const publicClient = createPublicClient({
-        chain: luksoMainnet,
+        chain: lukso,
         transport: http(),
     });
 
-    // Read all 3 data keys in one call
+    // Read LSP1 delegate keys first, then settings
     const rawValues = (await publicClient.readContract({
         address: upAddress,
-        abi: GET_DATA_BATCH_ABI,
+        abi: lsp0Erc725AccountAbi,
         functionName: "getDataBatch",
-        args: [[POTATO_TIPPER_SETTINGS_KEY, LSP1DELEGATE_ON_FOLLOW_DATA_KEY, LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY]],
+        args: [[LSP1DELEGATE_ON_FOLLOW_DATA_KEY, LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY, POTATO_TIPPER_SETTINGS_KEY]],
     })) as Hex[];
 
-    // --- Check 1: Settings ---
-    console.log("--- Check 1: Tip Settings ---");
-    const rawSettings = rawValues[0];
+    // --- Check 1: LSP1 Delegate on Follow ---
+    console.log("--- Check 1: LSP1 Delegate (Follow) ---");
+    const rawFollowDelegate = rawValues[0];
+    if (!rawFollowDelegate || rawFollowDelegate === "0x") {
+        console.log("❌ LSP1DELEGATE_ON_FOLLOW_DATA_KEY is empty — follow delegate not set.");
+    } else {
+        const storedFollowDelegate = ("0x" + rawFollowDelegate.slice(-40)) as Address;
+        if (storedFollowDelegate.toLowerCase() === potatoTipperAddress.toLowerCase()) {
+            console.log(`✅ Follow delegate set to PotatoTipper: ${storedFollowDelegate}`);
+        } else {
+            console.log(`❌ Follow delegate mismatch!`);
+            console.log(`   Expected: ${potatoTipperAddress}`);
+            console.log(`   Got:      ${storedFollowDelegate}`);
+        }
+    }
+    console.log("");
+
+    // --- Check 2: LSP1 Delegate on Unfollow ---
+    console.log("--- Check 2: LSP1 Delegate (Unfollow) ---");
+    const rawUnfollowDelegate = rawValues[1];
+    if (!rawUnfollowDelegate || rawUnfollowDelegate === "0x") {
+        console.log("❌ LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY is empty — unfollow delegate not set.");
+    } else {
+        const storedUnfollowDelegate = ("0x" + rawUnfollowDelegate.slice(-40)) as Address;
+        if (storedUnfollowDelegate.toLowerCase() === potatoTipperAddress.toLowerCase()) {
+            console.log(`✅ Unfollow delegate set to PotatoTipper: ${storedUnfollowDelegate}`);
+        } else {
+            console.log(`❌ Unfollow delegate mismatch!`);
+            console.log(`   Expected: ${potatoTipperAddress}`);
+            console.log(`   Got:      ${storedUnfollowDelegate}`);
+        }
+    }
+    console.log("");
+
+    // --- Check 3: Tip Settings ---
+    console.log("--- Check 3: Tip Settings ---");
+    const rawSettings = rawValues[2];
     if (!rawSettings || rawSettings === "0x") {
         console.log("❌ POTATO_TIPPER_SETTINGS_KEY is empty — settings were not written.");
     } else {
@@ -99,95 +117,51 @@ async function main() {
             parseAbiParameters("uint256 tipAmount, uint256 minFollowers, uint256 minPotatoBalance"),
             rawSettings
         );
+        console.log(`   Tip Amount:          ${tipAmount} wei`);
+        console.log(`   Min Followers:       ${minFollowers}`);
+        console.log(`   Min POTATO Balance:  ${minPotatoBalance} wei`);
 
-        console.log(`  Tip Amount (wei):         ${tipAmount}`);
-        console.log(`  Min Followers:            ${minFollowers}`);
-        console.log(`  Min POTATO Balance (wei): ${minPotatoBalance}`);
-
-        const settingsMatch =
-            (!expectedTipAmount || tipAmount === expectedTipAmount) &&
-            (!expectedMinFollowers || minFollowers === expectedMinFollowers) &&
-            (!expectedMinPotatoBalance || minPotatoBalance === expectedMinPotatoBalance);
-
-        if (settingsMatch) {
-            console.log("  ✅ Settings match expected values.");
-        } else {
-            console.log("  ❌ Settings do NOT match expected values.");
-            if (expectedTipAmount) console.log(`     Expected Tip Amount:         ${expectedTipAmount}`);
-            if (expectedMinFollowers) console.log(`     Expected Min Followers:      ${expectedMinFollowers}`);
-            if (expectedMinPotatoBalance)
-                console.log(`     Expected Min POTATO Balance: ${expectedMinPotatoBalance}`);
+        let settingsOk = true;
+        if (expectedTipAmount !== undefined && tipAmount !== expectedTipAmount) {
+            console.log(`   ❌ Tip amount mismatch! Expected: ${expectedTipAmount}, Got: ${tipAmount}`);
+            settingsOk = false;
+        }
+        if (expectedMinFollowers !== undefined && minFollowers !== expectedMinFollowers) {
+            console.log(`   ❌ Min followers mismatch! Expected: ${expectedMinFollowers}, Got: ${minFollowers}`);
+            settingsOk = false;
+        }
+        if (expectedMinPotatoBalance !== undefined && minPotatoBalance !== expectedMinPotatoBalance) {
+            console.log(`   ❌ Min balance mismatch! Expected: ${expectedMinPotatoBalance}, Got: ${minPotatoBalance}`);
+            settingsOk = false;
+        }
+        if (settingsOk) {
+            console.log("   ✅ All settings match expected values!");
         }
     }
-
     console.log("");
 
-    // --- Check 2: LSP1 delegate for follow ---
-    console.log("--- Check 2: LSP1 Delegate (on follow) ---");
-    const rawFollowDelegate = rawValues[1];
-    if (!rawFollowDelegate || rawFollowDelegate === "0x") {
-        console.log("❌ LSP1DELEGATE_ON_FOLLOW_DATA_KEY is empty — delegate not set.");
-    } else {
-        // The value is stored as a 20-byte address (packed, not ABI-encoded)
-        const followDelegate = getAddress(`0x${rawFollowDelegate.slice(-40)}`);
-        if (followDelegate.toLowerCase() === potatoTipperAddress.toLowerCase()) {
-            console.log(`  ✅ Follow delegate correctly set to PotatoTipper: ${followDelegate}`);
-        } else {
-            console.log("  ❌ Follow delegate mismatch.");
-            console.log(`     Expected: ${potatoTipperAddress}`);
-            console.log(`     Got:      ${followDelegate}`);
-        }
-    }
-
-    console.log("");
-
-    // --- Check 3: LSP1 delegate for unfollow ---
-    console.log("--- Check 3: LSP1 Delegate (on unfollow) ---");
-    const rawUnfollowDelegate = rawValues[2];
-    if (!rawUnfollowDelegate || rawUnfollowDelegate === "0x") {
-        console.log("❌ LSP1DELEGATE_ON_UNFOLLOW_DATA_KEY is empty — delegate not set.");
-    } else {
-        const unfollowDelegate = getAddress(`0x${rawUnfollowDelegate.slice(-40)}`);
-        if (unfollowDelegate.toLowerCase() === potatoTipperAddress.toLowerCase()) {
-            console.log(`  ✅ Unfollow delegate correctly set to PotatoTipper: ${unfollowDelegate}`);
-        } else {
-            console.log("  ❌ Unfollow delegate mismatch.");
-            console.log(`     Expected: ${potatoTipperAddress}`);
-            console.log(`     Got:      ${unfollowDelegate}`);
-        }
-    }
-
-    console.log("");
-
-    // --- Check 4: $POTATO token allowance ---
-    console.log("--- Check 4: $POTATO Token Allowance ---");
-    const allowance = (await publicClient.readContract({
+    // --- Check 4: Tipping Budget ---
+    console.log("--- Check 4: Tipping Budget (Allowance) ---");
+    const authorizedAmount = (await publicClient.readContract({
         address: potatoTokenAddress,
-        abi: AUTHORIZED_AMOUNT_FOR_ABI,
+        abi: lsp7DigitalAssetAbi,
         functionName: "authorizedAmountFor",
         args: [potatoTipperAddress, upAddress],
     })) as bigint;
-
-    console.log(`  Authorized amount (wei): ${allowance}`);
-
+    console.log(`   Authorized amount: ${authorizedAmount} wei`);
     if (expectedTippingBudget !== undefined) {
-        if (allowance >= expectedTippingBudget) {
-            console.log("  ✅ Tipping budget authorized — PotatoTipper can spend POTATO tokens.");
-        } else if (allowance > 0n) {
-            console.log(`  ⚠️  Partial budget authorized. Expected: ${expectedTippingBudget}, Got: ${allowance}`);
+        if (authorizedAmount >= expectedTippingBudget) {
+            console.log(`   ✅ Budget authorized: ${authorizedAmount} >= ${expectedTippingBudget}`);
         } else {
-            console.log("  ❌ No tipping budget authorized — authorizeOperator was not called.");
+            console.log(`   ❌ Budget too low! Expected: ${expectedTippingBudget}, Got: ${authorizedAmount}`);
         }
+    } else if (authorizedAmount > 0n) {
+        console.log(`   ✅ Budget authorized: ${authorizedAmount} wei`);
     } else {
-        if (allowance > 0n) {
-            console.log("  ✅ Tipping budget authorized.");
-        } else {
-            console.log("  ❌ No tipping budget authorized — authorizeOperator was not called.");
-        }
+        console.log("   ❌ No tipping budget authorized — run setup again.");
     }
-
     console.log("");
-    console.log("=== Verification Complete ===");
+    console.log("=== Verification complete ===");
 }
 
 main().catch((error) => {

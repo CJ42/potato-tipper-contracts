@@ -6,7 +6,8 @@ Quick-start guide for configuring the Potato Tipper on your Universal Profile.
 
 - [Foundry](https://getfoundry.sh/) installed (for Solidity scripts)
 - [Bun](https://bun.sh/) installed (for TypeScript scripts)
-- A LUKSO Universal Profile with a controller that has `ADDUNIVERSALRECEIVERDELEGATE` permission
+- A LUKSO Universal Profile with a controller that has [`ADDUNIVERSALRECEIVERDELEGATE` permission](https://docs.lukso.tech/standards/access-control/lsp6-key-manager/#permissions)
+  > 💡 You can check permissions on [erc725-inspect.lukso.tech/inspector](https://erc725-inspect.lukso.tech/inspector)
 
 ## 1. Configure environment
 
@@ -21,8 +22,8 @@ Edit `.env`:
 ```
 PRIVATE_KEY=0x...               # Controller private key (must have ADDUNIVERSALRECEIVERDELEGATE)
 UP_ADDRESS=0x...                # Your Universal Profile address
-POTATO_TIPPER_ADDRESS=0x...     # PotatoTipper contract (see deployed addresses)
-POTATO_TOKEN_ADDRESS=0x...      # $POTATO token contract
+POTATO_TIPPER_ADDRESS=0xb844b12313a2d702203109e9487c24ae807e1d66  # PotatoTipper on LUKSO Mainnet
+POTATO_TOKEN_ADDRESS=0x80D898C5A3A0B118a0c8C8aDcdBB260FC687F1ce  # $POTATO on LUKSO Mainnet
 TIP_AMOUNT=42000000000000000000            # 42 POTATO per tip (18 decimals)
 MIN_FOLLOWERS=5                            # Minimum followers required to receive a tip
 MIN_POTATO_BALANCE=100000000000000000000   # Minimum 100 POTATO balance required
@@ -31,7 +32,7 @@ TIPPING_BUDGET=1000000000000000000000      # Total 1000 POTATO authorized for ti
 
 See `deployments/` for deployed contract addresses on mainnet and testnet.
 
-## 2. Pre-flight check (verify permissions)
+## 2. Pre-setup check (verify permissions)
 
 **Foundry:**
 ```bash

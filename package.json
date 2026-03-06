@@ -42,14 +42,20 @@
     "postcheck": "bun run scripts/postCheck-setupPotatoTipper.ts"
   },
   "devDependencies": {
+    "@erc725/erc725.js": "^0.28.2",
+    "@erc725/smart-contracts": "^8.0.1",
+    "@lukso/lsp0-contracts": "^0.15.5",
+    "@lukso/lsp26-contracts": "^0.1.7",
+    "@lukso/lsp6-contracts": "^0.15.5",
+    "@lukso/lsp7-contracts": "^0.16.8",
     "@remix-project/remixd": "^0.6.56",
     "@types/bun": "latest",
+    "dotenv": "^16.4.5",
     "lcov-summary": "^1.0.1",
-    "solhint": "^6.0.1"
+    "solhint": "^6.0.1",
+    "viem": "^2.21.0"
   },
   "dependencies": {
-    "@lukso/lsp-smart-contracts": "latest",
-    "dotenv": "^16.4.5",
-    "viem": "^2.21.0"
+    "@lukso/lsp-smart-contracts": "latest"
   }
 }

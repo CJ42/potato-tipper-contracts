@@ -4,9 +4,8 @@ pragma solidity ^0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {console2} from "forge-std/console2.sol";
 
-interface IERC725Y {
-    function getData(bytes32 key) external view returns (bytes memory);
-}
+import {IERC725Y} from "@erc725/smart-contracts/contracts/interfaces/IERC725Y.sol";
+import {_PERMISSION_ADDUNIVERSALRECEIVERDELEGATE} from "@lukso/lsp6-contracts/contracts/LSP6Constants.sol";
 
 /// @title Pre-Check: Verify ADDUNIVERSALRECEIVERDELEGATE permission before setup
 /// @notice Reads the controller's LSP6 permissions on the UP and checks the ADDUNIVERSALRECEIVERDELEGATE bit
@@ -16,10 +15,6 @@ interface IERC725Y {
 /// - PRIVATE_KEY: EOA controller key to check permissions for
 /// - UP_ADDRESS: Universal Profile address to inspect
 contract PreCheckSetupPotatoTipper is Script {
-    // LSP6 permission bit for ADDUNIVERSALRECEIVERDELEGATE
-    bytes32 constant PERMISSION_ADDUNIVERSALRECEIVERDELEGATE =
-        0x0000000000000000000000000000000000000000000000000000000000000020;
-
     // LSP6 data key prefix: AddressPermissions:Permissions:<address>
     // keccak256("AddressPermissions:Permissions") = 0x4b80742de2bf82acb3630000
     bytes12 constant ADDRESS_PERMISSIONS_PERMISSIONS_PREFIX = 0x4b80742de2bf82acb3630000;
@@ -50,7 +45,7 @@ contract PreCheckSetupPotatoTipper is Script {
         }
 
         bytes32 permissions = abi.decode(rawPermissions, (bytes32));
-        bool hasPermission = (permissions & PERMISSION_ADDUNIVERSALRECEIVERDELEGATE) != 0;
+        bool hasPermission = (permissions & _PERMISSION_ADDUNIVERSALRECEIVERDELEGATE) != 0;
 
         if (hasPermission) {
             console2.log(unicode"✅ Controller has ADDUNIVERSALRECEIVERDELEGATE permission — ready to run setup!");
