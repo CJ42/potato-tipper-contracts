@@ -3,6 +3,7 @@
 - [Security notes](#security-notes)
   - [Audit reports from AI Auditing tools](#audit-reports-from-ai-auditing-tools)
     - [Ackee Wake - AI Audit Report](#ackee-wake---ai-audit-report)
+    - [Nethermind Audit Agent - AI Audit Report](#nethermind-ai-audit-agent---ai-audit-report)
   - [Known issues](#known-issues)
 - [Slither outputs - `PotatoTipper.sol`](#slither-outputs---potatotippersol)
   - [reentrancy-benign](#reentrancy-benign)
